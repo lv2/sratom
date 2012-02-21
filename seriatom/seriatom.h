@@ -55,12 +55,30 @@ extern "C" {
 */
 
 /**
+   Atom serialiser.
+*/
+typedef struct SeriatomImpl Seriatom;
+
+/**
+   Create a new Atom serialiser.
+*/
+SERIATOM_API
+Seriatom*
+seriatom_new(LV2_URID_Unmap* unmap);
+
+/**
+   Free an Atom serialisation.
+*/
+SERIATOM_API
+void
+seriatom_free(Seriatom* seriatom);
+
+/**
    Serialise an Atom to a SerdWriter.
 */
 SERIATOM_API
 void
-atom_to_rdf(SerdWriter*     writer,
-            LV2_URID_Unmap* unmap,
+atom_to_rdf(Seriatom*       seriatom,
             const SerdNode* subject,
             const SerdNode* predicate,
             const LV2_Atom* atom,
@@ -72,7 +90,7 @@ atom_to_rdf(SerdWriter*     writer,
 */
 SERIATOM_API
 char*
-atom_to_turtle(LV2_URID_Unmap* unmap,
+atom_to_turtle(Seriatom*       seriatom,
                const SerdNode* subject,
                const SerdNode* predicate,
                const LV2_Atom* atom);

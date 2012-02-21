@@ -81,6 +81,8 @@ main()
 	LV2_Atom_Forge forge;
 	lv2_atom_forge_init(&forge, &map);
 
+	Seriatom* seriatom = seriatom_new(&unmap);
+
 	LV2_URID eg_Object  = urid_map(NULL, "http://example.org/Object");
 	LV2_URID eg_one     = urid_map(NULL, "http://example.org/one");
 	LV2_URID eg_two     = urid_map(NULL, "http://example.org/two");
@@ -267,8 +269,9 @@ main()
 
 	SerdNode s = serd_node_from_string(SERD_BLANK, USTR("obj"));
 	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-	printf("%s", atom_to_turtle(&unmap, &s, &p, obj));
+	printf("%s", atom_to_turtle(seriatom, &s, &p, obj));
 
 	printf("All tests passed.\n");
+	seriatom_free(seriatom);
 	return 0;
 }

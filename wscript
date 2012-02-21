@@ -55,7 +55,7 @@ def configure(conf):
                       mandatory=False)
 
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
-                      atleast_version='0.8.0', mandatory=True)
+                      atleast_version='0.10.0', mandatory=True)
 
     autowaf.define(conf, 'SERIATOM_VERSION', SERIATOM_VERSION)
     conf.write_config_header('seriatom_config.h', remove=False)
