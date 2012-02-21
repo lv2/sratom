@@ -68,8 +68,8 @@ string_sink(const void* buf, size_t len, void* stream)
 static void
 gensym(SerdNode* out, char c, unsigned num)
 {
-	out->n_bytes = out->n_chars = snprintf((char*)out->buf, 10,
-	                                       "%c%u", c, num);
+	out->n_bytes = out->n_chars = snprintf(
+		(char*)out->buf, 10, "%c%u", c, num);
 }
 
 static void
@@ -205,17 +205,14 @@ atom_to_rdf(Seriatom*       seriatom,
 		object   = serd_node_from_string(SERD_LITERAL,
 		                                 USTR(val ? "true" : "false"));
 	} else if (!strcmp(type, LV2_ATOM__Tuple)) {
-		const LV2_Atom_Tuple* tup = (const LV2_Atom_Tuple*)atom;
 		gensym(&id, 't', seriatom->next_id++);
 		start_object(seriatom, flags, subject, predicate, &id, type);
-		SerdNode s = id;
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
-		LV2_TUPLE_FOREACH(tup, i) {
-			list_append(seriatom, &flags, &s, &p, &node, i);
+		LV2_TUPLE_FOREACH((LV2_Atom_Tuple*)atom, i) {
+			list_append(seriatom, &flags, &id, &p, &node, i);
 		}
-		list_end(writer, unmap, &flags, &s, &p);
-
+		list_end(writer, unmap, &flags, &id, &p);
 		serd_writer_end_anon(writer, &id);
 	} else if (!strcmp(type, LV2_ATOM__Blank)) {
 		const LV2_Atom_Object* obj   = (const LV2_Atom_Object*)atom;
@@ -251,21 +248,18 @@ atom_to_turtle(Seriatom*       seriatom,
                const SerdNode* predicate,
                const LV2_Atom* atom)
 {
-	SerdURI     base_uri = SERD_URI_NULL;
-	SerdEnv*    env      = serd_env_new(NULL);
-	String      str      = { NULL, 0 };
+	SerdURI  base_uri = SERD_URI_NULL;
+	SerdEnv* env      = serd_env_new(NULL);
+	String   str      = { NULL, 0 };
 
 	serd_env_set_prefix_from_strings(env, USTR("atom"),
 	                                 USTR(LV2_ATOM_URI "#"));
 	serd_env_set_prefix_from_strings(env, USTR("rdf"), NS_RDF);
 	serd_env_set_prefix_from_strings(env, USTR("xsd"), NS_XSD);
 
-
 	seriatom->writer = serd_writer_new(
 		SERD_TURTLE,
 		SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED,
-		/*		SERD_NTRIPLES,
-				0,*/
 		env, &base_uri, string_sink, &str);
 
 	atom_to_rdf(seriatom, subject, predicate, atom, 0);
