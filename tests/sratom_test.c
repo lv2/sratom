@@ -20,9 +20,10 @@
 
 #include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include "lv2/lv2plug.in/ns/ext/atom/util.h"
-#include "seriatom/seriatom.h"
+#include "sratom/sratom.h"
 
-#define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define NS_RDF  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define NS_MIDI "http://lv2plug.in/ns/ext/midi#"
 
 #define USTR(s) ((const uint8_t*)(s))
 
@@ -81,7 +82,7 @@ main()
 	LV2_Atom_Forge forge;
 	lv2_atom_forge_init(&forge, &map);
 
-	Seriatom* seriatom = seriatom_new(&unmap);
+	Sratom* sratom = sratom_new(&map, &unmap);
 
 	LV2_URID eg_Object  = urid_map(NULL, "http://example.org/Object");
 	LV2_URID eg_one     = urid_map(NULL, "http://example.org/one");
@@ -111,43 +112,43 @@ main()
 	// eg_one = (Int32)1
 	lv2_atom_forge_property_head(&forge, eg_one, 0);
 	LV2_Atom_Int32* one = lv2_atom_forge_int32(&forge, 1);
-	if (one->value != 1) {
-		return test_fail("%d != 1\n", one->value);
+	if (one->body != 1) {
+		return test_fail("%d != 1\n", one->body);
 	}
 
 	// eg_two = (Int64)2
 	lv2_atom_forge_property_head(&forge, eg_two, 0);
 	LV2_Atom_Int64* two = lv2_atom_forge_int64(&forge, 2);
-	if (two->value != 2) {
-		return test_fail("%ld != 2\n", two->value);
+	if (two->body != 2) {
+		return test_fail("%ld != 2\n", two->body);
 	}
 
 	// eg_three = (Float)3.0
 	lv2_atom_forge_property_head(&forge, eg_three, 0);
 	LV2_Atom_Float* three = lv2_atom_forge_float(&forge, 3.0f);
-	if (three->value != 3) {
-		return test_fail("%f != 3\n", three->value);
+	if (three->body != 3) {
+		return test_fail("%f != 3\n", three->body);
 	}
 
 	// eg_four = (Double)4.0
 	lv2_atom_forge_property_head(&forge, eg_four, 0);
 	LV2_Atom_Double* four = lv2_atom_forge_double(&forge, 4.0);
-	if (four->value != 4) {
-		return test_fail("%ld != 4\n", four->value);
+	if (four->body != 4) {
+		return test_fail("%ld != 4\n", four->body);
 	}
 
 	// eg_true = (Bool)1
 	lv2_atom_forge_property_head(&forge, eg_true, 0);
 	LV2_Atom_Bool* t = lv2_atom_forge_bool(&forge, true);
-	if (t->value != 1) {
-		return test_fail("%ld != 1 (true)\n", t->value);
+	if (t->body != 1) {
+		return test_fail("%ld != 1 (true)\n", t->body);
 	}
 
 	// eg_false = (Bool)0
 	lv2_atom_forge_property_head(&forge, eg_false, 0);
 	LV2_Atom_Bool* f = lv2_atom_forge_bool(&forge, false);
-	if (f->value != 0) {
-		return test_fail("%ld != 0 (false)\n", f->value);
+	if (f->body != 0) {
+		return test_fail("%ld != 0 (false)\n", f->body);
 	}
 
 	// eg_path = (Path)"/foo/bar"
@@ -176,8 +177,8 @@ main()
 	LV2_URID eg_value = urid_map(NULL, "http://example.org/value");
 	lv2_atom_forge_property_head(&forge, eg_urid, 0);
 	LV2_Atom_URID* urid = lv2_atom_forge_urid(&forge, eg_value);
-	if (urid->id != eg_value) {
-		return test_fail("%u != %u\n", urid->id, eg_value);
+	if (urid->body != eg_value) {
+		return test_fail("%u != %u\n", urid->body, eg_value);
 	}
 
 	// eg_string = (String)"hello"
@@ -256,22 +257,35 @@ main()
 	}
 
 	// eg_seq = (Sequence)1, 2
+	LV2_URID midi_midiEvent = map.map(map.handle, NS_MIDI "MidiEvent");
 	lv2_atom_forge_property_head(&forge, eg_seq, 0);
 	LV2_Atom_Forge_Frame seq_frame;
 	lv2_atom_forge_sequence_head(&forge, &seq_frame, 0);
-	lv2_atom_forge_audio_time(&forge, 0, 0);
-	lv2_atom_forge_int32(&forge, 1);
-	lv2_atom_forge_audio_time(&forge, 1, 0);
-	lv2_atom_forge_int32(&forge, 2);
-	lv2_atom_forge_pop(&forge, &seq_frame);
+	
+	const uint8_t ev1[3] = { 0x90, 0x1A, 0x1 };
+	lv2_atom_forge_frame_time(&forge, 1);
+	lv2_atom_forge_atom(&forge, midi_midiEvent, sizeof(ev1));
+	lv2_atom_forge_raw(&forge, ev1, sizeof(ev1));
+	lv2_atom_forge_pad(&forge, sizeof(ev1));
 
+	const uint8_t ev2[3] = { 0x90, 0x2B, 0x2 };
+	lv2_atom_forge_frame_time(&forge, 3);
+	lv2_atom_forge_atom(&forge, midi_midiEvent, sizeof(ev2));
+	lv2_atom_forge_raw(&forge, ev2, sizeof(ev2));
+	lv2_atom_forge_pad(&forge, sizeof(ev2));
+
+	lv2_atom_forge_pop(&forge, &seq_frame);
 	lv2_atom_forge_pop(&forge, &obj_frame);
 
 	SerdNode s = serd_node_from_string(SERD_BLANK, USTR("obj"));
 	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-	printf("%s", atom_to_turtle(seriatom, &s, &p, obj));
+	printf("%s", atom_to_turtle(sratom, &s, &p, obj));
 
 	printf("All tests passed.\n");
-	seriatom_free(seriatom);
+	sratom_free(sratom);
+	for (uint32_t i = 0; i < n_uris; ++i) {
+		free(uris[i]);
+	}
+	free(uris);
 	return 0;
 }

@@ -15,11 +15,11 @@
 */
 
 /**
-   @file seriatom.h API for Seriatom, an LV2 Atom RDF serialisation library.
+   @file sratom.h API for Sratom, an LV2 Atom RDF serialisation library.
 */
 
-#ifndef SERIATOM_SERIATOM_H
-#define SERIATOM_SERIATOM_H
+#ifndef SRATOM_SRATOM_H
+#define SRATOM_SRATOM_H
 
 #include <stdint.h>
 
@@ -27,21 +27,21 @@
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 #include "serd/serd.h"
 
-#ifdef SERIATOM_SHARED
+#ifdef SRATOM_SHARED
 #    ifdef _WIN32
-#        define SERIATOM_LIB_IMPORT __declspec(dllimport)
-#        define SERIATOM_LIB_EXPORT __declspec(dllexport)
+#        define SRATOM_LIB_IMPORT __declspec(dllimport)
+#        define SRATOM_LIB_EXPORT __declspec(dllexport)
 #    else
-#        define SERIATOM_LIB_IMPORT __attribute__((visibility("default")))
-#        define SERIATOM_LIB_EXPORT __attribute__((visibility("default")))
+#        define SRATOM_LIB_IMPORT __attribute__((visibility("default")))
+#        define SRATOM_LIB_EXPORT __attribute__((visibility("default")))
 #    endif
-#    ifdef SERIATOM_INTERNAL
-#        define SERIATOM_API SERIATOM_LIB_EXPORT
+#    ifdef SRATOM_INTERNAL
+#        define SRATOM_API SRATOM_LIB_EXPORT
 #    else
-#        define SERIATOM_API SERIATOM_LIB_IMPORT
+#        define SRATOM_API SRATOM_LIB_IMPORT
 #    endif
 #else
-#    define SERIATOM_API
+#    define SRATOM_API
 #endif
 
 #ifdef __cplusplus
@@ -49,7 +49,7 @@ extern "C" {
 #endif
 
 /**
-   @defgroup seriatom Seriatom
+   @defgroup sratom Sratom
    An LV2 Atom RDF serialisation library.
    @{
 */
@@ -57,29 +57,29 @@ extern "C" {
 /**
    Atom serialiser.
 */
-typedef struct SeriatomImpl Seriatom;
+typedef struct SratomImpl Sratom;
 
 /**
    Create a new Atom serialiser.
 */
-SERIATOM_API
-Seriatom*
-seriatom_new(LV2_URID_Map*   map,
-             LV2_URID_Unmap* unmap);
+SRATOM_API
+Sratom*
+sratom_new(LV2_URID_Map*   map,
+           LV2_URID_Unmap* unmap);
 
 /**
    Free an Atom serialisation.
 */
-SERIATOM_API
+SRATOM_API
 void
-seriatom_free(Seriatom* seriatom);
+sratom_free(Sratom* sratom);
 
 /**
    Serialise an Atom to a SerdWriter.
 */
-SERIATOM_API
+SRATOM_API
 void
-atom_to_rdf(Seriatom*       seriatom,
+atom_to_rdf(Sratom*         sratom,
             const SerdNode* subject,
             const SerdNode* predicate,
             const LV2_Atom* atom,
@@ -88,9 +88,9 @@ atom_to_rdf(Seriatom*       seriatom,
 /**
    Serialise an Atom body to a SerdWriter.
 */
-SERIATOM_API
+SRATOM_API
 void
-atom_body_to_rdf(Seriatom*       seriatom,
+atom_body_to_rdf(Sratom*         sratom,
                  const SerdNode* subject,
                  const SerdNode* predicate,
                  uint32_t        type_urid,
@@ -102,9 +102,9 @@ atom_body_to_rdf(Seriatom*       seriatom,
    Serialise an Atom to a Turtle string.
    The returned string must be free()'d by the caller.
 */
-SERIATOM_API
+SRATOM_API
 char*
-atom_to_turtle(Seriatom*       seriatom,
+atom_to_turtle(Sratom*         sratom,
                const SerdNode* subject,
                const SerdNode* predicate,
                const LV2_Atom* atom);
@@ -117,4 +117,4 @@ atom_to_turtle(Seriatom*       seriatom,
 }  /* extern "C" */
 #endif
 
-#endif  /* SERIATOM_SERIATOM_H */
+#endif  /* SRATOM_SRATOM_H */

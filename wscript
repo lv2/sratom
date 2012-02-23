@@ -9,19 +9,19 @@ from waflib.extras import autowaf as autowaf
 import waflib.Logs as Logs, waflib.Options as Options
 
 # Version of this package (even if built as a child)
-SERIATOM_VERSION       = '0.0.0'
-SERIATOM_MAJOR_VERSION = '0'
+SRATOM_VERSION       = '0.0.0'
+SRATOM_MAJOR_VERSION = '0'
 
 # Library version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-# Seriatom uses the same version number for both library and package
-SERIATOM_LIB_VERSION = SERIATOM_VERSION
+# Sratom uses the same version number for both library and package
+SRATOM_LIB_VERSION = SRATOM_VERSION
 
 # Variables for 'waf dist'
-APPNAME = 'seriatom'
-VERSION = SERIATOM_VERSION
+APPNAME = 'sratom'
+VERSION = SRATOM_VERSION
 
 # Mandatory variables
 top = '.'
@@ -38,7 +38,7 @@ def options(opt):
 def configure(conf):
     conf.load('compiler_c')
     autowaf.configure(conf)
-    autowaf.display_header('Seriatom Configuration')
+    autowaf.display_header('Sratom Configuration')
 
     if conf.env['MSVC_COMPILER']:
         conf.env.append_unique('CFLAGS', ['-TP', '-MD'])
@@ -57,8 +57,8 @@ def configure(conf):
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.10.0', mandatory=True)
 
-    autowaf.define(conf, 'SERIATOM_VERSION', SERIATOM_VERSION)
-    conf.write_config_header('seriatom_config.h', remove=False)
+    autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
+    conf.write_config_header('sratom_config.h', remove=False)
 
     autowaf.display_msg(conf, "Unit tests", str(conf.env['BUILD_TESTS']))
     print('')
@@ -69,13 +69,13 @@ lib_source = [
 
 def build(bld):
     # C Headers
-    includedir = '${INCLUDEDIR}/seriatom-%s/seriatom' % SERIATOM_MAJOR_VERSION
-    bld.install_files(includedir, bld.path.ant_glob('seriatom/*.h'))
+    includedir = '${INCLUDEDIR}/sratom-%s/sratom' % SRATOM_MAJOR_VERSION
+    bld.install_files(includedir, bld.path.ant_glob('sratom/*.h'))
 
     # Pkgconfig file
-    autowaf.build_pc(bld, 'SERIATOM', SERIATOM_VERSION, SERIATOM_MAJOR_VERSION,
+    autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION,
                      'SERD',
-                     {'SERIATOM_MAJOR_VERSION' : SERIATOM_MAJOR_VERSION})
+                     {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION})
 
     libflags = [ '-fvisibility=hidden' ]
     libs     = [ 'm' ]
@@ -89,12 +89,12 @@ def build(bld):
               source          = lib_source,
               includes        = ['.', './src'],
               lib             = libs,
-              name            = 'libseriatom',
-              target          = 'seriatom-%s' % SERIATOM_MAJOR_VERSION,
-              vnum            = SERIATOM_LIB_VERSION,
+              name            = 'libsratom',
+              target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
+              vnum            = SRATOM_LIB_VERSION,
               install_path    = '${LIBDIR}',
-              cflags          = libflags + [ '-DSERIATOM_SHARED',
-                                             '-DSERIATOM_INTERNAL' ])
+              cflags          = libflags + [ '-DSRATOM_SHARED',
+                                             '-DSRATOM_INTERNAL' ])
     autowaf.use_lib(bld, obj, 'SERD')
 
     # Static library
@@ -104,11 +104,11 @@ def build(bld):
                   source          = lib_source,
                   includes        = ['.', './src'],
                   lib             = libs,
-                  name            = 'libseriatom_static',
-                  target          = 'seriatom-%s' % SERIATOM_MAJOR_VERSION,
-                  vnum            = SERIATOM_LIB_VERSION,
+                  name            = 'libsratom_static',
+                  target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
+                  vnum            = SRATOM_LIB_VERSION,
                   install_path    = '${LIBDIR}',
-                  cflags          = ['-DSERIATOM_INTERNAL'])
+                  cflags          = ['-DSRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD')
 
     if bld.env['BUILD_TESTS']:
@@ -123,24 +123,24 @@ def build(bld):
                   source       = lib_source,
                   includes     = ['.', './src'],
                   lib          = test_libs,
-                  name         = 'libseriatom_profiled',
-                  target       = 'seriatom_profiled',
+                  name         = 'libsratom_profiled',
+                  target       = 'sratom_profiled',
                   install_path = '',
-                  cflags       = test_cflags + ['-DSERIATOM_INTERNAL'])
+                  cflags       = test_cflags + ['-DSRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD')
 
         # Unit test program
         obj = bld(features     = 'c cprogram',
-                  source       = 'tests/seriatom_test.c',
+                  source       = 'tests/sratom_test.c',
                   includes     = ['.', './src'],
-                  use          = 'libseriatom_profiled',
+                  use          = 'libsratom_profiled',
                   lib          = test_libs,
-                  target       = 'seriatom_test',
+                  target       = 'sratom_test',
                   install_path = '',
                   cflags       = test_cflags)
 
     # Documentation
-    autowaf.build_dox(bld, 'SERIATOM', SERIATOM_VERSION, top, out)
+    autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
 
     bld.add_post_fun(autowaf.run_ldconfig)
     if bld.env['DOCS']:
@@ -149,11 +149,11 @@ def build(bld):
 def test(ctx):
     autowaf.pre_test(ctx, APPNAME)
     os.environ['PATH'] = '.' + os.pathsep + os.getenv('PATH')
-    autowaf.run_tests(ctx, APPNAME, ['seriatom_test'], dirs=['./src','./tests'])
+    autowaf.run_tests(ctx, APPNAME, ['sratom_test'], dirs=['./src','./tests'])
     autowaf.post_test(ctx, APPNAME)
 
 def lint(ctx):
-    subprocess.call('cpplint.py --filter=+whitespace/comments,-whitespace/tab,-whitespace/braces,-whitespace/labels,-build/header_guard,-readability/casting,-readability/todo,-build/include src/* seriatom/*', shell=True)
+    subprocess.call('cpplint.py --filter=+whitespace/comments,-whitespace/tab,-whitespace/braces,-whitespace/labels,-build/header_guard,-readability/casting,-readability/todo,-build/include src/* sratom/*', shell=True)
 
 def build_dir(ctx, subdir):
     if autowaf.is_child():
@@ -165,17 +165,17 @@ def fix_docs(ctx):
     try:
         top = os.getcwd()
         os.chdir(build_dir(ctx, 'doc/html'))
-        os.system("sed -i 's/SERIATOM_API //' group__seriatom.html")
-        os.system("sed -i 's/SERIATOM_DEPRECATED //' group__seriatom.html")
+        os.system("sed -i 's/SRATOM_API //' group__sratom.html")
+        os.system("sed -i 's/SRATOM_DEPRECATED //' group__sratom.html")
         os.remove('index.html')
-        os.symlink('group__seriatom.html',
+        os.symlink('group__sratom.html',
                    'index.html')
         os.chdir(top)
         os.chdir(build_dir(ctx, 'doc/man/man3'))
-        os.system("sed -i 's/SERIATOM_API //' seriatom.3")
+        os.system("sed -i 's/SRATOM_API //' sratom.3")
         os.chdir(top)
     except:
         Logs.error("Failed to fix up %s documentation" % APPNAME)
 
 def upload_docs(ctx):
-    os.system("rsync -ravz --delete -e ssh build/doc/html/ drobilla@drobilla.net:~/drobilla.net/docs/seriatom/")
+    os.system("rsync -ravz --delete -e ssh build/doc/html/ drobilla@drobilla.net:~/drobilla.net/docs/sratom/")
