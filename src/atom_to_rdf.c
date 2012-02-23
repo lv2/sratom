@@ -337,7 +337,7 @@ sratom_to_turtle(Sratom*         sratom,
 		SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED,
 		env, &base_uri, string_sink, &str);
 
-	sratom_write(sratom, 0, subject, predicate, type, size, body);
+	sratom_write(sratom, SERD_EMPTY_S, subject, predicate, type, size, body);
 	serd_writer_finish(sratom->writer);
 	string_sink("", 1, &str);
 
