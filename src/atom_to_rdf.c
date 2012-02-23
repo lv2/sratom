@@ -18,28 +18,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include "lv2/lv2plug.in/ns/ext/atom/util.h"
+
 #include "seriatom/seriatom.h"
 
-#define NS_RDF (const uint8_t*)"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-#define NS_XSD (const uint8_t*)"http://www.w3.org/2001/XMLSchema#"
+#define NS_RDF  (const uint8_t*)"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define NS_XSD  (const uint8_t*)"http://www.w3.org/2001/XMLSchema#"
+#define NS_MIDI (const uint8_t*)"http://lv2plug.in/ns/ext/midi#"
 
 #define USTR(str) ((const uint8_t*)(str))
 
 struct SeriatomImpl {
 	SerdWriter*     writer;
+	LV2_URID_Map*   map;
 	LV2_URID_Unmap* unmap;
+	LV2_Atom_Forge  forge;
+	LV2_URID        atom_Event;
+	LV2_URID        midi_MidiEvent;
 	unsigned        next_id;
 };
 
 SERIATOM_API
 Seriatom*
-seriatom_new(LV2_URID_Unmap* unmap)
+seriatom_new(LV2_URID_Map*   map,
+             LV2_URID_Unmap* unmap)
 {
 	Seriatom* seriatom = (Seriatom*)malloc(sizeof(Seriatom));
-	seriatom->writer  = NULL;
-	seriatom->unmap   = unmap;
-	seriatom->next_id = 0;
+	seriatom->writer         = NULL;
+	seriatom->map            = map;
+	seriatom->unmap          = unmap;
+	seriatom->atom_Event     = map->map(map->handle, LV2_ATOM_URI "#Event");
+	seriatom->midi_MidiEvent = map->map(map->handle, (const char*)NS_MIDI "MidiEvent");
+	seriatom->next_id        = 0;
+	lv2_atom_forge_init(&seriatom->forge, map);
 	return seriatom;
 }
 
@@ -78,7 +90,9 @@ list_append(Seriatom* seriatom,
             SerdNode* s,
             SerdNode* p,
             SerdNode* node,
-            LV2_Atom* atom)
+            uint32_t  type,
+            uint32_t  size,
+            void*     body)
 {
 	// Generate a list node
 	gensym(node, 'l', seriatom->next_id);
@@ -88,7 +102,7 @@ list_append(Seriatom* seriatom,
 	// _:node rdf:first value
 	*flags = SERD_LIST_CONT;
 	*p = serd_node_from_string(SERD_URI, NS_RDF "first");
-	atom_to_rdf(seriatom, node, p, atom, SERD_LIST_CONT);
+	atom_body_to_rdf(seriatom, node, p, type, size, body, SERD_LIST_CONT);
 
 	// Set subject to node and predicate to rdf:rest for next time
 	gensym(node, 'l', ++seriatom->next_id);
@@ -125,22 +139,23 @@ start_object(Seriatom*       seriatom,
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "type");
 		SerdNode o = serd_node_from_string(SERD_URI, USTR(type));
 		serd_writer_write_statement(
-			seriatom->writer, flags|SERD_ANON_CONT, NULL,
+			seriatom->writer, SERD_ANON_CONT, NULL,
 			node, &p, &o, NULL, NULL);
 	}
 }
 
 SERIATOM_API
 void
-atom_to_rdf(Seriatom*       seriatom,
-            const SerdNode* subject,
-            const SerdNode* predicate,
-            const LV2_Atom* atom,
-            uint32_t        flags)
+atom_body_to_rdf(Seriatom*       seriatom,
+                 const SerdNode* subject,
+                 const SerdNode* predicate,
+                 uint32_t        type_urid,
+                 uint32_t        size,
+                 const void*     body,
+                 uint32_t        flags)
 {
 	LV2_URID_Unmap*   unmap       = seriatom->unmap;
-	SerdWriter*       writer      = seriatom->writer;
-	const char* const type        = unmap->unmap(unmap->handle, atom->type);
+	const char* const type        = unmap->unmap(unmap->handle, type_urid);
 	uint8_t           idbuf[12]   = "b0000000000";
 	SerdNode          id          = serd_node_from_string(SERD_BLANK, idbuf);
 	uint8_t           nodebuf[12] = "b0000000000";
@@ -149,14 +164,13 @@ atom_to_rdf(Seriatom*       seriatom,
 	SerdNode          datatype    = SERD_NODE_NULL;
 	SerdNode          language    = SERD_NODE_NULL;
 	bool              new_node    = false;
-	if (atom->type == 0 && atom->size == 0) {
+	if (type_urid == 0 && size == 0) {
 		object = serd_node_from_string(SERD_BLANK, USTR("null"));
-	} else if (!strcmp(type, LV2_ATOM__String)) {
-		const uint8_t* str = USTR(LV2_ATOM_BODY(atom));
-		object = serd_node_from_string(SERD_LITERAL, str);
-	} else if (!strcmp(type, LV2_ATOM__Literal)) {
-		LV2_Atom_Literal* lit = (LV2_Atom_Literal*)atom;
-		const uint8_t*    str = USTR(LV2_ATOM_CONTENTS(LV2_Atom_Literal, lit));
+	} else if (type_urid == seriatom->forge.String) {
+		object = serd_node_from_string(SERD_LITERAL, (const uint8_t*)body);
+	} else if (type_urid == seriatom->forge.Literal) {
+		LV2_Atom_Literal_Body* lit = (LV2_Atom_Literal_Body*)body;
+		const uint8_t*         str = USTR(lit + 1);
 		object = serd_node_from_string(SERD_LITERAL, str);
 		if (lit->datatype) {
 			datatype = serd_node_from_string(
@@ -172,59 +186,122 @@ atom_to_rdf(Seriatom*       seriatom,
 				fprintf(stderr, "Unknown language URI <%s>\n", lang);
 			}
 		}
-	} else if (!strcmp(type, LV2_ATOM__URID)) {
-		const uint32_t id  = *(const uint32_t*)LV2_ATOM_BODY(atom);
+	} else if (type_urid == seriatom->forge.URID) {
+		const uint32_t id  = *(const uint32_t*)body;
 		const uint8_t* str = USTR(unmap->unmap(unmap->handle, id));
 		object = serd_node_from_string(SERD_URI, str);
-	} else if (!strcmp(type, LV2_ATOM__Path)) {
-		const uint8_t* str = USTR(LV2_ATOM_BODY(atom));
+	} else if (type_urid == seriatom->forge.Path) {
+		const uint8_t* str = USTR(body);
 		object = serd_node_from_string(SERD_LITERAL, str);
 		datatype = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__Path));
-	} else if (!strcmp(type, LV2_ATOM__URI)) {
-		const uint8_t* str = USTR(LV2_ATOM_BODY(atom));
+	} else if (type_urid == seriatom->forge.URI) {
+		const uint8_t* str = USTR(body);
 		object = serd_node_from_string(SERD_URI, str);
-	} else if (!strcmp(type, LV2_ATOM__Int32)) {
+	} else if (type_urid == seriatom->forge.Int32) {
 		new_node = true;
-		object   = serd_node_new_integer(*(int32_t*)LV2_ATOM_BODY(atom));
+		object   = serd_node_new_integer(*(int32_t*)body);
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "int");
-	} else if (!strcmp(type, LV2_ATOM__Int64)) {
+	} else if (type_urid == seriatom->forge.Int64) {
 		new_node = true;
-		object   = serd_node_new_integer(*(int64_t*)LV2_ATOM_BODY(atom));
+		object   = serd_node_new_integer(*(int64_t*)body);
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "long");
-	} else if (!strcmp(type, LV2_ATOM__Float)) {
+	} else if (type_urid == seriatom->forge.Float) {
 		new_node = true;
-		object   = serd_node_new_decimal(*(float*)LV2_ATOM_BODY(atom), 8);
+		object   = serd_node_new_decimal(*(float*)body, 8);
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "float");
-	} else if (!strcmp(type, LV2_ATOM__Double)) {
+	} else if (type_urid == seriatom->forge.Double) {
 		new_node = true;
-		object   = serd_node_new_decimal(*(double*)LV2_ATOM_BODY(atom), 16);
+		object   = serd_node_new_decimal(*(double*)body, 16);
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "double");
-	} else if (!strcmp(type, LV2_ATOM__Bool)) {
-		const int32_t val = *(const int32_t*)LV2_ATOM_BODY(atom);
+	} else if (type_urid == seriatom->forge.Bool) {
+		const int32_t val = *(const int32_t*)body;
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "boolean");
 		object   = serd_node_from_string(SERD_LITERAL,
 		                                 USTR(val ? "true" : "false"));
-	} else if (!strcmp(type, LV2_ATOM__Tuple)) {
+	} else if (type_urid == seriatom->midi_MidiEvent) {
+		new_node = true;
+		datatype = serd_node_from_string(SERD_URI, NS_MIDI "MidiEvent");
+		uint8_t* str = calloc(size * 2, 1);
+		for (uint32_t i = 0; i < size; ++i) {
+			sprintf((char*)str + (2 * i), "%02X",
+			        (unsigned)(uint8_t)*((uint8_t*)body + i));
+		}
+		object = serd_node_from_string(SERD_LITERAL, USTR(str));
+	} else if (type_urid == seriatom->atom_Event) {
+		const LV2_Atom_Event* ev = (const LV2_Atom_Event*)body;
+		gensym(&id, 'e', seriatom->next_id++);
+		start_object(seriatom, flags, subject, predicate, &id, NULL);
+		// TODO: beat time
+		SerdNode p    = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__frameTime));
+		SerdNode time = serd_node_new_integer(ev->time.frames);
+		datatype = serd_node_from_string(SERD_URI, NS_XSD "decimal");
+		serd_writer_write_statement(seriatom->writer, SERD_ANON_CONT, NULL,
+		                            &id, &p, &time,
+		                            &datatype, &language);
+		serd_node_free(&time);
+		
+		p = serd_node_from_string(SERD_URI, NS_RDF "value");
+		atom_body_to_rdf(seriatom, &id, &p,
+		                 ev->body.type, ev->body.size,
+		                 LV2_ATOM_BODY(&ev->body),
+		                 SERD_ANON_CONT);
+		serd_writer_end_anon(seriatom->writer, &id);
+	} else if (type_urid == seriatom->forge.Tuple) {
 		gensym(&id, 't', seriatom->next_id++);
 		start_object(seriatom, flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
-		LV2_TUPLE_FOREACH((LV2_Atom_Tuple*)atom, i) {
-			list_append(seriatom, &flags, &id, &p, &node, i);
+		LV2_TUPLE_BODY_FOREACH(body, size, i) {
+			list_append(seriatom, &flags, &id, &p, &node,
+			            i->type, i->size, LV2_ATOM_BODY(i));
 		}
-		list_end(writer, unmap, &flags, &id, &p);
-		serd_writer_end_anon(writer, &id);
-	} else if (!strcmp(type, LV2_ATOM__Blank)) {
-		const LV2_Atom_Object* obj   = (const LV2_Atom_Object*)atom;
-		const char*            otype = unmap->unmap(unmap->handle, obj->otype);
+		list_end(seriatom->writer, unmap, &flags, &id, &p);
+		serd_writer_end_anon(seriatom->writer, &id);
+	} else if (type_urid == seriatom->forge.Vector) {
+		const LV2_Atom_Vector_Body* vec  = (const LV2_Atom_Vector_Body*)body;
+		gensym(&id, 'v', seriatom->next_id++);
+		start_object(seriatom, flags, subject, predicate, &id, type);
+		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
+		const uint32_t content_size = size - sizeof(LV2_Atom_Vector_Body);
+		const uint32_t elem_size    = content_size / vec->elem_count;
+		flags |= SERD_LIST_O_BEGIN;
+		for (char* i = (char*)(vec + 1);
+		     i < (char*)vec + size;
+		     i += elem_size) {
+			list_append(seriatom, &flags, &id, &p, &node,
+			            vec->elem_type, elem_size, i);
+		}
+		list_end(seriatom->writer, unmap, &flags, &id, &p);
+		serd_writer_end_anon(seriatom->writer, &id);
+	} else if (type_urid == seriatom->forge.Blank) {
+		const LV2_Atom_Object_Body* obj   = (const LV2_Atom_Object_Body*)body;
+		const char*                 otype = unmap->unmap(unmap->handle, obj->otype);
 		gensym(&id, 'b', seriatom->next_id++);
 		start_object(seriatom, flags, subject, predicate, &id, otype);
-		LV2_OBJECT_FOREACH(obj, i) {
+		LV2_OBJECT_BODY_FOREACH(obj, size, i) {
 			const LV2_Atom_Property_Body* prop = lv2_object_iter_get(i);
 			const char* const key = unmap->unmap(unmap->handle, prop->key);
 			SerdNode pred = serd_node_from_string(SERD_URI, USTR(key));
-			atom_to_rdf(seriatom, &id, &pred, &prop->value, flags|SERD_ANON_CONT);
+			atom_body_to_rdf(seriatom, &id, &pred,
+			                 prop->value.type, prop->value.size,
+			                 LV2_ATOM_BODY(&prop->value),
+			                 flags|SERD_ANON_CONT);
 		}
+		serd_writer_end_anon(seriatom->writer, &id);
+	} else if (type_urid == seriatom->forge.Sequence) {
+		const LV2_Atom_Sequence_Body* seq  = (const LV2_Atom_Sequence_Body*)body;
+		gensym(&id, 'v', seriatom->next_id++);
+		start_object(seriatom, flags, subject, predicate, &id, type);
+		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
+		flags |= SERD_LIST_O_BEGIN;
+		LV2_SEQUENCE_BODY_FOREACH(seq, size, i) {
+			LV2_Atom_Event* ev = lv2_sequence_iter_get(i);
+			list_append(seriatom, &flags, &id, &p, &node,
+			            seriatom->atom_Event,
+			            sizeof(LV2_Atom_Event) + ev->body.size,
+			            ev);
+		}
+		list_end(seriatom->writer, unmap, &flags, &id, &p);
 		serd_writer_end_anon(seriatom->writer, &id);
 	} else {
 		object = serd_node_from_string(SERD_LITERAL, USTR("(unknown)"));
@@ -242,6 +319,19 @@ atom_to_rdf(Seriatom*       seriatom,
 }
 
 SERIATOM_API
+void
+atom_to_rdf(Seriatom*       seriatom,
+            const SerdNode* subject,
+            const SerdNode* predicate,
+            const LV2_Atom* atom,
+            uint32_t        flags)
+{
+	atom_body_to_rdf(seriatom, subject, predicate,
+	                 atom->type, atom->size, LV2_ATOM_BODY(atom),
+	                 flags);
+}
+
+SERIATOM_API
 char*
 atom_to_turtle(Seriatom*       seriatom,
                const SerdNode* subject,
@@ -252,10 +342,13 @@ atom_to_turtle(Seriatom*       seriatom,
 	SerdEnv* env      = serd_env_new(NULL);
 	String   str      = { NULL, 0 };
 
+	serd_env_set_prefix_from_strings(env, USTR("midi"), NS_MIDI);
 	serd_env_set_prefix_from_strings(env, USTR("atom"),
 	                                 USTR(LV2_ATOM_URI "#"));
 	serd_env_set_prefix_from_strings(env, USTR("rdf"), NS_RDF);
 	serd_env_set_prefix_from_strings(env, USTR("xsd"), NS_XSD);
+	serd_env_set_prefix_from_strings(env, USTR("eg"),
+	                                 USTR("http://example.org/"));
 
 	seriatom->writer = serd_writer_new(
 		SERD_TURTLE,
@@ -268,5 +361,6 @@ atom_to_turtle(Seriatom*       seriatom,
 
 	serd_writer_free(seriatom->writer);
 	serd_env_free(env);
+	free(str.buf);
 	return str.buf;
 }

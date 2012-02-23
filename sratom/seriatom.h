@@ -64,7 +64,8 @@ typedef struct SeriatomImpl Seriatom;
 */
 SERIATOM_API
 Seriatom*
-seriatom_new(LV2_URID_Unmap* unmap);
+seriatom_new(LV2_URID_Map*   map,
+             LV2_URID_Unmap* unmap);
 
 /**
    Free an Atom serialisation.
@@ -83,6 +84,19 @@ atom_to_rdf(Seriatom*       seriatom,
             const SerdNode* predicate,
             const LV2_Atom* atom,
             uint32_t        flags);
+
+/**
+   Serialise an Atom body to a SerdWriter.
+*/
+SERIATOM_API
+void
+atom_body_to_rdf(Seriatom*       seriatom,
+                 const SerdNode* subject,
+                 const SerdNode* predicate,
+                 uint32_t        type_urid,
+                 uint32_t        size,
+                 const void*     body,
+                 uint32_t        flags);
 
 /**
    Serialise an Atom to a Turtle string.
