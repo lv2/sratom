@@ -63,9 +63,7 @@ def configure(conf):
     autowaf.display_msg(conf, "Unit tests", str(conf.env['BUILD_TESTS']))
     print('')
 
-lib_source = [
-    'src/atom_to_rdf.c'
-]
+lib_source = [ 'src/sratom.c' ]
 
 def build(bld):
     # C Headers
