@@ -42,7 +42,7 @@ struct SratomImpl {
 SRATOM_API
 Sratom*
 sratom_new(LV2_URID_Map*   map,
-             LV2_URID_Unmap* unmap)
+           LV2_URID_Unmap* unmap)
 {
 	Sratom* sratom = (Sratom*)malloc(sizeof(Sratom));
 	sratom->writer         = NULL;
@@ -85,7 +85,7 @@ gensym(SerdNode* out, char c, unsigned num)
 }
 
 static void
-list_append(Sratom* sratom,
+list_append(Sratom*   sratom,
             unsigned* flags,
             SerdNode* s,
             SerdNode* p,
@@ -102,7 +102,7 @@ list_append(Sratom* sratom,
 	// _:node rdf:first value
 	*flags = SERD_LIST_CONT;
 	*p = serd_node_from_string(SERD_URI, NS_RDF "first");
-	atom_body_to_rdf(sratom, node, p, type, size, body, SERD_LIST_CONT);
+	sratom_write(sratom, SERD_LIST_CONT, node, p, type, size, body);
 
 	// Set subject to node and predicate to rdf:rest for next time
 	gensym(node, 'l', ++sratom->next_id);
@@ -111,12 +111,7 @@ list_append(Sratom* sratom,
 }
 
 static void
-list_end(SerdWriter*     writer,
-         LV2_URID_Unmap* unmap,
-         unsigned*       flags,
-         SerdNode*       s,
-         SerdNode*       p)
-
+list_end(SerdWriter* writer, unsigned* flags, SerdNode* s, SerdNode* p)
 {
 	// _:node rdf:rest rdf:nil
 	const SerdNode nil = serd_node_from_string(SERD_URI, NS_RDF "nil");
@@ -125,7 +120,7 @@ list_end(SerdWriter*     writer,
 }
 
 static void
-start_object(Sratom*       sratom,
+start_object(Sratom*         sratom,
              uint32_t        flags,
              const SerdNode* subject,
              const SerdNode* predicate,
@@ -146,13 +141,13 @@ start_object(Sratom*       sratom,
 
 SRATOM_API
 void
-atom_body_to_rdf(Sratom*       sratom,
-                 const SerdNode* subject,
-                 const SerdNode* predicate,
-                 uint32_t        type_urid,
-                 uint32_t        size,
-                 const void*     body,
-                 uint32_t        flags)
+sratom_write(Sratom*         sratom,
+             uint32_t        flags,
+             const SerdNode* subject,
+             const SerdNode* predicate,
+             uint32_t        type_urid,
+             uint32_t        size,
+             const void*     body)
 {
 	LV2_URID_Unmap*   unmap       = sratom->unmap;
 	const char* const type        = unmap->unmap(unmap->handle, type_urid);
@@ -241,10 +236,9 @@ atom_body_to_rdf(Sratom*       sratom,
 		serd_node_free(&time);
 		
 		p = serd_node_from_string(SERD_URI, NS_RDF "value");
-		atom_body_to_rdf(sratom, &id, &p,
-		                 ev->body.type, ev->body.size,
-		                 LV2_ATOM_BODY(&ev->body),
-		                 SERD_ANON_CONT);
+		sratom_write(sratom, SERD_ANON_CONT, &id, &p,
+		             ev->body.type, ev->body.size,
+		             LV2_ATOM_BODY(&ev->body));
 		serd_writer_end_anon(sratom->writer, &id);
 	} else if (type_urid == sratom->forge.Tuple) {
 		gensym(&id, 't', sratom->next_id++);
@@ -255,7 +249,7 @@ atom_body_to_rdf(Sratom*       sratom,
 			list_append(sratom, &flags, &id, &p, &node,
 			            i->type, i->size, LV2_ATOM_BODY(i));
 		}
-		list_end(sratom->writer, unmap, &flags, &id, &p);
+		list_end(sratom->writer, &flags, &id, &p);
 		serd_writer_end_anon(sratom->writer, &id);
 	} else if (type_urid == sratom->forge.Vector) {
 		const LV2_Atom_Vector_Body* vec  = (const LV2_Atom_Vector_Body*)body;
@@ -271,7 +265,7 @@ atom_body_to_rdf(Sratom*       sratom,
 			list_append(sratom, &flags, &id, &p, &node,
 			            vec->elem_type, elem_size, i);
 		}
-		list_end(sratom->writer, unmap, &flags, &id, &p);
+		list_end(sratom->writer, &flags, &id, &p);
 		serd_writer_end_anon(sratom->writer, &id);
 	} else if (type_urid == sratom->forge.Blank) {
 		const LV2_Atom_Object_Body* obj   = (const LV2_Atom_Object_Body*)body;
@@ -282,10 +276,9 @@ atom_body_to_rdf(Sratom*       sratom,
 			const LV2_Atom_Property_Body* prop = lv2_object_iter_get(i);
 			const char* const key = unmap->unmap(unmap->handle, prop->key);
 			SerdNode pred = serd_node_from_string(SERD_URI, USTR(key));
-			atom_body_to_rdf(sratom, &id, &pred,
-			                 prop->value.type, prop->value.size,
-			                 LV2_ATOM_BODY(&prop->value),
-			                 flags|SERD_ANON_CONT);
+			sratom_write(sratom, flags|SERD_ANON_CONT, &id, &pred,
+			             prop->value.type, prop->value.size,
+			             LV2_ATOM_BODY(&prop->value));
 		}
 		serd_writer_end_anon(sratom->writer, &id);
 	} else if (type_urid == sratom->forge.Sequence) {
@@ -301,7 +294,7 @@ atom_body_to_rdf(Sratom*       sratom,
 			            sizeof(LV2_Atom_Event) + ev->body.size,
 			            ev);
 		}
-		list_end(sratom->writer, unmap, &flags, &id, &p);
+		list_end(sratom->writer, &flags, &id, &p);
 		serd_writer_end_anon(sratom->writer, &id);
 	} else {
 		object = serd_node_from_string(SERD_LITERAL, USTR("(unknown)"));
@@ -319,24 +312,13 @@ atom_body_to_rdf(Sratom*       sratom,
 }
 
 SRATOM_API
-void
-atom_to_rdf(Sratom*       sratom,
-            const SerdNode* subject,
-            const SerdNode* predicate,
-            const LV2_Atom* atom,
-            uint32_t        flags)
-{
-	atom_body_to_rdf(sratom, subject, predicate,
-	                 atom->type, atom->size, LV2_ATOM_BODY(atom),
-	                 flags);
-}
-
-SRATOM_API
 char*
-atom_to_turtle(Sratom*       sratom,
-               const SerdNode* subject,
-               const SerdNode* predicate,
-               const LV2_Atom* atom)
+sratom_to_turtle(Sratom*         sratom,
+                 const SerdNode* subject,
+                 const SerdNode* predicate,
+                 uint32_t        type,
+                 uint32_t        size,
+                 const void*     body)
 {
 	SerdURI  base_uri = SERD_URI_NULL;
 	SerdEnv* env      = serd_env_new(NULL);
@@ -355,7 +337,7 @@ atom_to_turtle(Sratom*       sratom,
 		SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED,
 		env, &base_uri, string_sink, &str);
 
-	atom_to_rdf(sratom, subject, predicate, atom, 0);
+	sratom_write(sratom, 0, subject, predicate, type, size, body);
 	serd_writer_finish(sratom->writer);
 	string_sink("", 1, &str);
 

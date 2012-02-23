@@ -171,9 +171,6 @@ def fix_docs(ctx):
         os.symlink('group__sratom.html',
                    'index.html')
         os.chdir(top)
-        os.chdir(build_dir(ctx, 'doc/man/man3'))
-        os.system("sed -i 's/SRATOM_API //' sratom.3")
-        os.chdir(top)
     except:
         Logs.error("Failed to fix up %s documentation" % APPNAME)
 

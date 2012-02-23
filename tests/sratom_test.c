@@ -279,7 +279,8 @@ main()
 
 	SerdNode s = serd_node_from_string(SERD_BLANK, USTR("obj"));
 	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-	printf("%s", atom_to_turtle(sratom, &s, &p, obj));
+	printf("%s", sratom_to_turtle(sratom, &s, &p,
+	                              obj->type, obj->size, LV2_ATOM_BODY(obj)));
 
 	printf("All tests passed.\n");
 	sratom_free(sratom);

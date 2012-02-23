@@ -23,7 +23,6 @@
 
 #include <stdint.h>
 
-#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 #include "serd/serd.h"
 
@@ -75,28 +74,17 @@ void
 sratom_free(Sratom* sratom);
 
 /**
-   Serialise an Atom to a SerdWriter.
+   Write an Atom to RDF.
 */
 SRATOM_API
 void
-atom_to_rdf(Sratom*         sratom,
-            const SerdNode* subject,
-            const SerdNode* predicate,
-            const LV2_Atom* atom,
-            uint32_t        flags);
-
-/**
-   Serialise an Atom body to a SerdWriter.
-*/
-SRATOM_API
-void
-atom_body_to_rdf(Sratom*         sratom,
-                 const SerdNode* subject,
-                 const SerdNode* predicate,
-                 uint32_t        type_urid,
-                 uint32_t        size,
-                 const void*     body,
-                 uint32_t        flags);
+sratom_write(Sratom*         sratom,
+             uint32_t        flags,
+             const SerdNode* subject,
+             const SerdNode* predicate,
+             uint32_t        type_urid,
+             uint32_t        size,
+             const void*     body);
 
 /**
    Serialise an Atom to a Turtle string.
@@ -104,10 +92,12 @@ atom_body_to_rdf(Sratom*         sratom,
 */
 SRATOM_API
 char*
-atom_to_turtle(Sratom*         sratom,
-               const SerdNode* subject,
-               const SerdNode* predicate,
-               const LV2_Atom* atom);
+sratom_to_turtle(Sratom*         sratom,
+                 const SerdNode* subject,
+                 const SerdNode* predicate,
+                 uint32_t        type_urid,
+                 uint32_t        size,
+                 const void*     body);
 
 /**
    @}
