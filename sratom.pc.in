@@ -3,9 +3,9 @@ exec_prefix=@EXEC_PREFIX@
 libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
-Name: Seriatom
-Version: @SERIATOM_VERSION@
+Name: Sratom
+Version: @SRATOM_VERSION@
 Description: LV2 Atom RDF serialisation library
-Requires: serd-0
-Libs: -L${libdir} -l@LIB_SERIATOM@
-Cflags: -I${includedir}/seriatom-@SERIATOM_MAJOR_VERSION@
+Requires: serd-0 sord-0
+Libs: -L${libdir} -lsratom-@SRATOM_MAJOR_VERSION@
+Cflags: -I${includedir}/sratom-@SRATOM_MAJOR_VERSION@

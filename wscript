@@ -37,6 +37,7 @@ def options(opt):
 
 def configure(conf):
     conf.load('compiler_c')
+    conf.line_just = 41
     autowaf.configure(conf)
     autowaf.display_header('Sratom Configuration')
 
@@ -54,8 +55,14 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
+    autowaf.check_pkg(conf, 'lv2-lv2plug.in-ns-ext-atom',
+                      uselib_store='LV2_ATOM', mandatory=True)
+    autowaf.check_pkg(conf, 'lv2-lv2plug.in-ns-ext-urid',
+                      uselib_store='LV2_URID', mandatory=True)
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.10.0', mandatory=True)
+    autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
+                      atleast_version='0.5.0', mandatory=True)
 
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
@@ -72,7 +79,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION,
-                     'SERD',
+                     ['SERD', 'SORD'],
                      {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION})
 
     libflags = [ '-fvisibility=hidden' ]
@@ -93,7 +100,7 @@ def build(bld):
               install_path    = '${LIBDIR}',
               cflags          = libflags + [ '-DSRATOM_SHARED',
                                              '-DSRATOM_INTERNAL' ])
-    autowaf.use_lib(bld, obj, 'SERD')
+    autowaf.use_lib(bld, obj, 'SERD SORD')
 
     # Static library
     if bld.env['BUILD_STATIC']:
@@ -107,7 +114,7 @@ def build(bld):
                   vnum            = SRATOM_LIB_VERSION,
                   install_path    = '${LIBDIR}',
                   cflags          = ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD')
+        autowaf.use_lib(bld, obj, 'SERD SORD')
 
     if bld.env['BUILD_TESTS']:
         test_libs   = libs
@@ -125,7 +132,7 @@ def build(bld):
                   target       = 'sratom_profiled',
                   install_path = '',
                   cflags       = test_cflags + ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD')
+        autowaf.use_lib(bld, obj, 'SERD SORD')
 
         # Unit test program
         obj = bld(features     = 'c cprogram',

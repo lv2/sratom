@@ -27,8 +27,8 @@
 
 #define USTR(s) ((const uint8_t*)(s))
 
-char** uris   = NULL;
-size_t n_uris = 0;
+static char** uris   = NULL;
+static size_t n_uris = 0;
 
 char*
 copy_string(const char* str)
@@ -57,7 +57,7 @@ const char*
 urid_unmap(LV2_URID_Unmap_Handle handle,
            LV2_URID              urid)
 {
-	if (urid <= n_uris) {
+	if (urid > 0 && urid <= n_uris) {
 		return uris[urid - 1];
 	}
 	return NULL;
@@ -106,109 +106,65 @@ main()
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
 
 	LV2_Atom_Forge_Frame obj_frame;
-	LV2_Atom* obj = (LV2_Atom*)lv2_atom_forge_blank(
-		&forge, &obj_frame, 1, eg_Object);
+	LV2_Atom* obj = (LV2_Atom*)lv2_atom_forge_deref(
+		&forge, lv2_atom_forge_blank(&forge, &obj_frame, 1, eg_Object));
 
 	// eg_one = (Int32)1
 	lv2_atom_forge_property_head(&forge, eg_one, 0);
-	LV2_Atom_Int32* one = lv2_atom_forge_int32(&forge, 1);
-	if (one->body != 1) {
-		return test_fail("%d != 1\n", one->body);
-	}
+	lv2_atom_forge_int32(&forge, 1);
 
 	// eg_two = (Int64)2
 	lv2_atom_forge_property_head(&forge, eg_two, 0);
-	LV2_Atom_Int64* two = lv2_atom_forge_int64(&forge, 2);
-	if (two->body != 2) {
-		return test_fail("%ld != 2\n", two->body);
-	}
+	lv2_atom_forge_int64(&forge, 2);
 
 	// eg_three = (Float)3.0
 	lv2_atom_forge_property_head(&forge, eg_three, 0);
-	LV2_Atom_Float* three = lv2_atom_forge_float(&forge, 3.0f);
-	if (three->body != 3) {
-		return test_fail("%f != 3\n", three->body);
-	}
-
+	lv2_atom_forge_float(&forge, 3.0f);
+	
 	// eg_four = (Double)4.0
 	lv2_atom_forge_property_head(&forge, eg_four, 0);
-	LV2_Atom_Double* four = lv2_atom_forge_double(&forge, 4.0);
-	if (four->body != 4) {
-		return test_fail("%ld != 4\n", four->body);
-	}
+	lv2_atom_forge_double(&forge, 4.0);
 
 	// eg_true = (Bool)1
 	lv2_atom_forge_property_head(&forge, eg_true, 0);
-	LV2_Atom_Bool* t = lv2_atom_forge_bool(&forge, true);
-	if (t->body != 1) {
-		return test_fail("%ld != 1 (true)\n", t->body);
-	}
+	lv2_atom_forge_bool(&forge, true);
 
 	// eg_false = (Bool)0
 	lv2_atom_forge_property_head(&forge, eg_false, 0);
-	LV2_Atom_Bool* f = lv2_atom_forge_bool(&forge, false);
-	if (f->body != 0) {
-		return test_fail("%ld != 0 (false)\n", f->body);
-	}
+	lv2_atom_forge_bool(&forge, false);
 
 	// eg_path = (Path)"/foo/bar"
 	const uint8_t* pstr     = (const uint8_t*)"/foo/bar";
 	const size_t   pstr_len = strlen((const char*)pstr);
 	lv2_atom_forge_property_head(&forge, eg_path, 0);
-	LV2_Atom_String* path  = lv2_atom_forge_uri(&forge, pstr, pstr_len);
-	uint8_t*         pbody = (uint8_t*)LV2_ATOM_BODY(path);
-	if (strcmp((const char*)pbody, (const char*)pstr)) {
-		return test_fail("%s != \"%s\"\n",
-		                 (const char*)pbody, (const char*)pstr);
-	}
+	lv2_atom_forge_uri(&forge, pstr, pstr_len);
 
 	// eg_uri = (URI)"http://example.org/value"
 	const uint8_t* ustr     = (const uint8_t*)"http://example.org/value";
 	const size_t   ustr_len = strlen((const char*)ustr);
 	lv2_atom_forge_property_head(&forge, eg_uri, 0);
-	LV2_Atom_String* uri   = lv2_atom_forge_uri(&forge, ustr, ustr_len);
-	uint8_t*         ubody = (uint8_t*)LV2_ATOM_BODY(uri);
-	if (strcmp((const char*)ubody, (const char*)ustr)) {
-		return test_fail("%s != \"%s\"\n",
-		                 (const char*)ubody, (const char*)ustr);
-	}
+	lv2_atom_forge_uri(&forge, ustr, ustr_len);
 
 	// eg_urid = (URID)"http://example.org/value"
 	LV2_URID eg_value = urid_map(NULL, "http://example.org/value");
 	lv2_atom_forge_property_head(&forge, eg_urid, 0);
-	LV2_Atom_URID* urid = lv2_atom_forge_urid(&forge, eg_value);
-	if (urid->body != eg_value) {
-		return test_fail("%u != %u\n", urid->body, eg_value);
-	}
+	lv2_atom_forge_urid(&forge, eg_value);
 
 	// eg_string = (String)"hello"
 	lv2_atom_forge_property_head(&forge, eg_string, 0);
-	LV2_Atom_String* string = lv2_atom_forge_string(
-		&forge, (const uint8_t*)"hello", strlen("hello"));
-	uint8_t* sbody = (uint8_t*)LV2_ATOM_BODY(string);
-	if (strcmp((const char*)sbody, "hello")) {
-		return test_fail("%s != \"hello\"\n", (const char*)sbody);
-	}
+	lv2_atom_forge_string(&forge, (const uint8_t*)"hello", strlen("hello"));
 
 	// eg_langlit = (Literal)"bonjour"@fr
 	lv2_atom_forge_property_head(&forge, eg_langlit, 0);
-	LV2_Atom_Literal* langlit = lv2_atom_forge_literal(
+	lv2_atom_forge_literal(
 		&forge, (const uint8_t*)"bonjour", strlen("bonjour"),
 		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/fra"));
-	uint8_t* llbody = (uint8_t*)LV2_ATOM_CONTENTS(LV2_Atom_Literal, langlit);
-	if (strcmp((const char*)llbody, "bonjour")) {
-		return test_fail("%s != \"bonjour\"\n", (const char*)llbody);
-	}
 
 	// eg_typelit = (Literal)"bonjour"@fr
 	lv2_atom_forge_property_head(&forge, eg_typelit, 0);
-	LV2_Atom_Literal* typelit = lv2_atom_forge_literal(
+		lv2_atom_forge_literal(
 		&forge, (const uint8_t*)"value", strlen("value"),
 		urid_map(NULL, "http://example.org/Type"), 0);
-	uint8_t* tlbody = (uint8_t*)LV2_ATOM_CONTENTS(LV2_Atom_Literal, typelit);
-	if (strcmp((const char*)tlbody, "value")) {
-		return test_fail("%s != \"value\"\n", (const char*)tlbody);
-	}
 
 	// eg_blank = [ a <http://example.org/Object> ]
 	lv2_atom_forge_property_head(&forge, eg_blank, 0);
@@ -219,68 +175,48 @@ main()
 	// eg_tuple = "foo",true
 	lv2_atom_forge_property_head(&forge, eg_tuple, 0);
 	LV2_Atom_Forge_Frame tuple_frame;
-	LV2_Atom_Tuple*      tuple = (LV2_Atom_Tuple*)lv2_atom_forge_tuple(
-		&forge, &tuple_frame);
-	LV2_Atom_String* tup0 = lv2_atom_forge_string(
-		&forge, (const uint8_t*)"foo", strlen("foo"));
-	LV2_Atom_Bool* tup1 = lv2_atom_forge_bool(&forge, true);
+	lv2_atom_forge_tuple(&forge, &tuple_frame);
+	lv2_atom_forge_string(&forge, (const uint8_t*)"foo", strlen("foo"));
+	lv2_atom_forge_bool(&forge, true);
 	lv2_atom_forge_pop(&forge, &tuple_frame);
-	LV2_Atom_Tuple_Iter i = lv2_tuple_begin(tuple);
-	if (lv2_tuple_is_end(tuple, i)) {
-		return test_fail("Tuple iterator is empty\n");
-	}
-	LV2_Atom* tup0i = (LV2_Atom*)lv2_tuple_iter_get(i);
-	if (!lv2_atom_equals((LV2_Atom*)tup0, tup0i)) {
-		return test_fail("Corrupt tuple element 0\n");
-	}
-	i = lv2_tuple_iter_next(i);
-	if (lv2_tuple_is_end(tuple, i)) {
-		return test_fail("Premature end of tuple iterator\n");
-	}
-	LV2_Atom* tup1i = lv2_tuple_iter_get(i);
-	if (!lv2_atom_equals((LV2_Atom*)tup1, tup1i)) {
-		return test_fail("Corrupt tuple element 1\n");
-	}
-	i = lv2_tuple_iter_next(i);
-	if (!lv2_tuple_is_end(tuple, i)) {
-		return test_fail("Tuple iter is not at end\n");
-	}
 
 	// eg_vector = (Vector<Int32>)1,2,3,4
 	lv2_atom_forge_property_head(&forge, eg_vector, 0);
 	int32_t elems[] = { 1, 2, 3, 4 };
-	LV2_Atom_Vector* vector = lv2_atom_forge_vector(
-		&forge, 4, forge.Int32, sizeof(int32_t), elems);
-	void* vec_body = LV2_ATOM_CONTENTS(LV2_Atom_Vector, vector);
-	if (memcmp(elems, vec_body, sizeof(elems))) {
-		return test_fail("Corrupt vector\n");
-	}
+	lv2_atom_forge_vector(&forge, 4, forge.Int32, sizeof(int32_t), elems);
 
 	// eg_seq = (Sequence)1, 2
 	LV2_URID midi_midiEvent = map.map(map.handle, NS_MIDI "MidiEvent");
 	lv2_atom_forge_property_head(&forge, eg_seq, 0);
 	LV2_Atom_Forge_Frame seq_frame;
 	lv2_atom_forge_sequence_head(&forge, &seq_frame, 0);
-	
+
 	const uint8_t ev1[3] = { 0x90, 0x1A, 0x1 };
 	lv2_atom_forge_frame_time(&forge, 1);
-	lv2_atom_forge_atom(&forge, midi_midiEvent, sizeof(ev1));
+	lv2_atom_forge_atom(&forge, sizeof(ev1), midi_midiEvent);
 	lv2_atom_forge_raw(&forge, ev1, sizeof(ev1));
 	lv2_atom_forge_pad(&forge, sizeof(ev1));
 
 	const uint8_t ev2[3] = { 0x90, 0x2B, 0x2 };
 	lv2_atom_forge_frame_time(&forge, 3);
-	lv2_atom_forge_atom(&forge, midi_midiEvent, sizeof(ev2));
+	lv2_atom_forge_atom(&forge, sizeof(ev2), midi_midiEvent);
 	lv2_atom_forge_raw(&forge, ev2, sizeof(ev2));
 	lv2_atom_forge_pad(&forge, sizeof(ev2));
 
 	lv2_atom_forge_pop(&forge, &seq_frame);
 	lv2_atom_forge_pop(&forge, &obj_frame);
 
-	SerdNode s = serd_node_from_string(SERD_BLANK, USTR("obj"));
-	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-	printf("%s", sratom_to_turtle(sratom, &s, &p,
-	                              obj->type, obj->size, LV2_ATOM_BODY(obj)));
+	SerdNode s      = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
+	SerdNode p      = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
+	char*    outstr = sratom_to_turtle(
+		sratom, &s, &p, obj->type, obj->size, LV2_ATOM_BODY(obj));
+	printf("# Atom => Turtle\n\n%s", outstr);
+
+	LV2_Atom* parsed = sratom_from_turtle(sratom, &s, &p, outstr);
+
+	char* instr = sratom_to_turtle(
+		sratom, &s, &p, parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
+	printf("# Turtle => Atom\n\n%s", instr);
 
 	printf("All tests passed.\n");
 	sratom_free(sratom);

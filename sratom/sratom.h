@@ -24,7 +24,9 @@
 #include <stdint.h>
 
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
 #include "serd/serd.h"
+#include "sord/sord.h"
 
 #ifdef SRATOM_SHARED
 #    ifdef _WIN32
@@ -75,16 +77,30 @@ sratom_free(Sratom* sratom);
 
 /**
    Write an Atom to RDF.
+   The resulting serialised atom is written to @p writer.
 */
 SRATOM_API
 void
 sratom_write(Sratom*         sratom,
+             SerdWriter*     writer,
              uint32_t        flags,
              const SerdNode* subject,
              const SerdNode* predicate,
-             uint32_t        type_urid,
+             uint32_t        type,
              uint32_t        size,
              const void*     body);
+
+/**
+   Read an Atom from RDF.
+   The resulting atom will be written to @p forge.
+*/
+SRATOM_API
+void
+sratom_read(Sratom*         sratom,
+            LV2_Atom_Forge* forge,
+            SordWorld*      world,
+            SordModel*      model,
+            const SordNode* node);
 
 /**
    Serialise an Atom to a Turtle string.
@@ -95,9 +111,20 @@ char*
 sratom_to_turtle(Sratom*         sratom,
                  const SerdNode* subject,
                  const SerdNode* predicate,
-                 uint32_t        type_urid,
+                 uint32_t        type,
                  uint32_t        size,
                  const void*     body);
+
+/**
+   Read an Atom from a Turtle string.
+   The returned atom must be free()'d by the caller.
+*/
+SRATOM_API
+LV2_Atom*
+sratom_from_turtle(Sratom*         sratom,
+                   const SerdNode* subject,
+                   const SerdNode* predicate,
+                   const char*     str);
 
 /**
    @}
