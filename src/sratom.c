@@ -49,6 +49,7 @@ struct SratomImpl {
 		SordNode* rdf_rest;
 		SordNode* rdf_type;
 		SordNode* rdf_value;
+		SordNode* xsd_base64Binary;
 	} nodes;
 };
 
@@ -327,7 +328,14 @@ sratom_write(Sratom*         sratom,
 		list_end(writer, &flags, &id, &p);
 		serd_writer_end_anon(writer, &id);
 	} else {
-		object = serd_node_from_string(SERD_LITERAL, USTR("(unknown)"));
+		gensym(&id, 'b', sratom->next_id++);
+		start_object(sratom, writer, flags, subject, predicate, &id, type);
+		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
+		SerdNode o = serd_node_new_blob(body, size, true);
+		datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
+		serd_writer_write_statement(writer, flags, NULL,
+		                            &id, &p, &o, &datatype, NULL);
+		serd_writer_end_anon(writer, &id);
 	}
 
 	if (object.buf) {
@@ -444,7 +452,8 @@ sratom_read_internal(Sratom*         sratom,
                      ReadMode        mode)
 {
 	LV2_URID_Map* map = sratom->map;
-	const char*   str = (const char*)sord_node_get_string(node);
+	size_t        len = 0;
+	const char*   str = (const char*)sord_node_get_string_counted(node, &len);
 	if (sord_node_get_type(node) == SORD_LITERAL) {
 		char*       endptr;
 		SordNode*   datatype = sord_node_get_datatype(node);
@@ -462,7 +471,6 @@ sratom_read_internal(Sratom*         sratom,
 			} else if (!strcmp(type_uri, (char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
 			} else if (!strcmp(type_uri, (char*)NS_MIDI "MidiEvent")) {
-				const size_t len = strlen(str);
 				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
 				for (const char* s = str; s < str + len; s += 2) {
 					unsigned num;
@@ -474,7 +482,7 @@ sratom_read_internal(Sratom*         sratom,
 				lv2_atom_forge_pad(forge, len / 2);
 			} else {
 				lv2_atom_forge_literal(
-					forge, (const uint8_t*)str, strlen(str),
+					forge, (const uint8_t*)str, len,
 					sratom->map->map(sratom->map->handle, type_uri),
 					0);
 			}
@@ -484,20 +492,21 @@ sratom_read_internal(Sratom*         sratom,
 			char*        lang_uri = calloc(lang_len + 1, 1);
 			snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
 			lv2_atom_forge_literal(
-				forge, (const uint8_t*)str, strlen(str), 0,
+				forge, (const uint8_t*)str, len, 0,
 				sratom->map->map(sratom->map->handle, lang_uri));
 			free(lang_uri);
 		} else {
-			lv2_atom_forge_string(forge, (const uint8_t*)str, strlen(str));
+			lv2_atom_forge_string(forge, (const uint8_t*)str, len);
 		}
 	} else if (sord_node_get_type(node) == SORD_URI) {
 		if (serd_uri_string_has_scheme((const uint8_t*)str)) {
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));
 		} else {
-			lv2_atom_forge_uri(forge, (const uint8_t*)str, strlen(str));
+			lv2_atom_forge_uri(forge, (const uint8_t*)str, len);
 		}
 	} else {
-		const SordNode* type = get_object(model, node, sratom->nodes.rdf_type);
+		const SordNode* type  = get_object(model, node, sratom->nodes.rdf_type);
+		const SordNode* value = get_object(model, node, sratom->nodes.rdf_value);
 
 		const uint8_t* type_uri  = NULL;
 		uint32_t       type_urid = 0;
@@ -510,8 +519,6 @@ sratom_read_internal(Sratom*         sratom,
 		if (mode == MODE_SEQUENCE) {
 			const SordNode* frame_time = get_object(
 				model, node, sratom->nodes.atom_frameTime);
-			const SordNode* value = get_object(
-				model, node, sratom->nodes.rdf_value);
 			const char* frame_time_str = frame_time
 				? (const char*)sord_node_get_string(frame_time)
 				: "";
@@ -519,19 +526,13 @@ sratom_read_internal(Sratom*         sratom,
 			sratom_read_internal(sratom, forge, world, model, value, MODE_NORMAL);
 		} else if (type_urid == sratom->forge.Tuple) {
 			lv2_atom_forge_tuple(forge, &frame);
-			const SordNode* value = get_object(
-				model, node, sratom->nodes.rdf_value);
 			read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
 		} else if (type_urid == sratom->forge.Sequence) {
 			lv2_atom_forge_sequence_head(forge, &frame, 0);
-			const SordNode* value = get_object(
-				model, node, sratom->nodes.rdf_value);
 			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
 		} else if (type_urid == sratom->forge.Vector) {
 			const SordNode* child_type_node = get_object(
 				model, node, sratom->nodes.atom_childType);
-			const SordNode* value = get_object(
-				model, node, sratom->nodes.rdf_value);
 			uint32_t child_type = map->map(
 				map->handle, (const char*)sord_node_get_string(child_type_node));
 			uint32_t child_size = atom_size(sratom, child_type);
@@ -539,6 +540,14 @@ sratom_read_internal(Sratom*         sratom,
 				lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
 				read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
 			}
+		} else if (value && sord_node_equals(sord_node_get_datatype(value),
+		                                     sratom->nodes.xsd_base64Binary)) {
+			size_t         vlen = 0;
+			const uint8_t* vstr = sord_node_get_string_counted(value, &vlen);
+			size_t         size = 0;
+			void*          body = serd_base64_decode(vstr, vlen, &size);
+			lv2_atom_forge_atom(forge, size, type_urid);
+			lv2_atom_forge_write(forge, body, size);
 		} else {
 			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
 			SordQuad match;
@@ -573,16 +582,18 @@ sratom_read(Sratom*         sratom,
             SordModel*      model,
             const SordNode* node)
 {
-	sratom->nodes.atom_childType = sord_new_uri(world, NS_ATOM "childType");
-	sratom->nodes.atom_frameTime = sord_new_uri(world, NS_ATOM "frameTime");
-	sratom->nodes.rdf_first      = sord_new_uri(world, NS_RDF "first");
-	sratom->nodes.rdf_rest       = sord_new_uri(world, NS_RDF "rest");
-	sratom->nodes.rdf_type       = sord_new_uri(world, NS_RDF "type");
-	sratom->nodes.rdf_value      = sord_new_uri(world, NS_RDF "value");
+	sratom->nodes.atom_childType   = sord_new_uri(world, NS_ATOM "childType");
+	sratom->nodes.atom_frameTime   = sord_new_uri(world, NS_ATOM "frameTime");
+	sratom->nodes.rdf_first        = sord_new_uri(world, NS_RDF "first");
+	sratom->nodes.rdf_rest         = sord_new_uri(world, NS_RDF "rest");
+	sratom->nodes.rdf_type         = sord_new_uri(world, NS_RDF "type");
+	sratom->nodes.rdf_value        = sord_new_uri(world, NS_RDF "value");
+	sratom->nodes.xsd_base64Binary = sord_new_uri(world, NS_XSD "base64Binary");
 
 	sratom->next_id = 1;
 	sratom_read_internal(sratom, forge, world, model, node, MODE_NORMAL);
 
+	sord_node_free(world, sratom->nodes.xsd_base64Binary);
 	sord_node_free(world, sratom->nodes.rdf_value);
 	sord_node_free(world, sratom->nodes.rdf_type);
 	sord_node_free(world, sratom->nodes.rdf_rest);
