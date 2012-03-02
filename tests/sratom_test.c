@@ -138,7 +138,7 @@ main()
 	const uint8_t* pstr     = (const uint8_t*)"/foo/bar";
 	const size_t   pstr_len = strlen((const char*)pstr);
 	lv2_atom_forge_property_head(&forge, eg_path, 0);
-	lv2_atom_forge_uri(&forge, pstr, pstr_len);
+	lv2_atom_forge_path(&forge, pstr, pstr_len);
 
 	// eg_uri = (URI)"a/relative/uri"
 	const uint8_t* ustr     = (const uint8_t*)"a/relative/uri";

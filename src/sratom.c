@@ -470,6 +470,8 @@ read_node(Sratom*         sratom,
 				lv2_atom_forge_double(forge, serd_strtod(str, &endptr));
 			} else if (!strcmp(type_uri, (char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
+			} else if (!strcmp(type_uri, (char*)NS_ATOM "Path")) {
+				lv2_atom_forge_path(forge, (const uint8_t*)str, len);
 			} else if (!strcmp(type_uri, (char*)NS_MIDI "MidiEvent")) {
 				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
 				for (const char* s = str; s < str + len; s += 2) {
