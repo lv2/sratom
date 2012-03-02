@@ -70,7 +70,7 @@ sratom_new(LV2_URID_Map*   map,
 	sratom->map            = map;
 	sratom->unmap          = unmap;
 	sratom->atom_Event     = map->map(map->handle,
-	                                  (const char*)NS_ATOM "#Event");
+	                                  (const char*)NS_ATOM "Event");
 	sratom->midi_MidiEvent = map->map(map->handle,
 	                                  (const char*)NS_MIDI "MidiEvent");
 	sratom->next_id        = 0;
