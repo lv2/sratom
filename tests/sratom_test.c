@@ -226,10 +226,15 @@ main()
 	}
 
 	printf("All tests passed.\n");
+
+	free(parsed);
+	free(instr);
+	free(outstr);
 	sratom_free(sratom);
 	for (uint32_t i = 0; i < n_uris; ++i) {
 		free(uris[i]);
 	}
 	free(uris);
+
 	return 0;
 }

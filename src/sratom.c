@@ -544,9 +544,8 @@ sratom_read_internal(Sratom*         sratom,
 			SordQuad match;
 
 			SordQuad q2 = { node, 0, 0, 0 };
-			for (SordIter* i = sord_find(model, q2);
-			     !sord_iter_end(i);
-			     sord_iter_next(i)) {
+			SordIter* i = sord_find(model, q2);
+			for (;!sord_iter_end(i); sord_iter_next(i)) {
 				sord_iter_get(i, match);
 				const SordNode* p      = match[SORD_PREDICATE];
 				const char*     p_uri  = (const char*)sord_node_get_string(p);
@@ -558,6 +557,7 @@ sratom_read_internal(Sratom*         sratom,
 					                     match[SORD_OBJECT], MODE_NORMAL);
 				}
 			}
+			sord_iter_free(i);
 		}
 		if (frame.ref) {
 			lv2_atom_forge_pop(forge, &frame);
@@ -638,6 +638,7 @@ sratom_from_turtle(Sratom*         sratom,
 		} else {
 			fprintf(stderr, "Failed to find node\n");
 		}
+		sord_iter_free(i);
 	} else {
 		fprintf(stderr, "Failed to read Turtle\n");
 	}
