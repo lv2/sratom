@@ -43,6 +43,7 @@ struct SratomImpl {
 	LV2_URID        midi_MidiEvent;
 	unsigned        next_id;
 	struct {
+		SordNode* atom_childType;
 		SordNode* atom_frameTime;
 		SordNode* rdf_first;
 		SordNode* rdf_rest;
@@ -113,8 +114,8 @@ list_append(Sratom*     sratom,
             SerdNode*   s,
             SerdNode*   p,
             SerdNode*   node,
-            uint32_t    type,
             uint32_t    size,
+            uint32_t    type,
             void*       body)
 {
 	// Generate a list node
@@ -272,7 +273,7 @@ sratom_write(Sratom*         sratom,
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_TUPLE_BODY_FOREACH(body, size, i) {
 			list_append(sratom, writer, &flags, &id, &p, &node,
-			            i->type, i->size, LV2_ATOM_BODY(i));
+			            i->size, i->type, LV2_ATOM_BODY(i));
 		}
 		list_end(writer, &flags, &id, &p);
 		serd_writer_end_anon(writer, &id);
@@ -280,15 +281,18 @@ sratom_write(Sratom*         sratom,
 		const LV2_Atom_Vector_Body* vec  = (const LV2_Atom_Vector_Body*)body;
 		gensym(&id, 'v', sratom->next_id++);
 		start_object(sratom, writer, flags, subject, predicate, &id, type);
-		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
-		const uint32_t content_size = size - sizeof(LV2_Atom_Vector_Body);
-		const uint32_t elem_size    = content_size / vec->elem_count;
+		SerdNode p = serd_node_from_string(SERD_URI, (const uint8_t*)LV2_ATOM__childType);
+		SerdNode child_type = serd_node_from_string(
+			SERD_URI, (const uint8_t*)unmap->unmap(unmap->handle, vec->child_type));
+		serd_writer_write_statement(
+			writer, flags, NULL, &id, &p, &child_type, NULL, NULL);
+		p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
 		for (char* i = (char*)(vec + 1);
 		     i < (char*)vec + size;
-		     i += elem_size) {
+		     i += vec->child_size) {
 			list_append(sratom, writer, &flags, &id, &p, &node,
-			            vec->elem_type, elem_size, i);
+			            vec->child_size, vec->child_type, i);
 		}
 		list_end(writer, &flags, &id, &p);
 		serd_writer_end_anon(writer, &id);
@@ -316,8 +320,8 @@ sratom_write(Sratom*         sratom,
 		LV2_SEQUENCE_BODY_FOREACH(seq, size, i) {
 			LV2_Atom_Event* ev = lv2_sequence_iter_get(i);
 			list_append(sratom, writer, &flags, &id, &p, &node,
-			            sratom->atom_Event,
 			            sizeof(LV2_Atom_Event) + ev->body.size,
+			            sratom->atom_Event,
 			            ev);
 		}
 		list_end(writer, &flags, &id, &p);
@@ -411,6 +415,26 @@ read_list_value(Sratom*         sratom,
 	}
 }
 
+static uint32_t
+atom_size(Sratom* sratom, uint32_t type_urid)
+{
+	if (type_urid == sratom->forge.Int32) {
+		return sizeof(int32_t);
+	} else if (type_urid == sratom->forge.Int64) {
+		return sizeof(int64_t);
+	} else if (type_urid == sratom->forge.Float) {
+		return sizeof(float);
+	} else if (type_urid == sratom->forge.Double) {
+		return sizeof(double);
+	} else if (type_urid == sratom->forge.Bool) {
+		return sizeof(int32_t);
+	} else if (type_urid == sratom->forge.URID) {
+		return sizeof(uint32_t);
+	} else {
+		return 0;
+	}
+}
+
 static void
 sratom_read_internal(Sratom*         sratom,
                      LV2_Atom_Forge* forge,
@@ -488,6 +512,18 @@ sratom_read_internal(Sratom*         sratom,
 			const SordNode* value = get_object(
 				model, node, sratom->nodes.rdf_value);
 			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
+		} else if (type_urid == sratom->forge.Vector) {
+			const SordNode* child_type_node = get_object(
+				model, node, sratom->nodes.atom_childType);
+			const SordNode* value = get_object(
+				model, node, sratom->nodes.rdf_value);
+			uint32_t child_type = map->map(
+				map->handle, (const char*)sord_node_get_string(child_type_node));
+			uint32_t child_size = atom_size(sratom, child_type);
+			if (child_size > 0) {
+				lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
+				read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
+			}
 		} else {
 			lv2_atom_forge_blank(forge, &frame, 1, type_urid);
 
@@ -519,6 +555,7 @@ sratom_read(Sratom*         sratom,
             SordModel*      model,
             const SordNode* node)
 {
+	sratom->nodes.atom_childType = sord_new_uri(world, NS_ATOM "childType");
 	sratom->nodes.atom_frameTime = sord_new_uri(world, NS_ATOM "frameTime");
 	sratom->nodes.rdf_first      = sord_new_uri(world, NS_RDF "first");
 	sratom->nodes.rdf_rest       = sord_new_uri(world, NS_RDF "rest");
@@ -532,6 +569,7 @@ sratom_read(Sratom*         sratom,
 	sord_node_free(world, sratom->nodes.rdf_rest);
 	sord_node_free(world, sratom->nodes.rdf_first);
 	sord_node_free(world, sratom->nodes.atom_frameTime);
+	sord_node_free(world, sratom->nodes.atom_childType);
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
 }
 
@@ -546,11 +584,11 @@ forge_sink(LV2_Atom_Forge_Sink_Handle handle,
 	return ref;
 }
 
-static void*
+static LV2_Atom*
 forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
 {
 	String* string = (String*)handle;
-	return string->buf + ref;
+	return (LV2_Atom*)(string->buf + ref);
 }
 
 SRATOM_API
