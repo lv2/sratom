@@ -335,6 +335,7 @@ sratom_write(Sratom*         sratom,
 		serd_writer_write_statement(writer, flags, NULL,
 		                            &id, &p, &o, &datatype, NULL);
 		serd_writer_end_anon(writer, &id);
+		serd_node_free(&o);
 	}
 
 	if (object.buf) {
@@ -547,6 +548,7 @@ read_node(Sratom*         sratom,
 			void*          body = serd_base64_decode(vstr, vlen, &size);
 			lv2_atom_forge_atom(forge, size, type_urid);
 			lv2_atom_forge_write(forge, body, size);
+			free(body);
 		} else {
 			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
 			SordQuad match;
