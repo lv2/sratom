@@ -443,7 +443,8 @@ sratom_read_internal(Sratom*         sratom,
                      const SordNode* node,
                      ReadMode        mode)
 {
-	const char* str = (const char*)sord_node_get_string(node);
+	LV2_URID_Map* map = sratom->map;
+	const char*   str = (const char*)sord_node_get_string(node);
 	if (sord_node_get_type(node) == SORD_LITERAL) {
 		char*       endptr;
 		SordNode*   datatype = sord_node_get_datatype(node);
@@ -457,9 +458,20 @@ sratom_read_internal(Sratom*         sratom,
 			} else if (!strcmp(type_uri, (char*)NS_XSD "float")) {
 				lv2_atom_forge_float(forge, serd_strtod(str, &endptr));
 			} else if (!strcmp(type_uri, (char*)NS_XSD "double")) {
-				lv2_atom_forge_float(forge, serd_strtod(str, &endptr));
+				lv2_atom_forge_double(forge, serd_strtod(str, &endptr));
 			} else if (!strcmp(type_uri, (char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
+			} else if (!strcmp(type_uri, (char*)NS_MIDI "MidiEvent")) {
+				const size_t len = strlen(str);
+				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
+				for (const char* s = str; s < str + len; s += 2) {
+					unsigned num;
+					sscanf(s, "%2X", &num);
+					assert(num < UINT8_MAX);
+					const uint8_t c = num;
+					lv2_atom_forge_raw(forge, &c, 1);
+				}
+				lv2_atom_forge_pad(forge, len / 2);
 			} else {
 				lv2_atom_forge_literal(
 					forge, (const uint8_t*)str, strlen(str),
@@ -479,9 +491,12 @@ sratom_read_internal(Sratom*         sratom,
 			lv2_atom_forge_string(forge, (const uint8_t*)str, strlen(str));
 		}
 	} else if (sord_node_get_type(node) == SORD_URI) {
-		lv2_atom_forge_uri(forge, (const uint8_t*)str, strlen(str));
+		if (serd_uri_string_has_scheme((const uint8_t*)str)) {
+			lv2_atom_forge_urid(forge, map->map(map->handle, str));
+		} else {
+			lv2_atom_forge_uri(forge, (const uint8_t*)str, strlen(str));
+		}
 	} else {
-		LV2_URID_Map*   map  = sratom->map;
 		const SordNode* type = get_object(model, node, sratom->nodes.rdf_type);
 
 		const uint8_t* type_uri  = NULL;
@@ -525,20 +540,23 @@ sratom_read_internal(Sratom*         sratom,
 				read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
 			}
 		} else {
-			lv2_atom_forge_blank(forge, &frame, 1, type_urid);
+			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
+			SordQuad match;
 
-			SordQuad q = { node, 0, 0, 0 };
-			for (SordIter* i = sord_find(model, q);
+			SordQuad q2 = { node, 0, 0, 0 };
+			for (SordIter* i = sord_find(model, q2);
 			     !sord_iter_end(i);
 			     sord_iter_next(i)) {
-				SordQuad quad;
-				sord_iter_get(i, quad);
-				const SordNode* key = quad[SORD_PREDICATE];
-				lv2_atom_forge_property_head(
-					forge,
-					map->map(map->handle, (const char*)sord_node_get_string(key)),
-					0);
-				sratom_read_internal(sratom, forge, world, model, quad[SORD_OBJECT], MODE_NORMAL);
+				sord_iter_get(i, match);
+				const SordNode* p      = match[SORD_PREDICATE];
+				const char*     p_uri  = (const char*)sord_node_get_string(p);
+				uint32_t        p_urid = map->map(map->handle, p_uri);
+				if (!sord_node_equals(p, sratom->nodes.rdf_type)) {
+					// TODO: This will lose multiple rdf:type properties
+					lv2_atom_forge_property_head(forge, p_urid, 0);
+					sratom_read_internal(sratom, forge, world, model,
+					                     match[SORD_OBJECT], MODE_NORMAL);
+				}
 			}
 		}
 		if (frame.ref) {
@@ -562,6 +580,7 @@ sratom_read(Sratom*         sratom,
 	sratom->nodes.rdf_type       = sord_new_uri(world, NS_RDF "type");
 	sratom->nodes.rdf_value      = sord_new_uri(world, NS_RDF "value");
 
+	sratom->next_id = 1;
 	sratom_read_internal(sratom, forge, world, model, node, MODE_NORMAL);
 
 	sord_node_free(world, sratom->nodes.rdf_value);

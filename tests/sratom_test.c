@@ -85,22 +85,22 @@ main()
 	Sratom* sratom = sratom_new(&map, &unmap);
 
 	LV2_URID eg_Object  = urid_map(NULL, "http://example.org/Object");
-	LV2_URID eg_one     = urid_map(NULL, "http://example.org/one");
-	LV2_URID eg_two     = urid_map(NULL, "http://example.org/two");
-	LV2_URID eg_three   = urid_map(NULL, "http://example.org/three");
-	LV2_URID eg_four    = urid_map(NULL, "http://example.org/four");
-	LV2_URID eg_true    = urid_map(NULL, "http://example.org/true");
-	LV2_URID eg_false   = urid_map(NULL, "http://example.org/false");
-	LV2_URID eg_path    = urid_map(NULL, "http://example.org/path");
-	LV2_URID eg_uri     = urid_map(NULL, "http://example.org/uri");
-	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/urid");
-	LV2_URID eg_string  = urid_map(NULL, "http://example.org/string");
-	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/langlit");
-	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/typelit");
-	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/blank");
-	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/tuple");
-	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/vector");
-	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/seq");
+	LV2_URID eg_one     = urid_map(NULL, "http://example.org/a-one");
+	LV2_URID eg_two     = urid_map(NULL, "http://example.org/b-two");
+	LV2_URID eg_three   = urid_map(NULL, "http://example.org/c-three");
+	LV2_URID eg_four    = urid_map(NULL, "http://example.org/d-four");
+	LV2_URID eg_true    = urid_map(NULL, "http://example.org/e-true");
+	LV2_URID eg_false   = urid_map(NULL, "http://example.org/f-false");
+	LV2_URID eg_path    = urid_map(NULL, "http://example.org/g-path");
+	LV2_URID eg_uri     = urid_map(NULL, "http://example.org/h-uri");
+	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/i-urid");
+	LV2_URID eg_string  = urid_map(NULL, "http://example.org/j-string");
+	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/k-langlit");
+	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/l-typelit");
+	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/m-blank");
+	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/n-tuple");
+	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/o-vector");
+	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/p-seq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -139,8 +139,8 @@ main()
 	lv2_atom_forge_property_head(&forge, eg_path, 0);
 	lv2_atom_forge_uri(&forge, pstr, pstr_len);
 
-	// eg_uri = (URI)"http://example.org/value"
-	const uint8_t* ustr     = (const uint8_t*)"http://example.org/value";
+	// eg_uri = (URI)"a/relative/uri"
+	const uint8_t* ustr     = (const uint8_t*)"a/relative/uri";
 	const size_t   ustr_len = strlen((const char*)ustr);
 	lv2_atom_forge_property_head(&forge, eg_uri, 0);
 	lv2_atom_forge_uri(&forge, ustr, ustr_len);
@@ -213,10 +213,17 @@ main()
 	printf("# Atom => Turtle\n\n%s", outstr);
 
 	LV2_Atom* parsed = sratom_from_turtle(sratom, &s, &p, outstr);
+	if (!lv2_atom_equals(obj, parsed)) {
+		return test_fail("Parsed atom does not match original\n");
+	}
 
 	char* instr = sratom_to_turtle(
 		sratom, &s, &p, parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
 	printf("# Turtle => Atom\n\n%s", instr);
+
+	if (strcmp(outstr, instr)) {
+		return test_fail("Re-serialised string differs from original\n");
+	}
 
 	printf("All tests passed.\n");
 	sratom_free(sratom);
