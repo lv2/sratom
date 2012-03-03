@@ -82,7 +82,7 @@ main()
 	LV2_Atom_Forge forge;
 	lv2_atom_forge_init(&forge, &map);
 
-	Sratom* sratom = sratom_new(&map, &unmap);
+	Sratom* sratom = sratom_new(&map);
 
 	LV2_URID eg_Object  = urid_map(NULL, "http://example.org/Object");
 	LV2_URID eg_one     = urid_map(NULL, "http://example.org/a-one");
@@ -217,7 +217,7 @@ main()
 	SerdNode s      = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
 	SerdNode p      = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
 	char*    outstr = sratom_to_turtle(
-		sratom, &s, &p, obj->type, obj->size, LV2_ATOM_BODY(obj));
+		sratom, &unmap, &s, &p, obj->type, obj->size, LV2_ATOM_BODY(obj));
 	printf("# Atom => Turtle\n\n%s", outstr);
 
 	LV2_Atom* parsed = sratom_from_turtle(sratom, &s, &p, outstr);
@@ -226,7 +226,7 @@ main()
 	}
 
 	char* instr = sratom_to_turtle(
-		sratom, &s, &p, parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
+		sratom, &unmap, &s, &p, parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
 	printf("# Turtle => Atom\n\n%s", instr);
 
 	if (strcmp(outstr, instr)) {

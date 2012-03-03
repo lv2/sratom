@@ -37,7 +37,6 @@ typedef enum {
 
 struct SratomImpl {
 	LV2_URID_Map*   map;
-	LV2_URID_Unmap* unmap;
 	LV2_Atom_Forge  forge;
 	LV2_URID        atom_Event;
 	LV2_URID        midi_MidiEvent;
@@ -63,12 +62,10 @@ read_node(Sratom*         sratom,
 
 SRATOM_API
 Sratom*
-sratom_new(LV2_URID_Map*   map,
-           LV2_URID_Unmap* unmap)
+sratom_new(LV2_URID_Map* map)
 {
 	Sratom* sratom = (Sratom*)malloc(sizeof(Sratom));
 	sratom->map            = map;
-	sratom->unmap          = unmap;
 	sratom->atom_Event     = map->map(map->handle,
 	                                  (const char*)NS_ATOM "Event");
 	sratom->midi_MidiEvent = map->map(map->handle,
@@ -86,21 +83,6 @@ sratom_free(Sratom* sratom)
 	free(sratom);
 }
 
-typedef struct {
-	char*  buf;
-	size_t len;
-} String;
-
-static size_t
-string_sink(const void* buf, size_t len, void* stream)
-{
-	String* str = (String*)stream;
-	str->buf = realloc(str->buf, str->len + len);
-	memcpy(str->buf + str->len, buf, len);
-	str->len += len;
-	return len;
-}
-
 static void
 gensym(SerdNode* out, char c, unsigned num)
 {
@@ -109,15 +91,16 @@ gensym(SerdNode* out, char c, unsigned num)
 }
 
 static void
-list_append(Sratom*     sratom,
-            SerdWriter* writer,
-            unsigned*   flags,
-            SerdNode*   s,
-            SerdNode*   p,
-            SerdNode*   node,
-            uint32_t    size,
-            uint32_t    type,
-            void*       body)
+list_append(Sratom*         sratom,
+            LV2_URID_Unmap* unmap,
+            SerdWriter*     writer,
+            unsigned*       flags,
+            SerdNode*       s,
+            SerdNode*       p,
+            SerdNode*       node,
+            uint32_t        size,
+            uint32_t        type,
+            void*           body)
 {
 	// Generate a list node
 	gensym(node, 'l', sratom->next_id);
@@ -126,7 +109,7 @@ list_append(Sratom*     sratom,
 	// _:node rdf:first value
 	*flags = SERD_LIST_CONT;
 	*p = serd_node_from_string(SERD_URI, NS_RDF "first");
-	sratom_write(sratom, writer, SERD_LIST_CONT, node, p, type, size, body);
+	sratom_write(sratom, unmap, writer, SERD_LIST_CONT, node, p, type, size, body);
 
 	// Set subject to node and predicate to rdf:rest for next time
 	gensym(node, 'l', ++sratom->next_id);
@@ -166,6 +149,7 @@ start_object(Sratom*         sratom,
 SRATOM_API
 void
 sratom_write(Sratom*         sratom,
+             LV2_URID_Unmap* unmap,
              SerdWriter*     writer,
              uint32_t        flags,
              const SerdNode* subject,
@@ -174,7 +158,6 @@ sratom_write(Sratom*         sratom,
              uint32_t        size,
              const void*     body)
 {
-	LV2_URID_Unmap*   unmap       = sratom->unmap;
 	const char* const type        = unmap->unmap(unmap->handle, type_urid);
 	uint8_t           idbuf[12]   = "b0000000000";
 	SerdNode          id          = serd_node_from_string(SERD_BLANK, idbuf);
@@ -262,7 +245,7 @@ sratom_write(Sratom*         sratom,
 		serd_node_free(&time);
 
 		p = serd_node_from_string(SERD_URI, NS_RDF "value");
-		sratom_write(sratom, writer, SERD_ANON_CONT, &id, &p,
+		sratom_write(sratom, unmap, writer, SERD_ANON_CONT, &id, &p,
 		             ev->body.type, ev->body.size,
 		             LV2_ATOM_BODY(&ev->body));
 		serd_writer_end_anon(writer, &id);
@@ -272,7 +255,7 @@ sratom_write(Sratom*         sratom,
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_TUPLE_BODY_FOREACH(body, size, i) {
-			list_append(sratom, writer, &flags, &id, &p, &node,
+			list_append(sratom, unmap, writer, &flags, &id, &p, &node,
 			            i->size, i->type, LV2_ATOM_BODY(i));
 		}
 		list_end(writer, &flags, &id, &p);
@@ -291,7 +274,7 @@ sratom_write(Sratom*         sratom,
 		for (char* i = (char*)(vec + 1);
 		     i < (char*)vec + size;
 		     i += vec->child_size) {
-			list_append(sratom, writer, &flags, &id, &p, &node,
+			list_append(sratom, unmap, writer, &flags, &id, &p, &node,
 			            vec->child_size, vec->child_type, i);
 		}
 		list_end(writer, &flags, &id, &p);
@@ -306,7 +289,8 @@ sratom_write(Sratom*         sratom,
 			const LV2_Atom_Property_Body* prop = lv2_object_iter_get(i);
 			const char* const key = unmap->unmap(unmap->handle, prop->key);
 			SerdNode pred = serd_node_from_string(SERD_URI, USTR(key));
-			sratom_write(sratom, writer, flags|SERD_ANON_CONT, &id, &pred,
+			sratom_write(sratom, unmap, writer,
+			             flags|SERD_ANON_CONT, &id, &pred,
 			             prop->value.type, prop->value.size,
 			             LV2_ATOM_BODY(&prop->value));
 		}
@@ -319,7 +303,7 @@ sratom_write(Sratom*         sratom,
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_SEQUENCE_BODY_FOREACH(seq, size, i) {
 			LV2_Atom_Event* ev = lv2_sequence_iter_get(i);
-			list_append(sratom, writer, &flags, &id, &p, &node,
+			list_append(sratom, unmap, writer, &flags, &id, &p, &node,
 			            sizeof(LV2_Atom_Event) + ev->body.size,
 			            sratom->atom_Event,
 			            ev);
@@ -352,15 +336,16 @@ sratom_write(Sratom*         sratom,
 SRATOM_API
 char*
 sratom_to_turtle(Sratom*         sratom,
+                 LV2_URID_Unmap* unmap,
                  const SerdNode* subject,
                  const SerdNode* predicate,
                  uint32_t        type,
                  uint32_t        size,
                  const void*     body)
 {
-	SerdURI  base_uri = SERD_URI_NULL;
-	SerdEnv* env      = serd_env_new(NULL);
-	String   str      = { NULL, 0 };
+	SerdURI   base_uri = SERD_URI_NULL;
+	SerdEnv*  env      = serd_env_new(NULL);
+	SerdChunk str      = { NULL, 0 };
 
 	serd_env_set_prefix_from_strings(env, USTR("midi"), NS_MIDI);
 	serd_env_set_prefix_from_strings(env, USTR("atom"),
@@ -373,21 +358,20 @@ sratom_to_turtle(Sratom*         sratom,
 	SerdWriter* writer = serd_writer_new(
 		SERD_TURTLE,
 		SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED,
-		env, &base_uri, string_sink, &str);
+		env, &base_uri, serd_chunk_sink, &str);
 
 	// Write @prefix directives
 	serd_env_foreach(env,
 	                 (SerdPrefixSink)serd_writer_set_prefix,
 	                 writer);
 
-	sratom_write(sratom, writer, SERD_EMPTY_S,
+	sratom_write(sratom, unmap, writer, SERD_EMPTY_S,
 	             subject, predicate, type, size, body);
 	serd_writer_finish(writer);
-	string_sink("", 1, &str);
 
 	serd_writer_free(writer);
 	serd_env_free(env);
-	return str.buf;
+	return (char*)serd_chunk_sink_finish(&str);
 }
 
 static const SordNode*
@@ -396,8 +380,8 @@ get_object(SordModel*      model,
            const SordNode* predicate)
 {
 	const SordNode* object = NULL;
-	SordQuad  q = { subject, predicate, 0, 0 };
-	SordIter* i = sord_find(model, q);
+	SordQuad        q      = { subject, predicate, 0, 0 };
+	SordIter*       i      = sord_find(model, q);
 	if (!sord_iter_end(i)) {
 		SordQuad quad;
 		sord_iter_get(i, quad);
@@ -606,22 +590,24 @@ sratom_read(Sratom*         sratom,
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
 }
 
-static LV2_Atom_Forge_Ref
-forge_sink(LV2_Atom_Forge_Sink_Handle handle,
-           const void*                buf,
-           uint32_t                   size)
+SRATOM_API
+LV2_Atom_Forge_Ref
+sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
+                  const void*                buf,
+                  uint32_t                   size)
 {
-	String*                  string = (String*)handle;
-	const LV2_Atom_Forge_Ref ref    = string->len;
-	string_sink(buf, size, string);
+	SerdChunk*               chunk = (SerdChunk*)handle;
+	const LV2_Atom_Forge_Ref ref   = chunk->len + 1;
+	serd_chunk_sink(buf, size, chunk);
 	return ref;
 }
 
-static LV2_Atom*
-forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
+SRATOM_API
+LV2_Atom*
+sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
 {
-	String* string = (String*)handle;
-	return (LV2_Atom*)(string->buf + ref);
+	SerdChunk* chunk = (SerdChunk*)handle;
+	return (LV2_Atom*)(chunk->buf + ref - 1);
 }
 
 SRATOM_API
@@ -631,8 +617,7 @@ sratom_from_turtle(Sratom*         sratom,
                    const SerdNode* predicate,
                    const char*     str)
 {
-	String out = { NULL, 0 };
-
+	SerdChunk   out           = { NULL, 0 };
 	SerdNode    base_uri_node = SERD_NODE_NULL;
 	SordWorld*  world         = sord_world_new();
 	SordModel*  model         = sord_new(world, SORD_SPO, false);
@@ -647,7 +632,8 @@ sratom_from_turtle(Sratom*         sratom,
 		if (!sord_iter_end(i)) {
 			SordQuad result;
 			sord_iter_get(i, result);
-			lv2_atom_forge_set_sink(&sratom->forge, forge_sink, forge_deref, &out);
+			lv2_atom_forge_set_sink(
+				&sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
 			sratom_read(sratom, &sratom->forge, world, model, result[SORD_OBJECT]);
 		} else {
 			fprintf(stderr, "Failed to find node\n");

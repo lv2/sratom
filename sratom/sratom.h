@@ -65,8 +65,7 @@ typedef struct SratomImpl Sratom;
 */
 SRATOM_API
 Sratom*
-sratom_new(LV2_URID_Map*   map,
-           LV2_URID_Unmap* unmap);
+sratom_new(LV2_URID_Map* map);
 
 /**
    Free an Atom serialisation.
@@ -82,6 +81,7 @@ sratom_free(Sratom* sratom);
 SRATOM_API
 void
 sratom_write(Sratom*         sratom,
+             LV2_URID_Unmap* unmap,
              SerdWriter*     writer,
              uint32_t        flags,
              const SerdNode* subject,
@@ -109,6 +109,7 @@ sratom_read(Sratom*         sratom,
 SRATOM_API
 char*
 sratom_to_turtle(Sratom*         sratom,
+                 LV2_URID_Unmap* unmap,
                  const SerdNode* subject,
                  const SerdNode* predicate,
                  uint32_t        type,
@@ -125,6 +126,24 @@ sratom_from_turtle(Sratom*         sratom,
                    const SerdNode* subject,
                    const SerdNode* predicate,
                    const char*     str);
+
+/**
+   A convenient resizing string sink for LV2_Atom_Forge.
+   The handle must point to an initialized SerdChunk.
+*/
+SRATOM_API
+LV2_Atom_Forge_Ref
+sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
+                  const void*                buf,
+                  uint32_t                   size);
+
+/**
+   The corresponding deref function for sratom_forge_sink.
+*/
+SRATOM_API
+LV2_Atom*
+sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle,
+                   LV2_Atom_Forge_Ref         ref);
 
 /**
    @}
