@@ -97,11 +97,12 @@ main()
 	LV2_URID eg_string  = urid_map(NULL, "http://example.org/j-string");
 	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/k-langlit");
 	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/l-typelit");
-	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/m-blob");
-	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/n-blank");
-	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/o-tuple");
-	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/p-vector");
-	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/q-seq");
+	LV2_URID eg_null    = urid_map(NULL, "http://example.org/m-null");
+	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/o-blob");
+	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/p-blank");
+	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/q-tuple");
+	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/r-vector");
+	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/s-seq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -166,6 +167,10 @@ main()
 	lv2_atom_forge_literal(
 		&forge, (const uint8_t*)"value", strlen("value"),
 		urid_map(NULL, "http://example.org/Type"), 0);
+
+	// eg_null = null
+	lv2_atom_forge_property_head(&forge, eg_null, 0);
+	lv2_atom_forge_atom(&forge, 0, 0);
 
 	// eg_blob = 0xDEADBEEF
 	uint32_t blob_type  = map.map(map.handle, "http://example.org/Blob");

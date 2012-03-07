@@ -168,7 +168,7 @@ sratom_write(Sratom*         sratom,
 	SerdNode          language    = SERD_NODE_NULL;
 	bool              new_node    = false;
 	if (type_urid == 0 && size == 0) {
-		object = serd_node_from_string(SERD_BLANK, USTR("null"));
+		object = serd_node_from_string(SERD_URI, USTR(NS_RDF "nil"));
 	} else if (type_urid == sratom->forge.String) {
 		object = serd_node_from_string(SERD_LITERAL, (const uint8_t*)body);
 	} else if (type_urid == sratom->forge.Literal) {
@@ -485,7 +485,9 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_string(forge, (const uint8_t*)str, len);
 		}
 	} else if (sord_node_get_type(node) == SORD_URI) {
-		if (serd_uri_string_has_scheme((const uint8_t*)str)) {
+		if (!strcmp(str, (const char*)NS_RDF "nil")) {
+			lv2_atom_forge_atom(forge, 0, 0);
+		} else if (serd_uri_string_has_scheme((const uint8_t*)str)) {
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));
 		} else {
 			lv2_atom_forge_uri(forge, (const uint8_t*)str, len);
