@@ -92,17 +92,16 @@ main()
 	LV2_URID eg_true    = urid_map(NULL, "http://example.org/e-true");
 	LV2_URID eg_false   = urid_map(NULL, "http://example.org/f-false");
 	LV2_URID eg_path    = urid_map(NULL, "http://example.org/g-path");
-	LV2_URID eg_uri     = urid_map(NULL, "http://example.org/h-uri");
-	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/i-urid");
-	LV2_URID eg_string  = urid_map(NULL, "http://example.org/j-string");
-	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/k-langlit");
-	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/l-typelit");
-	LV2_URID eg_null    = urid_map(NULL, "http://example.org/m-null");
-	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/o-blob");
-	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/p-blank");
-	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/q-tuple");
-	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/r-vector");
-	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/s-seq");
+	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/h-urid");
+	LV2_URID eg_string  = urid_map(NULL, "http://example.org/i-string");
+	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/j-langlit");
+	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/k-typelit");
+	LV2_URID eg_null    = urid_map(NULL, "http://example.org/l-null");
+	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/m-blob");
+	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/n-blank");
+	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/o-tuple");
+	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/p-vector");
+	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/q-seq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -135,17 +134,11 @@ main()
 	lv2_atom_forge_property_head(&forge, eg_false, 0);
 	lv2_atom_forge_bool(&forge, false);
 
-	// eg_path = (Path)"/foo/bar"
-	const uint8_t* pstr     = (const uint8_t*)"/foo/bar";
+	// eg_path = (Path)"/absolute/path"
+	const uint8_t* pstr     = (const uint8_t*)"/absolute/path";
 	const size_t   pstr_len = strlen((const char*)pstr);
 	lv2_atom_forge_property_head(&forge, eg_path, 0);
 	lv2_atom_forge_path(&forge, pstr, pstr_len);
-
-	// eg_uri = (URI)"a/relative/uri"
-	const uint8_t* ustr     = (const uint8_t*)"a/relative/uri";
-	const size_t   ustr_len = strlen((const char*)ustr);
-	lv2_atom_forge_property_head(&forge, eg_uri, 0);
-	lv2_atom_forge_uri(&forge, ustr, ustr_len);
 
 	// eg_urid = (URID)"http://example.org/value"
 	LV2_URID eg_value = urid_map(NULL, "http://example.org/value");
@@ -219,19 +212,23 @@ main()
 	lv2_atom_forge_pop(&forge, &seq_frame);
 	lv2_atom_forge_pop(&forge, &obj_frame);
 
+	const char* base_uri = "file:///tmp/base/";
+
 	SerdNode s      = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
 	SerdNode p      = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
 	char*    outstr = sratom_to_turtle(
-		sratom, &unmap, &s, &p, obj->type, obj->size, LV2_ATOM_BODY(obj));
+		sratom, &unmap, base_uri, &s, &p,
+		obj->type, obj->size, LV2_ATOM_BODY(obj));
 	printf("# Atom => Turtle\n\n%s", outstr);
 
-	LV2_Atom* parsed = sratom_from_turtle(sratom, &s, &p, outstr);
+	LV2_Atom* parsed = sratom_from_turtle(sratom, base_uri, &s, &p, outstr);
 	if (!lv2_atom_equals(obj, parsed)) {
 		return test_fail("Parsed atom does not match original\n");
 	}
 
 	char* instr = sratom_to_turtle(
-		sratom, &unmap, &s, &p, parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
+		sratom, &unmap, base_uri, &s, &p,
+		parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
 	printf("# Turtle => Atom\n\n%s", instr);
 
 	if (strcmp(outstr, instr)) {
