@@ -135,8 +135,8 @@ main()
 	lv2_atom_forge_bool(&forge, false);
 
 	// eg_path = (Path)"/absolute/path"
-	const uint8_t* pstr     = (const uint8_t*)"/absolute/path";
-	const size_t   pstr_len = strlen((const char*)pstr);
+	const char*  pstr     = "/absolute/path";
+	const size_t pstr_len = strlen(pstr);
 	lv2_atom_forge_property_head(&forge, eg_path, 0);
 	lv2_atom_forge_path(&forge, pstr, pstr_len);
 
@@ -147,18 +147,18 @@ main()
 
 	// eg_string = (String)"hello"
 	lv2_atom_forge_property_head(&forge, eg_string, 0);
-	lv2_atom_forge_string(&forge, (const uint8_t*)"hello", strlen("hello"));
+	lv2_atom_forge_string(&forge, "hello", strlen("hello"));
 
 	// eg_langlit = (Literal)"bonjour"@fr
 	lv2_atom_forge_property_head(&forge, eg_langlit, 0);
 	lv2_atom_forge_literal(
-		&forge, (const uint8_t*)"bonjour", strlen("bonjour"),
+		&forge, "bonjour", strlen("bonjour"),
 		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/fra"));
 
 	// eg_typelit = (Literal)"bonjour"@fr
 	lv2_atom_forge_property_head(&forge, eg_typelit, 0);
 	lv2_atom_forge_literal(
-		&forge, (const uint8_t*)"value", strlen("value"),
+		&forge, "value", strlen("value"),
 		urid_map(NULL, "http://example.org/Type"), 0);
 
 	// eg_null = null
@@ -182,14 +182,14 @@ main()
 	lv2_atom_forge_property_head(&forge, eg_tuple, 0);
 	LV2_Atom_Forge_Frame tuple_frame;
 	lv2_atom_forge_tuple(&forge, &tuple_frame);
-	lv2_atom_forge_string(&forge, (const uint8_t*)"foo", strlen("foo"));
+	lv2_atom_forge_string(&forge, "foo", strlen("foo"));
 	lv2_atom_forge_bool(&forge, true);
 	lv2_atom_forge_pop(&forge, &tuple_frame);
 
 	// eg_vector = (Vector<Int32>)1,2,3,4
 	lv2_atom_forge_property_head(&forge, eg_vector, 0);
 	int32_t elems[] = { 1, 2, 3, 4 };
-	lv2_atom_forge_vector(&forge, 4, forge.Int32, sizeof(int32_t), elems);
+	lv2_atom_forge_vector(&forge, 4, forge.Int, sizeof(int32_t), elems);
 
 	// eg_seq = (Sequence)1, 2
 	LV2_URID midi_midiEvent = map.map(map.handle, NS_MIDI "MidiEvent");
