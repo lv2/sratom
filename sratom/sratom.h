@@ -25,6 +25,7 @@
 
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 #include "lv2/lv2plug.in/ns/ext/atom/atom.h"
+#include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include "serd/serd.h"
 #include "sord/sord.h"
 
@@ -75,15 +76,31 @@ void
 sratom_free(Sratom* sratom);
 
 /**
+   Set the sink(s) where sratom will write its output.
+
+   This must be called before calling sratom_write().  If @p pretty_numbers is
+   true, numbers will be written as pretty Turtle literals, rather than string
+   literals with precise types.  The cost of this is the types might get
+   fudged on a round-trip to RDF and back.
+*/
+SRATOM_API
+void
+sratom_set_sink(Sratom*           sratom,
+                const char*       base_uri,
+                SerdStatementSink sink,
+                SerdEndSink       end_sink,
+                void*             handle,
+                bool              pretty_numbers);
+
+/**
    Write an Atom to RDF.
-   The resulting serialised atom is written to @p writer.
+   The serialised atom is written to the sink set by sratom_set_sink().
    @return 0 on success, or a non-zero error code otherwise.
 */
 SRATOM_API
 int
 sratom_write(Sratom*         sratom,
              LV2_URID_Unmap* unmap,
-             SerdWriter*     writer,
              uint32_t        flags,
              const SerdNode* subject,
              const SerdNode* predicate,
@@ -131,7 +148,7 @@ sratom_from_turtle(Sratom*         sratom,
                    const char*     str);
 
 /**
-   A convenient resizing string sink for LV2_Atom_Forge.
+   A convenient resizing sink for LV2_Atom_Forge.
    The handle must point to an initialized SerdChunk.
 */
 SRATOM_API

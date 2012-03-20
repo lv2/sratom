@@ -112,11 +112,11 @@ main()
 
 	// eg_one = (Int32)1
 	lv2_atom_forge_property_head(&forge, eg_one, 0);
-	lv2_atom_forge_int32(&forge, 1);
+	lv2_atom_forge_int(&forge, 1);
 
 	// eg_two = (Int64)2
 	lv2_atom_forge_property_head(&forge, eg_two, 0);
-	lv2_atom_forge_int64(&forge, 2);
+	lv2_atom_forge_long(&forge, 2);
 
 	// eg_three = (Float)3.0
 	lv2_atom_forge_property_head(&forge, eg_three, 0);
