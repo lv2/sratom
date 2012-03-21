@@ -79,7 +79,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION,
-                     ['SERD', 'SORD'],
+                     ['SERD', 'SORD', 'LV2_ATOM', 'LV2_URID'],
                      {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION})
 
     libflags = [ '-fvisibility=hidden' ]
