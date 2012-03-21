@@ -100,7 +100,7 @@ def build(bld):
               install_path    = '${LIBDIR}',
               cflags          = libflags + [ '-DSRATOM_SHARED',
                                              '-DSRATOM_INTERNAL' ])
-    autowaf.use_lib(bld, obj, 'SERD SORD')
+    autowaf.use_lib(bld, obj, 'SERD SORD LV2_ATOM LV2_URID')
 
     # Static library
     if bld.env['BUILD_STATIC']:
@@ -114,7 +114,7 @@ def build(bld):
                   vnum            = SRATOM_LIB_VERSION,
                   install_path    = '${LIBDIR}',
                   cflags          = ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD SORD')
+        autowaf.use_lib(bld, obj, 'SERD SORD  LV2_ATOM LV2_URID')
 
     if bld.env['BUILD_TESTS']:
         test_libs   = libs
@@ -132,7 +132,7 @@ def build(bld):
                   target       = 'sratom_profiled',
                   install_path = '',
                   cflags       = test_cflags + ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD SORD')
+        autowaf.use_lib(bld, obj, 'SERD SORD LV2_ATOM LV2_URID')
 
         # Unit test program
         obj = bld(features     = 'c cprogram',
