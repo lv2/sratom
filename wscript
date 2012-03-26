@@ -55,10 +55,7 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
-    autowaf.check_pkg(conf, 'lv2-lv2plug.in-ns-ext-atom',
-                      uselib_store='LV2_ATOM', mandatory=True)
-    autowaf.check_pkg(conf, 'lv2-lv2plug.in-ns-ext-urid',
-                      uselib_store='LV2_URID', mandatory=True)
+    autowaf.check_pkg(conf, 'lv2', atleast_version='0.1.0', uselib_store='LV2')
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.11.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
@@ -79,7 +76,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION,
-                     ['SERD', 'SORD', 'LV2_ATOM', 'LV2_URID'],
+                     ['SERD', 'SORD', 'LV2'],
                      {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION})
 
     libflags = [ '-fvisibility=hidden' ]
@@ -100,7 +97,7 @@ def build(bld):
               install_path    = '${LIBDIR}',
               cflags          = libflags + [ '-DSRATOM_SHARED',
                                              '-DSRATOM_INTERNAL' ])
-    autowaf.use_lib(bld, obj, 'SERD SORD LV2_ATOM LV2_URID')
+    autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Static library
     if bld.env['BUILD_STATIC']:
@@ -114,7 +111,7 @@ def build(bld):
                   vnum            = SRATOM_LIB_VERSION,
                   install_path    = '${LIBDIR}',
                   cflags          = ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD SORD  LV2_ATOM LV2_URID')
+        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     if bld.env['BUILD_TESTS']:
         test_libs   = libs
@@ -132,7 +129,7 @@ def build(bld):
                   target       = 'sratom_profiled',
                   install_path = '',
                   cflags       = test_cflags + ['-DSRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD SORD LV2_ATOM LV2_URID')
+        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
         # Unit test program
         obj = bld(features     = 'c cprogram',
