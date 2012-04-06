@@ -81,9 +81,11 @@ def build(bld):
 
     libflags = [ '-fvisibility=hidden' ]
     libs     = [ 'm' ]
+    defines  = []
     if bld.env['MSVC_COMPILER']:
         libflags = []
         libs     = []
+        defines  = ['snprintf=_snprintf']
 
     # Shared Library
     obj = bld(features        = 'c cshlib',
@@ -95,6 +97,7 @@ def build(bld):
               target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
               vnum            = SRATOM_LIB_VERSION,
               install_path    = '${LIBDIR}',
+              defines         = defines,
               cflags          = libflags + [ '-DSRATOM_SHARED',
                                              '-DSRATOM_INTERNAL' ])
     autowaf.use_lib(bld, obj, 'SERD SORD LV2')
@@ -110,6 +113,7 @@ def build(bld):
                   target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
                   vnum            = SRATOM_LIB_VERSION,
                   install_path    = '${LIBDIR}',
+                  defines         = defines,
                   cflags          = ['-DSRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
@@ -128,6 +132,7 @@ def build(bld):
                   name         = 'libsratom_profiled',
                   target       = 'sratom_profiled',
                   install_path = '',
+                  defines      = defines,
                   cflags       = test_cflags + ['-DSRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
@@ -139,6 +144,7 @@ def build(bld):
                   lib          = test_libs,
                   target       = 'sratom_test',
                   install_path = '',
+                  defines      = defines,
                   cflags       = test_cflags)
 
     # Documentation

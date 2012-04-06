@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -281,7 +282,7 @@ sratom_write(Sratom*         sratom,
 	} else if (type_urid == sratom->midi_MidiEvent) {
 		new_node = true;
 		datatype = serd_node_from_string(SERD_URI, NS_MIDI "MidiEvent");
-		uint8_t* str = calloc(size * 2 + 1, 1);
+		uint8_t* str = (uint8_t*)calloc(size * 2 + 1, 1);
 		for (uint32_t i = 0; i < size; ++i) {
 			snprintf((char*)str + (2 * i), size * 2 + 1, "%02X",
 			         (unsigned)(uint8_t)*((uint8_t*)body + i));
@@ -424,7 +425,9 @@ sratom_to_turtle(Sratom*         sratom,
 
 	SerdWriter* writer = serd_writer_new(
 		SERD_TURTLE,
-		SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED,
+		(SerdStyle)(SERD_STYLE_ABBREVIATED |
+		            SERD_STYLE_RESOLVED |
+		            SERD_STYLE_CURIED),
 		env, &buri, serd_chunk_sink, &str);
 
 	// Write @prefix directives
@@ -549,7 +552,7 @@ read_node(Sratom*         sratom,
 		} else if (language) {
 			const char*  prefix   = "http://lexvo.org/id/iso639-3/";
 			const size_t lang_len = strlen(prefix) + strlen(language);
-			char*        lang_uri = calloc(lang_len + 1, 1);
+			char*        lang_uri = (char*)calloc(lang_len + 1, 1);
 			snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
 			lv2_atom_forge_literal(
 				forge, str, len, 0,
