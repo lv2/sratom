@@ -96,8 +96,7 @@ sratom_set_sink(Sratom*           sratom,
                 const char*       base_uri,
                 SerdStatementSink write_statement,
                 SerdEndSink       end_anon,
-                void*             handle,
-                bool              pretty_numbers)
+                void*             handle)
 {
 	if (base_uri) {
 		serd_node_free(&sratom->base_uri);
@@ -107,7 +106,14 @@ sratom_set_sink(Sratom*           sratom,
 	sratom->write_statement = write_statement;
 	sratom->end_anon        = end_anon;
 	sratom->handle          = handle;
-	sratom->pretty_numbers  = pretty_numbers;
+}
+
+SRATOM_API
+void
+sratom_set_pretty_numbers(Sratom* sratom,
+                          bool    pretty_numbers)
+{
+	sratom->pretty_numbers = pretty_numbers;
 }
 
 static void
@@ -441,8 +447,7 @@ sratom_to_turtle(Sratom*         sratom,
 	sratom_set_sink(sratom, base_uri,
 	                (SerdStatementSink)serd_writer_write_statement,
 	                (SerdEndSink)serd_writer_end_anon,
-	                writer,
-	                false);
+	                writer);
 	sratom_write(sratom, unmap, SERD_EMPTY_S,
 	             subject, predicate, type, size, body);
 	serd_writer_finish(writer);

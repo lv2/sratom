@@ -78,10 +78,7 @@ sratom_free(Sratom* sratom);
 /**
    Set the sink(s) where sratom will write its output.
 
-   This must be called before calling sratom_write().  If @p pretty_numbers is
-   true, numbers will be written as pretty Turtle literals, rather than string
-   literals with precise types.  The cost of this is the types might get
-   fudged on a round-trip to RDF and back.
+   This must be called before calling sratom_write().
 */
 SRATOM_API
 void
@@ -89,8 +86,19 @@ sratom_set_sink(Sratom*           sratom,
                 const char*       base_uri,
                 SerdStatementSink sink,
                 SerdEndSink       end_sink,
-                void*             handle,
-                bool              pretty_numbers);
+                void*             handle);
+
+/**
+   Write pretty numeric literals.
+
+   If @p pretty_numbers is true, numbers will be written as pretty Turtle
+   literals, rather than string literals with precise types.  The cost of this
+   is that the types might get fudged on a round-trip to RDF and back.
+*/
+SRATOM_API
+void
+sratom_set_pretty_numbers(Sratom* sratom,
+                          bool    pretty_numbers);
 
 /**
    Write an Atom to RDF.
