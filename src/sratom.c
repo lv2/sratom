@@ -157,12 +157,12 @@ list_end(SerdStatementSink sink,
 }
 
 static void
-start_object(Sratom*           sratom,
-             uint32_t          flags,
-             const SerdNode*   subject,
-             const SerdNode*   predicate,
-             const SerdNode*   node,
-             const char*       type)
+start_object(Sratom*         sratom,
+             uint32_t        flags,
+             const SerdNode* subject,
+             const SerdNode* predicate,
+             const SerdNode* node,
+             const char*     type)
 {
 	sratom->write_statement(sratom->handle, flags|SERD_ANON_O_BEGIN, NULL,
 	                        subject, predicate, node, NULL, NULL);
@@ -206,6 +206,9 @@ sratom_write(Sratom*         sratom,
 		object = serd_node_from_string(SERD_URI, USTR(NS_RDF "nil"));
 	} else if (type_urid == sratom->forge.String) {
 		object = serd_node_from_string(SERD_LITERAL, (const uint8_t*)body);
+	} else if (type_urid == sratom->forge.Chunk) {
+		datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
+		object   = serd_node_new_blob(body, size, true);
 	} else if (type_urid == sratom->forge.Literal) {
 		LV2_Atom_Literal_Body* lit = (LV2_Atom_Literal_Body*)body;
 		const uint8_t*         str = USTR(lit + 1);
@@ -531,6 +534,12 @@ read_node(Sratom*         sratom,
 				lv2_atom_forge_double(forge, serd_strtod(str, &endptr));
 			} else if (!strcmp(type_uri, (char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
+			} else if (!strcmp(type_uri, (char*)NS_XSD "base64Binary")) {
+				size_t size = 0;
+				void*  body = serd_base64_decode(USTR(str), len, &size);
+				lv2_atom_forge_atom(forge, size, forge->Chunk);
+				lv2_atom_forge_write(forge, body, size);
+				free(body);
 			} else if (!strcmp(type_uri, LV2_ATOM__Path)) {
 				lv2_atom_forge_path(forge, str, len);
 			} else if (!strcmp(type_uri, (char*)NS_MIDI "MidiEvent")) {

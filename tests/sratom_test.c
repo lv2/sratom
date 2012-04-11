@@ -97,11 +97,12 @@ main()
 	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/j-langlit");
 	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/k-typelit");
 	LV2_URID eg_null    = urid_map(NULL, "http://example.org/l-null");
-	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/m-blob");
-	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/n-blank");
-	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/o-tuple");
-	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/p-vector");
-	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/q-seq");
+	LV2_URID eg_chunk   = urid_map(NULL, "http://example.org/m-chunk");
+	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/n-blob");
+	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/o-blank");
+	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/p-tuple");
+	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/q-vector");
+	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/r-seq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -164,6 +165,12 @@ main()
 	// eg_null = null
 	lv2_atom_forge_property_head(&forge, eg_null, 0);
 	lv2_atom_forge_atom(&forge, 0, 0);
+
+	// eg_chunk = 0xBEEFDEAD
+	uint8_t chunk_buf[] = { 0xBE, 0xEF, 0xDE, 0xAD };
+	lv2_atom_forge_property_head(&forge, eg_chunk, 0);
+	lv2_atom_forge_atom(&forge, sizeof(chunk_buf), forge.Chunk);
+	lv2_atom_forge_write(&forge, chunk_buf, sizeof(chunk_buf));
 
 	// eg_blob = 0xDEADBEEF
 	uint32_t blob_type  = map.map(map.handle, "http://example.org/Blob");

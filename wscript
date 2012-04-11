@@ -55,7 +55,7 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
-    autowaf.check_pkg(conf, 'lv2', atleast_version='0.1.0', uselib_store='LV2')
+    autowaf.check_pkg(conf, 'lv2', atleast_version='0.4.0', uselib_store='LV2')
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.11.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
