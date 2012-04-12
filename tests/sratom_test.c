@@ -22,8 +22,7 @@
 #include "lv2/lv2plug.in/ns/ext/atom/util.h"
 #include "sratom/sratom.h"
 
-#define NS_RDF  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-#define NS_MIDI "http://lv2plug.in/ns/ext/midi#"
+#define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
 #define USTR(s) ((const uint8_t*)(s))
 
@@ -199,7 +198,7 @@ main()
 	lv2_atom_forge_vector(&forge, 4, forge.Int, sizeof(int32_t), elems);
 
 	// eg_seq = (Sequence)1, 2
-	LV2_URID midi_midiEvent = map.map(map.handle, NS_MIDI "MidiEvent");
+	LV2_URID midi_midiEvent = map.map(map.handle, LV2_MIDI__MidiEvent);
 	lv2_atom_forge_property_head(&forge, eg_seq, 0);
 	LV2_Atom_Forge_Frame seq_frame;
 	lv2_atom_forge_sequence_head(&forge, &seq_frame, 0);

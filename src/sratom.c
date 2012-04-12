@@ -22,12 +22,12 @@
 
 #include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include "lv2/lv2plug.in/ns/ext/atom/util.h"
+#include "lv2/lv2plug.in/ns/ext/midi/midi.h"
 
 #include "sratom/sratom.h"
 
-#define NS_MIDI (const uint8_t*)"http://lv2plug.in/ns/ext/midi#"
-#define NS_RDF  (const uint8_t*)"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-#define NS_XSD  (const uint8_t*)"http://www.w3.org/2001/XMLSchema#"
+#define NS_RDF (const uint8_t*)"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define NS_XSD (const uint8_t*)"http://www.w3.org/2001/XMLSchema#"
 
 #define USTR(str) ((const uint8_t*)(str))
 
@@ -73,8 +73,7 @@ sratom_new(LV2_URID_Map* map)
 	Sratom* sratom = (Sratom*)malloc(sizeof(Sratom));
 	sratom->map            = map;
 	sratom->atom_Event     = map->map(map->handle, LV2_ATOM__Event);
-	sratom->midi_MidiEvent = map->map(map->handle,
-	                                  (const char*)NS_MIDI "MidiEvent");
+	sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 	sratom->next_id        = 0;
 	sratom->base_uri       = SERD_NODE_NULL;
 	sratom->pretty_numbers = false;
@@ -290,7 +289,7 @@ sratom_write(Sratom*         sratom,
 		                                 USTR(val ? "true" : "false"));
 	} else if (type_urid == sratom->midi_MidiEvent) {
 		new_node = true;
-		datatype = serd_node_from_string(SERD_URI, NS_MIDI "MidiEvent");
+		datatype = serd_node_from_string(SERD_URI, USTR(LV2_MIDI__MidiEvent));
 		uint8_t* str = (uint8_t*)calloc(size * 2 + 1, 1);
 		for (uint32_t i = 0; i < size; ++i) {
 			snprintf((char*)str + (2 * i), size * 2 + 1, "%02X",
@@ -422,7 +421,8 @@ sratom_to_turtle(Sratom*         sratom,
 	SerdEnv*  env  = serd_env_new(&base);
 	SerdChunk str  = { NULL, 0 };
 
-	serd_env_set_prefix_from_strings(env, USTR("midi"), NS_MIDI);
+	serd_env_set_prefix_from_strings(env, USTR("midi"),
+	                                 USTR(LV2_MIDI_PREFIX));
 	serd_env_set_prefix_from_strings(env, USTR("atom"),
 	                                 USTR(LV2_ATOM_URI "#"));
 	serd_env_set_prefix_from_strings(env, USTR("rdf"), NS_RDF);
@@ -545,7 +545,7 @@ read_node(Sratom*         sratom,
 				free(body);
 			} else if (!strcmp(type_uri, LV2_ATOM__Path)) {
 				lv2_atom_forge_path(forge, str, len);
-			} else if (!strcmp(type_uri, (char*)NS_MIDI "MidiEvent")) {
+			} else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
 				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
 				for (const char* s = str; s < str + len; s += 2) {
 					unsigned num;
