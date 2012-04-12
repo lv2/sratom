@@ -321,7 +321,7 @@ sratom_write(Sratom*         sratom,
 		start_object(sratom, flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
-		LV2_TUPLE_BODY_FOREACH(body, size, i) {
+		LV2_ATOM_TUPLE_BODY_FOREACH(body, size, i) {
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            i->size, i->type, LV2_ATOM_BODY(i));
 		}
@@ -355,10 +355,9 @@ sratom_write(Sratom*         sratom,
 		                                                 obj->otype);
 		gensym(&id, 'b', sratom->next_id++);
 		start_object(sratom, flags, subject, predicate, &id, otype);
-		LV2_OBJECT_BODY_FOREACH(obj, size, i) {
-			const LV2_Atom_Property_Body* prop = lv2_object_iter_get(i);
-			const char* const key = unmap->unmap(unmap->handle, prop->key);
-			SerdNode pred = serd_node_from_string(SERD_URI, USTR(key));
+		LV2_ATOM_OBJECT_BODY_FOREACH(obj, size, prop) {
+			const char* const key  = unmap->unmap(unmap->handle, prop->key);
+			SerdNode          pred = serd_node_from_string(SERD_URI, USTR(key));
 			sratom_write(sratom, unmap, flags|SERD_ANON_CONT, &id, &pred,
 			             prop->value.type, prop->value.size,
 			             LV2_ATOM_BODY(&prop->value));
@@ -372,8 +371,7 @@ sratom_write(Sratom*         sratom,
 		start_object(sratom, flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
-		LV2_SEQUENCE_BODY_FOREACH(seq, size, i) {
-			LV2_Atom_Event* ev = lv2_sequence_iter_get(i);
+		LV2_ATOM_SEQUENCE_BODY_FOREACH(seq, size, ev) {
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            sizeof(LV2_Atom_Event) + ev->body.size,
 			            sratom->atom_Event,
