@@ -20,6 +20,7 @@
 
 #include "lv2/lv2plug.in/ns/ext/atom/forge.h"
 #include "lv2/lv2plug.in/ns/ext/atom/util.h"
+#include "lv2/lv2plug.in/ns/ext/midi/midi.h"
 #include "sratom/sratom.h"
 
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
