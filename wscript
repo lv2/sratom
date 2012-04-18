@@ -55,11 +55,11 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
-    autowaf.check_pkg(conf, 'lv2', atleast_version='0.5.0', uselib_store='LV2')
+    autowaf.check_pkg(conf, 'lv2', atleast_version='1.0.0', uselib_store='LV2')
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
-                      atleast_version='0.11.0', mandatory=True)
+                      atleast_version='0.14.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
-                      atleast_version='0.5.0', mandatory=True)
+                      atleast_version='0.8.0', mandatory=True)
 
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
