@@ -55,11 +55,11 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
-    autowaf.check_pkg(conf, 'lv2', atleast_version='0.5.0', uselib_store='LV2')
+    autowaf.check_pkg(conf, 'lv2', atleast_version='1.0.0', uselib_store='LV2')
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
-                      atleast_version='0.11.0', mandatory=True)
+                      atleast_version='0.14.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
-                      atleast_version='0.5.0', mandatory=True)
+                      atleast_version='0.8.0', mandatory=True)
 
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
@@ -175,9 +175,12 @@ def fix_docs(ctx):
         os.chdir(build_dir(ctx, 'doc/html'))
         os.system("sed -i 's/SRATOM_API //' group__sratom.html")
         os.system("sed -i 's/SRATOM_DEPRECATED //' group__sratom.html")
+        os.system("sed -i 's/href=\"doc\/style.css\"/href=\"style.css\"/' group__sratom.html")
         os.remove('index.html')
-        os.symlink('group__sratom.html',
-                   'index.html')
+        os.symlink('group__sratom.html', 'index.html')
+        os.chdir(top)
+        os.chdir(build_dir(ctx, 'doc/man/man3'))
+        os.system("sed -i 's/SRATOM_API //' sratom.3")
         os.chdir(top)
     except:
         Logs.error("Failed to fix up %s documentation" % APPNAME)
