@@ -175,9 +175,12 @@ def fix_docs(ctx):
         os.chdir(build_dir(ctx, 'doc/html'))
         os.system("sed -i 's/SRATOM_API //' group__sratom.html")
         os.system("sed -i 's/SRATOM_DEPRECATED //' group__sratom.html")
+        os.system("sed -i 's/href=\"doc\/style.css\"/href=\"style.css\"/' group__sratom.html")
         os.remove('index.html')
-        os.symlink('group__sratom.html',
-                   'index.html')
+        os.symlink('group__sratom.html', 'index.html')
+        os.chdir(top)
+        os.chdir(build_dir(ctx, 'doc/man/man3'))
+        os.system("sed -i 's/SRATOM_API //' sratom.3")
         os.chdir(top)
     except:
         Logs.error("Failed to fix up %s documentation" % APPNAME)
