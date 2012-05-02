@@ -639,7 +639,8 @@ read_node(Sratom*         sratom,
 				const SordNode* p      = match[SORD_PREDICATE];
 				const char*     p_uri  = (const char*)sord_node_get_string(p);
 				uint32_t        p_urid = map->map(map->handle, p_uri);
-				if (!sord_node_equals(p, sratom->nodes.rdf_type)) {
+				if (!(sord_node_equals(p, sratom->nodes.rdf_type)
+				      && sord_node_equals(match[SORD_OBJECT], type))) {
 					// TODO: This will lose multiple rdf:type properties
 					lv2_atom_forge_property_head(forge, p_urid, 0);
 					read_node(sratom, forge, world, model,
