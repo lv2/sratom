@@ -1,6 +1,8 @@
 sratom (9999) unstable;
 
   * Correctly read objects with several rdf:type properties
+  * Support writing Object Atoms as top level descriptions if subject and
+    predicate are not given.
 
  -- David Robillard <d@drobilla.net>
 

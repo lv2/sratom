@@ -163,18 +163,21 @@ list_end(SerdStatementSink sink,
 
 static void
 start_object(Sratom*         sratom,
-             uint32_t        flags,
+             uint32_t*       flags,
              const SerdNode* subject,
              const SerdNode* predicate,
              const SerdNode* node,
              const char*     type)
 {
-	sratom->write_statement(sratom->handle, flags|SERD_ANON_O_BEGIN, NULL,
-	                        subject, predicate, node, NULL, NULL);
+	if (subject && predicate) {
+		sratom->write_statement(sratom->handle, *flags|SERD_ANON_O_BEGIN, NULL,
+		                        subject, predicate, node, NULL, NULL);
+		*flags |= SERD_ANON_CONT;
+	}
 	if (type) {
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "type");
 		SerdNode o = serd_node_from_string(SERD_URI, USTR(type));
-		sratom->write_statement(sratom->handle, SERD_ANON_CONT, NULL,
+		sratom->write_statement(sratom->handle, *flags, NULL,
 		                        node, &p, &o, NULL, NULL);
 	}
 }
@@ -299,7 +302,7 @@ sratom_write(Sratom*         sratom,
 	} else if (type_urid == sratom->atom_Event) {
 		const LV2_Atom_Event* ev = (const LV2_Atom_Event*)body;
 		gensym(&id, 'e', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, NULL);
+		start_object(sratom, &flags, subject, predicate, &id, NULL);
 		// TODO: beat time
 		SerdNode time = serd_node_new_integer(ev->time.frames);
 		SerdNode p    = serd_node_from_string(SERD_URI,
@@ -317,7 +320,7 @@ sratom_write(Sratom*         sratom,
 		}
 	} else if (type_urid == sratom->forge.Tuple) {
 		gensym(&id, 't', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, type);
+		start_object(sratom, &flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_ATOM_TUPLE_BODY_FOREACH(body, size, i) {
@@ -331,7 +334,7 @@ sratom_write(Sratom*         sratom,
 	} else if (type_urid == sratom->forge.Vector) {
 		const LV2_Atom_Vector_Body* vec  = (const LV2_Atom_Vector_Body*)body;
 		gensym(&id, 'v', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, type);
+		start_object(sratom, &flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, (const uint8_t*)LV2_ATOM__childType);
 		SerdNode child_type = serd_node_from_string(
 			SERD_URI, (const uint8_t*)unmap->unmap(unmap->handle, vec->child_type));
@@ -353,7 +356,7 @@ sratom_write(Sratom*         sratom,
 		const char*                 otype = unmap->unmap(unmap->handle,
 		                                                 obj->otype);
 		gensym(&id, 'b', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, otype);
+		start_object(sratom, &flags, subject, predicate, &id, otype);
 		LV2_ATOM_OBJECT_BODY_FOREACH(obj, size, prop) {
 			const char* const key  = unmap->unmap(unmap->handle, prop->key);
 			SerdNode          pred = serd_node_from_string(SERD_URI, USTR(key));
@@ -361,13 +364,13 @@ sratom_write(Sratom*         sratom,
 			             prop->value.type, prop->value.size,
 			             LV2_ATOM_BODY(&prop->value));
 		}
-		if (sratom->end_anon) {
+		if (sratom->end_anon && subject && predicate) {
 			sratom->end_anon(sratom->handle, &id);
 		}
 	} else if (type_urid == sratom->forge.Sequence) {
 		const LV2_Atom_Sequence_Body* seq = (const LV2_Atom_Sequence_Body*)body;
 		gensym(&id, 'v', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, type);
+		start_object(sratom, &flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_ATOM_SEQUENCE_BODY_FOREACH(seq, size, ev) {
@@ -377,17 +380,17 @@ sratom_write(Sratom*         sratom,
 			            ev);
 		}
 		list_end(sratom->write_statement, sratom->handle, &flags, &id, &p);
-		if (sratom->end_anon) {
+		if (sratom->end_anon && subject && predicate) {
 			sratom->end_anon(sratom->handle, &id);
 		}
 	} else {
 		gensym(&id, 'b', sratom->next_id++);
-		start_object(sratom, flags, subject, predicate, &id, type);
+		start_object(sratom, &flags, subject, predicate, &id, type);
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		SerdNode o = serd_node_new_blob(body, size, true);
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
 		sratom->write_statement(sratom->handle, flags, NULL, &id, &p, &o, &datatype, NULL);
-		if (sratom->end_anon) {
+		if (sratom->end_anon && subject && predicate) {
 			sratom->end_anon(sratom->handle, &id);
 		}
 		serd_node_free(&o);
