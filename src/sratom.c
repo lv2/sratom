@@ -232,7 +232,7 @@ sratom_write(Sratom*         sratom,
 				language = serd_node_from_string(
 					SERD_LITERAL, USTR(lang + prefix_len));
 			} else {
-				fprintf(stderr, "Unknown language URI <%s>\n", lang);
+				fprintf(stderr, "Unknown language URID %d\n", lit->lang);
 			}
 		}
 	} else if (type_urid == sratom->forge.URID) {
