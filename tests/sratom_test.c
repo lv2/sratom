@@ -14,6 +14,7 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,7 +76,7 @@ test_fail(const char* fmt, ...)
 }
 
 int
-main()
+test(bool top_level)
 {
 	LV2_URID_Map   map   = { NULL, urid_map };
 	LV2_URID_Unmap unmap = { NULL, urid_unmap };
@@ -107,9 +108,15 @@ main()
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
 
+	const char*          obj_uri = "http://example.org/obj";
+	LV2_URID             obj_id  = urid_map(NULL, obj_uri);
 	LV2_Atom_Forge_Frame obj_frame;
-	LV2_Atom* obj = (LV2_Atom*)lv2_atom_forge_deref(
-		&forge, lv2_atom_forge_blank(&forge, &obj_frame, 1, eg_Object));
+	if (top_level) {
+		lv2_atom_forge_resource(&forge, &obj_frame, obj_id, eg_Object);
+	} else {
+		lv2_atom_forge_blank(&forge, &obj_frame, 1, eg_Object);
+	}
+	LV2_Atom* obj = lv2_atom_forge_deref(&forge, obj_frame.ref);
 
 	// eg_one = (Int32)1
 	lv2_atom_forge_property_head(&forge, eg_one, 0);
@@ -182,7 +189,7 @@ main()
 	// eg_blank = [ a <http://example.org/Object> ]
 	lv2_atom_forge_property_head(&forge, eg_blank, 0);
 	LV2_Atom_Forge_Frame blank_frame;
-	lv2_atom_forge_blank(&forge, &blank_frame, 2, eg_Object);
+	lv2_atom_forge_blank(&forge, &blank_frame, top_level ? 1 : 2, eg_Object);
 	lv2_atom_forge_pop(&forge, &blank_frame);
 
 	// eg_tuple = "foo",true
@@ -221,20 +228,31 @@ main()
 
 	const char* base_uri = "file:///tmp/base/";
 
-	SerdNode s      = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
-	SerdNode p      = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-	char*    outstr = sratom_to_turtle(
-		sratom, &unmap, base_uri, &s, &p,
+	SerdNode s = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
+	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
+
+	SerdNode* subj   = top_level ? NULL : &s;
+	SerdNode* pred   = top_level ? NULL : &p;
+
+	char* outstr = sratom_to_turtle(
+		sratom, &unmap, base_uri, subj, pred,
 		obj->type, obj->size, LV2_ATOM_BODY(obj));
+
 	printf("# Atom => Turtle\n\n%s", outstr);
 
-	LV2_Atom* parsed = sratom_from_turtle(sratom, base_uri, &s, &p, outstr);
+	LV2_Atom* parsed = NULL;
+	if (top_level) {
+		SerdNode s = serd_node_from_string(SERD_URI, (const uint8_t*)obj_uri);
+		parsed = sratom_from_turtle(sratom, base_uri, &s, NULL, outstr);
+	} else {
+		parsed = sratom_from_turtle(sratom, base_uri, subj, pred, outstr);
+	}
 	if (!lv2_atom_equals(obj, parsed)) {
 		return test_fail("Parsed atom does not match original\n");
 	}
 
 	char* instr = sratom_to_turtle(
-		sratom, &unmap, base_uri, &s, &p,
+		sratom, &unmap, base_uri, subj, pred,
 		parsed->type, parsed->size, LV2_ATOM_BODY(parsed));
 	printf("# Turtle => Atom\n\n%s", instr);
 
@@ -251,7 +269,21 @@ main()
 	for (uint32_t i = 0; i < n_uris; ++i) {
 		free(uris[i]);
 	}
-	free(uris);
 
+	free(uris);
+	uris   = NULL;
+	n_uris = 0;
+
+	return 0;
+}
+
+int
+main()
+{
+	if (test(false)) {
+		return 1;
+	} else if (test(true)) {
+		return 1;
+	}
 	return 0;
 }

@@ -32,7 +32,8 @@
 #define USTR(str) ((const uint8_t*)(str))
 
 typedef enum {
-	MODE_NORMAL,
+	MODE_SUBJECT,
+	MODE_BODY,
 	MODE_SEQUENCE,
 } ReadMode;
 
@@ -351,20 +352,28 @@ sratom_write(Sratom*         sratom,
 		if (sratom->end_anon) {
 			sratom->end_anon(sratom->handle, &id);
 		}
-	} else if (type_urid == sratom->forge.Blank) {
+	} else if (type_urid == sratom->forge.Blank ||
+	           type_urid == sratom->forge.Resource) {
 		const LV2_Atom_Object_Body* obj   = (const LV2_Atom_Object_Body*)body;
 		const char*                 otype = unmap->unmap(unmap->handle,
 		                                                 obj->otype);
-		gensym(&id, 'b', sratom->next_id++);
-		start_object(sratom, &flags, subject, predicate, &id, otype);
+		if (type_urid == sratom->forge.Blank) {
+			gensym(&id, 'b', sratom->next_id++);
+			start_object(sratom, &flags, subject, predicate, &id, otype);
+		} else {
+			id = serd_node_from_string(
+				SERD_URI, (const uint8_t*)unmap->unmap(unmap->handle, obj->id));
+			flags = 0;
+			start_object(sratom, &flags, NULL, NULL, &id, otype);
+		}
 		LV2_ATOM_OBJECT_BODY_FOREACH(obj, size, prop) {
 			const char* const key  = unmap->unmap(unmap->handle, prop->key);
 			SerdNode          pred = serd_node_from_string(SERD_URI, USTR(key));
-			sratom_write(sratom, unmap, flags|SERD_ANON_CONT, &id, &pred,
+			sratom_write(sratom, unmap, flags, &id, &pred,
 			             prop->value.type, prop->value.size,
 			             LV2_ATOM_BODY(&prop->value));
 		}
-		if (sratom->end_anon && subject && predicate) {
+		if (sratom->end_anon && (flags & SERD_ANON_CONT)) {
 			sratom->end_anon(sratom->handle, &id);
 		}
 	} else if (type_urid == sratom->forge.Sequence) {
@@ -491,6 +500,34 @@ read_list_value(Sratom*         sratom,
 	}
 }
 
+static void
+read_resource(Sratom*         sratom,
+              LV2_Atom_Forge* forge,
+              SordWorld*      world,
+              SordModel*      model,
+              const SordNode* node,
+              LV2_URID        otype)
+{            
+	LV2_URID_Map* map = sratom->map;
+	SordQuad      q   = { node, NULL, NULL, NULL };
+	SordIter*     i   = sord_find(model, q);
+	SordQuad      match;
+	for (;!sord_iter_end(i); sord_iter_next(i)) {
+		sord_iter_get(i, match);
+		const SordNode* p      = match[SORD_PREDICATE];
+		const SordNode* o      = match[SORD_OBJECT];
+		const char*     p_uri  = (const char*)sord_node_get_string(p);
+		uint32_t        p_urid = map->map(map->handle, p_uri);
+		if (!(sord_node_equals(p, sratom->nodes.rdf_type) &&
+		      sord_node_get_type(o) == SORD_URI &&
+		      map->map(map->handle, (const char*)sord_node_get_string(o)) == otype)) {
+			lv2_atom_forge_property_head(forge, p_urid, 0);
+			read_node(sratom, forge, world, model, o, MODE_BODY);
+		}
+	}
+	sord_iter_free(i);
+}
+
 static uint32_t
 atom_size(Sratom* sratom, uint32_t type_urid)
 {
@@ -576,7 +613,7 @@ read_node(Sratom*         sratom,
 		} else {
 			lv2_atom_forge_string(forge, str, len);
 		}
-	} else if (sord_node_get_type(node) == SORD_URI) {
+	} else if (sord_node_get_type(node) == SORD_URI && mode == MODE_BODY) {
 		if (!strcmp(str, (const char*)NS_RDF "nil")) {
 			lv2_atom_forge_atom(forge, 0, 0);
 		} else if (!strncmp(str, "file://", 7)) {
@@ -598,17 +635,21 @@ read_node(Sratom*         sratom,
 		}
 
 		LV2_Atom_Forge_Frame frame = { 0, 0 };
-		if (mode == MODE_SEQUENCE) {
+		if (mode == MODE_SUBJECT && sord_node_get_type(node) == SORD_URI) {
+			lv2_atom_forge_resource(
+				forge, &frame, map->map(map->handle, str), type_urid);
+			read_resource(sratom, forge, world, model, node, type_urid);
+		} else if (mode == MODE_SEQUENCE) {
 			const SordNode* frame_time = get_object(
 				model, node, sratom->nodes.atom_frameTime);
 			const char* frame_time_str = frame_time
 				? (const char*)sord_node_get_string(frame_time)
 				: "";
 			lv2_atom_forge_frame_time(forge, serd_strtod(frame_time_str, NULL));
-			read_node(sratom, forge, world, model, value, MODE_NORMAL);
+			read_node(sratom, forge, world, model, value, MODE_BODY);
 		} else if (type_urid == sratom->forge.Tuple) {
 			lv2_atom_forge_tuple(forge, &frame);
-			read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
+			read_list_value(sratom, forge, world, model, value, MODE_BODY);
 		} else if (type_urid == sratom->forge.Sequence) {
 			lv2_atom_forge_sequence_head(forge, &frame, 0);
 			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
@@ -620,7 +661,7 @@ read_node(Sratom*         sratom,
 			uint32_t child_size = atom_size(sratom, child_type);
 			if (child_size > 0) {
 				lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
-				read_list_value(sratom, forge, world, model, value, MODE_NORMAL);
+				read_list_value(sratom, forge, world, model, value, MODE_BODY);
 			}
 		} else if (value && sord_node_equals(sord_node_get_datatype(value),
 		                                     sratom->nodes.xsd_base64Binary)) {
@@ -633,24 +674,7 @@ read_node(Sratom*         sratom,
 			free(body);
 		} else {
 			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
-			SordQuad match;
-
-			SordQuad q2 = { node, 0, 0, 0 };
-			SordIter* i = sord_find(model, q2);
-			for (;!sord_iter_end(i); sord_iter_next(i)) {
-				sord_iter_get(i, match);
-				const SordNode* p      = match[SORD_PREDICATE];
-				const char*     p_uri  = (const char*)sord_node_get_string(p);
-				uint32_t        p_urid = map->map(map->handle, p_uri);
-				if (!(sord_node_equals(p, sratom->nodes.rdf_type)
-				      && sord_node_equals(match[SORD_OBJECT], type))) {
-					// TODO: This will lose multiple rdf:type properties
-					lv2_atom_forge_property_head(forge, p_urid, 0);
-					read_node(sratom, forge, world, model,
-					          match[SORD_OBJECT], MODE_NORMAL);
-				}
-			}
-			sord_iter_free(i);
+			read_resource(sratom, forge, world, model, node, type_urid);
 		}
 		if (frame.ref) {
 			lv2_atom_forge_pop(forge, &frame);
@@ -675,7 +699,7 @@ sratom_read(Sratom*         sratom,
 	sratom->nodes.xsd_base64Binary = sord_new_uri(world, NS_XSD "base64Binary");
 
 	sratom->next_id = 1;
-	read_node(sratom, forge, world, model, node, MODE_NORMAL);
+	read_node(sratom, forge, world, model, node, MODE_SUBJECT);
 
 	sord_node_free(world, sratom->nodes.xsd_base64Binary);
 	sord_node_free(world, sratom->nodes.rdf_value);
@@ -724,19 +748,23 @@ sratom_from_turtle(Sratom*         sratom,
 
 	if (!serd_reader_read_string(reader, (const uint8_t*)str)) {
 		SordNode* s = sord_node_from_serd_node(world, env, subject, 0, 0);
-		SordNode* p = sord_node_from_serd_node(world, env, predicate, 0, 0);
-		SordQuad  q = { s, p, 0, 0 };
-		SordIter* i = sord_find(model, q);
-		if (!sord_iter_end(i)) {
-			SordQuad result;
-			sord_iter_get(i, result);
-			lv2_atom_forge_set_sink(
-				&sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
-			sratom_read(sratom, &sratom->forge, world, model, result[SORD_OBJECT]);
+		lv2_atom_forge_set_sink(
+			&sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
+		if (subject && predicate) {
+			SordNode* p = sord_node_from_serd_node(world, env, predicate, 0, 0);
+			SordQuad  q = { s, p, 0, 0 };
+			SordIter* i = sord_find(model, q);
+			if (!sord_iter_end(i)) {
+				SordQuad result;
+				sord_iter_get(i, result);
+				sratom_read(sratom, &sratom->forge, world, model, result[SORD_OBJECT]);
+			} else {
+				fprintf(stderr, "Failed to find node\n");
+			}
+			sord_iter_free(i);
 		} else {
-			fprintf(stderr, "Failed to find node\n");
+			sratom_read(sratom, &sratom->forge, world, model, s);
 		}
-		sord_iter_free(i);
 	} else {
 		fprintf(stderr, "Failed to read Turtle\n");
 	}
