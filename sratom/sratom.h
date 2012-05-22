@@ -62,6 +62,31 @@ extern "C" {
 typedef struct SratomImpl Sratom;
 
 /**
+   Mode for reading resources to LV2 Objects.
+
+   This affects how resources (which are either blank nodes or have URIs) are
+   read by sratom_read(), since they may be read as simple references (a URI or
+   blank node ID) or a complete description (an atom "Object").
+
+   Currently, blank nodes are always read as Objects, but support for reading
+   blank node IDs may be added in the future.
+*/
+typedef enum {
+	/**
+	   Read blank nodes as Objects, and named resources as URIs.
+	*/
+	SRATOM_OBJECT_MODE_BLANK,
+
+	/**
+	   Read blank nodes and the main subject as Objects, and any other named
+	   resources as URIs.  The "main subject" is the subject parameter passed
+	   to sratom_read(); if this is a resource it will be read as an Object,
+	   but all other named resources encountered will be read as URIs.
+	*/
+	SRATOM_OBJECT_MODE_BLANK_SUBJECT,
+} SratomObjectMode;
+
+/**
    Create a new Atom serialiser.
 */
 SRATOM_API
@@ -101,6 +126,14 @@ sratom_set_pretty_numbers(Sratom* sratom,
                           bool    pretty_numbers);
 
 /**
+   Configure how resources will be read to form LV2 Objects.
+*/
+SRATOM_API
+void
+sratom_set_object_mode(Sratom*        sratom,
+                       SratomObjectMode object_mode);
+
+/**
    Write an Atom to RDF.
    The serialised atom is written to the sink set by sratom_set_sink().
    @return 0 on success, or a non-zero error code otherwise.
@@ -126,7 +159,7 @@ sratom_read(Sratom*         sratom,
             LV2_Atom_Forge* forge,
             SordWorld*      world,
             SordModel*      model,
-            const SordNode* node);
+            const SordNode* subject);
 
 /**
    Serialise an Atom to a Turtle string.

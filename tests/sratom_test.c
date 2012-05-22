@@ -84,6 +84,9 @@ test(bool top_level)
 	lv2_atom_forge_init(&forge, &map);
 
 	Sratom* sratom = sratom_new(&map);
+	sratom_set_object_mode(
+		sratom,
+		top_level ? SRATOM_OBJECT_MODE_BLANK_SUBJECT : SRATOM_OBJECT_MODE_BLANK);
 
 	LV2_URID eg_Object  = urid_map(NULL, "http://example.org/Object");
 	LV2_URID eg_one     = urid_map(NULL, "http://example.org/a-one");

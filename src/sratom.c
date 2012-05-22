@@ -47,6 +47,7 @@ struct SratomImpl {
 	SerdStatementSink write_statement;
 	SerdEndSink       end_anon;
 	void*             handle;
+	SratomObjectMode  object_mode;
 	bool              pretty_numbers;
 	struct {
 		SordNode* atom_childType;
@@ -77,6 +78,7 @@ sratom_new(LV2_URID_Map* map)
 	sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 	sratom->next_id        = 0;
 	sratom->base_uri       = SERD_NODE_NULL;
+	sratom->object_mode    = SRATOM_OBJECT_MODE_BLANK;
 	sratom->pretty_numbers = false;
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
 	lv2_atom_forge_init(&sratom->forge, map);
@@ -114,6 +116,14 @@ sratom_set_pretty_numbers(Sratom* sratom,
                           bool    pretty_numbers)
 {
 	sratom->pretty_numbers = pretty_numbers;
+}
+
+SRATOM_API
+void
+sratom_set_object_mode(Sratom*          sratom,
+                       SratomObjectMode object_mode)
+{
+	sratom->object_mode = object_mode;
 }
 
 static void
@@ -310,7 +320,7 @@ sratom_write(Sratom*         sratom,
 		                                      USTR(LV2_ATOM__frameTime));
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "decimal");
 		sratom->write_statement(sratom->handle, SERD_ANON_CONT, NULL,
-		     &id, &p, &time, &datatype, &language);
+		                        &id, &p, &time, &datatype, &language);
 		serd_node_free(&time);
 
 		p = serd_node_from_string(SERD_URI, NS_RDF "value");
@@ -407,7 +417,7 @@ sratom_write(Sratom*         sratom,
 
 	if (object.buf) {
 		sratom->write_statement(sratom->handle, flags, NULL,
-		     subject, predicate, &object, &datatype, &language);
+		                        subject, predicate, &object, &datatype, &language);
 	}
 
 	if (new_node) {
@@ -507,12 +517,12 @@ read_resource(Sratom*         sratom,
               SordModel*      model,
               const SordNode* node,
               LV2_URID        otype)
-{            
+{
 	LV2_URID_Map* map = sratom->map;
 	SordQuad      q   = { node, NULL, NULL, NULL };
 	SordIter*     i   = sord_find(model, q);
 	SordQuad      match;
-	for (;!sord_iter_end(i); sord_iter_next(i)) {
+	for (; !sord_iter_end(i); sord_iter_next(i)) {
 		sord_iter_get(i, match);
 		const SordNode* p      = match[SORD_PREDICATE];
 		const SordNode* o      = match[SORD_OBJECT];
@@ -613,7 +623,9 @@ read_node(Sratom*         sratom,
 		} else {
 			lv2_atom_forge_string(forge, str, len);
 		}
-	} else if (sord_node_get_type(node) == SORD_URI && mode == MODE_BODY) {
+	} else if (sord_node_get_type(node) == SORD_URI &&
+	           !(sratom->object_mode == SRATOM_OBJECT_MODE_BLANK_SUBJECT
+	             && mode == MODE_SUBJECT)) {
 		if (!strcmp(str, (const char*)NS_RDF "nil")) {
 			lv2_atom_forge_atom(forge, 0, 0);
 		} else if (!strncmp(str, "file://", 7)) {
@@ -635,11 +647,7 @@ read_node(Sratom*         sratom,
 		}
 
 		LV2_Atom_Forge_Frame frame = { 0, 0 };
-		if (mode == MODE_SUBJECT && sord_node_get_type(node) == SORD_URI) {
-			lv2_atom_forge_resource(
-				forge, &frame, map->map(map->handle, str), type_urid);
-			read_resource(sratom, forge, world, model, node, type_urid);
-		} else if (mode == MODE_SEQUENCE) {
+		if (mode == MODE_SEQUENCE) {
 			const SordNode* frame_time = get_object(
 				model, node, sratom->nodes.atom_frameTime);
 			const char* frame_time_str = frame_time
@@ -672,6 +680,10 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_atom(forge, size, type_urid);
 			lv2_atom_forge_write(forge, body, size);
 			free(body);
+		} else if (sord_node_get_type(node) == SORD_URI) {
+			lv2_atom_forge_resource(
+				forge, &frame, map->map(map->handle, str), type_urid);
+			read_resource(sratom, forge, world, model, node, type_urid);
 		} else {
 			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
 			read_resource(sratom, forge, world, model, node, type_urid);
