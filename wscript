@@ -36,7 +36,6 @@ def options(opt):
 
 def configure(conf):
     conf.load('compiler_c')
-    conf.line_just = 41
     autowaf.configure(conf)
     autowaf.display_header('Sratom Configuration')
 
