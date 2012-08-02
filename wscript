@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import os
-import shutil
 import subprocess
-import sys
 
 from waflib.extras import autowaf as autowaf
-import waflib.Logs as Logs, waflib.Options as Options
+import waflib.Options as Options
 
 # Version of this package (even if built as a child)
 SRATOM_VERSION       = '0.2.1'
