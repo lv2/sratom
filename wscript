@@ -31,6 +31,8 @@ def options(opt):
                    help="Build unit tests")
     opt.add_option('--static', action='store_true', dest='static',
                    help="Build static library")
+    opt.add_option('--no-shared', action='store_true', dest='no_shared',
+                   help='Do not build shared library')
 
 def configure(conf):
     conf.load('compiler_c')
@@ -39,7 +41,9 @@ def configure(conf):
     autowaf.display_header('Sratom Configuration')
 
     conf.env.BUILD_TESTS  = Options.options.build_tests
-    conf.env.BUILD_STATIC = Options.options.static
+    conf.env.BUILD_SHARED = not Options.options.no_shared
+    conf.env.BUILD_STATIC = (Options.options.static or
+                             Options.options.static_progs)
 
     # Check for gcov library (for test coverage)
     if conf.env.BUILD_TESTS:
@@ -80,18 +84,19 @@ def build(bld):
         defines  = ['snprintf=_snprintf']
 
     # Shared Library
-    obj = bld(features        = 'c cshlib',
-              export_includes = ['.'],
-              source          = lib_source,
-              includes        = ['.', './src'],
-              lib             = libs,
-              name            = 'libsratom',
-              target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
-              vnum            = SRATOM_LIB_VERSION,
-              install_path    = '${LIBDIR}',
-              defines         = defines + ['SRATOM_SHARED', 'SRATOM_INTERNAL'],
-              cflags          = libflags)
-    autowaf.use_lib(bld, obj, 'SERD SORD LV2')
+    if bld.env.BUILD_SHARED:
+        obj = bld(features        = 'c cshlib',
+                  export_includes = ['.'],
+                  source          = lib_source,
+                  includes        = ['.', './src'],
+                  lib             = libs,
+                  name            = 'libsratom',
+                  target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
+                  vnum            = SRATOM_LIB_VERSION,
+                  install_path    = '${LIBDIR}',
+                  defines         = defines + ['SRATOM_SHARED', 'SRATOM_INTERNAL'],
+                  cflags          = libflags)
+        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Static library
     if bld.env.BUILD_STATIC:
