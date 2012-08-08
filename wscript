@@ -27,9 +27,9 @@ out = 'build'
 def options(opt):
     opt.load('compiler_c')
     autowaf.set_options(opt)
-    opt.add_option('--test', action='store_true', default=False, dest='build_tests',
+    opt.add_option('--test', action='store_true', dest='build_tests',
                    help="Build unit tests")
-    opt.add_option('--static', action='store_true', default=False, dest='static',
+    opt.add_option('--static', action='store_true', dest='static',
                    help="Build static library")
 
 def configure(conf):
@@ -37,16 +37,16 @@ def configure(conf):
     autowaf.configure(conf)
     autowaf.display_header('Sratom Configuration')
 
-    if conf.env['MSVC_COMPILER']:
+    if conf.env.MSVC_COMPILER:
         conf.env.append_unique('CFLAGS', ['-TP', '-MD'])
     else:
         conf.env.append_unique('CFLAGS', '-std=c99')
 
-    conf.env['BUILD_TESTS']  = Options.options.build_tests
-    conf.env['BUILD_STATIC'] = Options.options.static
+    conf.env.BUILD_TESTS  = Options.options.build_tests
+    conf.env.BUILD_STATIC = Options.options.static
 
     # Check for gcov library (for test coverage)
-    if conf.env['BUILD_TESTS']:
+    if conf.env.BUILD_TESTS:
         conf.check_cc(lib='gcov',
                       define_name='HAVE_GCOV',
                       mandatory=False)
@@ -60,7 +60,7 @@ def configure(conf):
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
 
-    autowaf.display_msg(conf, "Unit tests", str(conf.env['BUILD_TESTS']))
+    autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
     print('')
 
 lib_source = [ 'src/sratom.c' ]
@@ -78,7 +78,7 @@ def build(bld):
     libflags = [ '-fvisibility=hidden' ]
     libs     = [ 'm' ]
     defines  = []
-    if bld.env['MSVC_COMPILER']:
+    if bld.env.MSVC_COMPILER:
         libflags = []
         libs     = []
         defines  = ['snprintf=_snprintf']
@@ -98,7 +98,7 @@ def build(bld):
     autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Static library
-    if bld.env['BUILD_STATIC']:
+    if bld.env.BUILD_STATIC:
         obj = bld(features        = 'c cstlib',
                   export_includes = ['.'],
                   source          = lib_source,
@@ -111,7 +111,7 @@ def build(bld):
                   defines         = defines + ['SRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
-    if bld.env['BUILD_TESTS']:
+    if bld.env.BUILD_TESTS:
         test_libs   = libs
         test_cflags = ['']
         if bld.is_defined('HAVE_GCOV'):
@@ -145,7 +145,7 @@ def build(bld):
     autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
 
     bld.add_post_fun(autowaf.run_ldconfig)
-    if bld.env['DOCS']:
+    if bld.env.DOCS:
         bld.add_post_fun(fix_docs)
 
 def test(ctx):
