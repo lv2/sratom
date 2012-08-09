@@ -42,8 +42,10 @@ def configure(conf):
 
     conf.env.BUILD_TESTS  = Options.options.build_tests
     conf.env.BUILD_SHARED = not Options.options.no_shared
-    conf.env.BUILD_STATIC = (Options.options.static or
-                             Options.options.static_progs)
+    conf.env.BUILD_STATIC = Options.options.static
+
+    if not conf.env.BUILD_SHARED and not conf.env.BUILD_STATIC:
+        conf.fatal('Neither a shared nor a static build requested')
 
     # Check for gcov library (for test coverage)
     if conf.env.BUILD_TESTS:
