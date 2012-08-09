@@ -142,7 +142,7 @@ list_append(Sratom*           sratom,
             SerdNode*         node,
             uint32_t          size,
             uint32_t          type,
-            void*             body)
+            const void*       body)
 {
 	// Generate a list node
 	gensym(node, 'l', sratom->next_id);
@@ -229,7 +229,7 @@ sratom_write(Sratom*         sratom,
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
 		object   = serd_node_new_blob(body, size, true);
 	} else if (type_urid == sratom->forge.Literal) {
-		LV2_Atom_Literal_Body* lit = (LV2_Atom_Literal_Body*)body;
+		const LV2_Atom_Literal_Body* lit = (const LV2_Atom_Literal_Body*)body;
 		const uint8_t*         str = USTR(lit + 1);
 		object = serd_node_from_string(SERD_LITERAL, str);
 		if (lit->datatype) {
@@ -247,8 +247,8 @@ sratom_write(Sratom*         sratom,
 			}
 		}
 	} else if (type_urid == sratom->forge.URID) {
-		const uint32_t id  = *(const uint32_t*)body;
-		const uint8_t* str = USTR(unmap->unmap(unmap->handle, id));
+		const uint32_t urid = *(const uint32_t*)body;
+		const uint8_t* str  = USTR(unmap->unmap(unmap->handle, urid));
 		object = serd_node_from_string(SERD_URI, str);
 	} else if (type_urid == sratom->forge.Path) {
 		const uint8_t* str = USTR(body);
@@ -278,22 +278,22 @@ sratom_write(Sratom*         sratom,
 		object = serd_node_from_string(SERD_URI, str);
 	} else if (type_urid == sratom->forge.Int) {
 		new_node = true;
-		object   = serd_node_new_integer(*(int32_t*)body);
+		object   = serd_node_new_integer(*(const int32_t*)body);
 		datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
 		                                 ? NS_XSD "integer" : NS_XSD "int");
 	} else if (type_urid == sratom->forge.Long) {
 		new_node = true;
-		object   = serd_node_new_integer(*(int64_t*)body);
+		object   = serd_node_new_integer(*(const int64_t*)body);
 		datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
 		                                 ? NS_XSD "integer" : NS_XSD "long");
 	} else if (type_urid == sratom->forge.Float) {
 		new_node = true;
-		object   = serd_node_new_decimal(*(float*)body, 8);
+		object   = serd_node_new_decimal(*(const float*)body, 8);
 		datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
 		                                 ? NS_XSD "decimal" : NS_XSD "float");
 	} else if (type_urid == sratom->forge.Double) {
 		new_node = true;
-		object   = serd_node_new_decimal(*(double*)body, 16);
+		object   = serd_node_new_decimal(*(const double*)body, 16);
 		datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
 		                                 ? NS_XSD "decimal" : NS_XSD "double");
 	} else if (type_urid == sratom->forge.Bool) {
@@ -307,7 +307,7 @@ sratom_write(Sratom*         sratom,
 		uint8_t* str = (uint8_t*)calloc(size * 2 + 1, 1);
 		for (uint32_t i = 0; i < size; ++i) {
 			snprintf((char*)str + (2 * i), size * 2 + 1, "%02X",
-			         (unsigned)(uint8_t)*((uint8_t*)body + i));
+			         (unsigned)(uint8_t)*((const uint8_t*)body + i));
 		}
 		object = serd_node_from_string(SERD_LITERAL, USTR(str));
 	} else if (type_urid == sratom->atom_Event) {
@@ -352,8 +352,8 @@ sratom_write(Sratom*         sratom,
 		sratom->write_statement(sratom->handle, flags, NULL, &id, &p, &child_type, NULL, NULL);
 		p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
-		for (char* i = (char*)(vec + 1);
-		     i < (char*)vec + size;
+		for (const char* i = (const char*)(vec + 1);
+		     i < (const char*)vec + size;
 		     i += vec->child_size) {
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            vec->child_size, vec->child_type, i);
@@ -575,19 +575,19 @@ read_node(Sratom*         sratom,
 		const char* language = sord_node_get_language(node);
 		if (datatype) {
 			const char* type_uri = (const char*)sord_node_get_string(datatype);
-			if (!strcmp(type_uri, (char*)NS_XSD "int") ||
-			    !strcmp(type_uri, (char*)NS_XSD "integer")) {
+			if (!strcmp(type_uri, (const char*)NS_XSD "int") ||
+			    !strcmp(type_uri, (const char*)NS_XSD "integer")) {
 				lv2_atom_forge_int(forge, strtol(str, &endptr, 10));
-			} else if (!strcmp(type_uri, (char*)NS_XSD "long")) {
+			} else if (!strcmp(type_uri, (const char*)NS_XSD "long")) {
 				lv2_atom_forge_long(forge, strtol(str, &endptr, 10));
-			} else if (!strcmp(type_uri, (char*)NS_XSD "float") ||
-			           !strcmp(type_uri, (char*)NS_XSD "decimal")) {
+			} else if (!strcmp(type_uri, (const char*)NS_XSD "float") ||
+			           !strcmp(type_uri, (const char*)NS_XSD "decimal")) {
 				lv2_atom_forge_float(forge, serd_strtod(str, &endptr));
-			} else if (!strcmp(type_uri, (char*)NS_XSD "double")) {
+			} else if (!strcmp(type_uri, (const char*)NS_XSD "double")) {
 				lv2_atom_forge_double(forge, serd_strtod(str, &endptr));
-			} else if (!strcmp(type_uri, (char*)NS_XSD "boolean")) {
+			} else if (!strcmp(type_uri, (const char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
-			} else if (!strcmp(type_uri, (char*)NS_XSD "base64Binary")) {
+			} else if (!strcmp(type_uri, (const char*)NS_XSD "base64Binary")) {
 				size_t size = 0;
 				void*  body = serd_base64_decode(USTR(str), len, &size);
 				lv2_atom_forge_atom(forge, size, forge->Chunk);

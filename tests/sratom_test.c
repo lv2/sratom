@@ -31,7 +31,7 @@
 static char** uris   = NULL;
 static size_t n_uris = 0;
 
-char*
+static char*
 copy_string(const char* str)
 {
 	const size_t len = strlen(str);
@@ -40,7 +40,7 @@ copy_string(const char* str)
 	return dup;
 }
 
-LV2_URID
+static LV2_URID
 urid_map(LV2_URID_Map_Handle handle, const char* uri)
 {
 	for (size_t i = 0; i < n_uris; ++i) {
@@ -54,7 +54,7 @@ urid_map(LV2_URID_Map_Handle handle, const char* uri)
 	return n_uris;
 }
 
-const char*
+static const char*
 urid_unmap(LV2_URID_Unmap_Handle handle,
            LV2_URID              urid)
 {
@@ -64,7 +64,7 @@ urid_unmap(LV2_URID_Unmap_Handle handle,
 	return NULL;
 }
 
-int
+static int
 test_fail(const char* fmt, ...)
 {
 	va_list args;
@@ -75,7 +75,7 @@ test_fail(const char* fmt, ...)
 	return 1;
 }
 
-int
+static int
 test(bool top_level)
 {
 	LV2_URID_Map   map   = { NULL, urid_map };
@@ -234,8 +234,8 @@ test(bool top_level)
 	SerdNode s = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
 	SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
 
-	SerdNode* subj   = top_level ? NULL : &s;
-	SerdNode* pred   = top_level ? NULL : &p;
+	SerdNode* subj = top_level ? NULL : &s;
+	SerdNode* pred = top_level ? NULL : &p;
 
 	char* outstr = sratom_to_turtle(
 		sratom, &unmap, base_uri, subj, pred,
@@ -245,8 +245,8 @@ test(bool top_level)
 
 	LV2_Atom* parsed = NULL;
 	if (top_level) {
-		SerdNode s = serd_node_from_string(SERD_URI, (const uint8_t*)obj_uri);
-		parsed = sratom_from_turtle(sratom, base_uri, &s, NULL, outstr);
+		SerdNode o= serd_node_from_string(SERD_URI, (const uint8_t*)obj_uri);
+		parsed = sratom_from_turtle(sratom, base_uri, &o, NULL, outstr);
 	} else {
 		parsed = sratom_from_turtle(sratom, base_uri, subj, pred, outstr);
 	}
@@ -281,7 +281,7 @@ test(bool top_level)
 }
 
 int
-main()
+main(void)
 {
 	if (test(false)) {
 		return 1;
