@@ -6,7 +6,7 @@ from waflib.extras import autowaf as autowaf
 import waflib.Options as Options
 
 # Version of this package (even if built as a child)
-SRATOM_VERSION       = '0.2.1'
+SRATOM_VERSION       = '0.4.0'
 SRATOM_MAJOR_VERSION = '0'
 
 # Library version (UNIX style major, minor, micro)
