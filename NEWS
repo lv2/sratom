@@ -1,3 +1,9 @@
+sratom (0.4.1) unstable;
+
+  * Disable timestamps in HTML documentation for reproducible build
+
+ -- David Robillard <d@drobilla.net>  Sun, 09 Sep 2012 03:19:01 -0400
+
 sratom (0.4.0) stable;
 
   * Correctly read objects with several rdf:type properties
