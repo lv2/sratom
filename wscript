@@ -1,28 +1,22 @@
 #!/usr/bin/env python
 import os
 import subprocess
-
-from waflib.extras import autowaf as autowaf
+import waflib.Logs as Logs
 import waflib.Options as Options
+import waflib.extras.autowaf as autowaf
 
-# Version of this package (even if built as a child)
-SRATOM_VERSION       = '0.4.1'
-SRATOM_MAJOR_VERSION = '0'
-
-# Library version (UNIX style major, minor, micro)
+# Library and package version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-# Sratom uses the same version number for both library and package
-SRATOM_LIB_VERSION = SRATOM_VERSION
+SRATOM_VERSION       = '0.4.1'
+SRATOM_MAJOR_VERSION = '0'
 
-# Variables for 'waf dist'
-APPNAME = 'sratom'
-VERSION = SRATOM_VERSION
-
-# Mandatory variables
-top = '.'
-out = 'build'
+# Mandatory waf variables
+APPNAME = 'sratom'        # Package name for waf dist
+VERSION = SRATOM_VERSION  # Package version for waf dist
+top     = '.'             # Source directory
+out     = 'build'         # Build directory
 
 def options(opt):
     opt.load('compiler_c')
@@ -53,19 +47,21 @@ def configure(conf):
                       define_name='HAVE_GCOV',
                       mandatory=False)
 
-    autowaf.check_pkg(conf, 'lv2', atleast_version='1.0.0', uselib_store='LV2')
+    autowaf.check_pkg(conf, 'lv2', uselib_store='LV2',
+                      atleast_version='1.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.14.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
                       atleast_version='0.8.0', mandatory=True)
 
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
+    autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
 
     autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
     print('')
 
-lib_source = [ 'src/sratom.c' ]
+lib_source = ['src/sratom.c']
 
 def build(bld):
     # C Headers
@@ -94,7 +90,7 @@ def build(bld):
                   lib             = libs,
                   name            = 'libsratom',
                   target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
-                  vnum            = SRATOM_LIB_VERSION,
+                  vnum            = SRATOM_VERSION,
                   install_path    = '${LIBDIR}',
                   defines         = defines + ['SRATOM_SHARED', 'SRATOM_INTERNAL'],
                   cflags          = libflags)
@@ -109,7 +105,7 @@ def build(bld):
                   lib             = libs,
                   name            = 'libsratom_static',
                   target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
-                  vnum            = SRATOM_LIB_VERSION,
+                  vnum            = SRATOM_VERSION,
                   install_path    = '${LIBDIR}',
                   defines         = defines + ['SRATOM_INTERNAL'])
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')

@@ -6,6 +6,6 @@ includedir=@INCLUDEDIR@
 Name: Sratom
 Version: @SRATOM_VERSION@
 Description: LV2 Atom RDF serialisation library
-Requires: serd-0 sord-0 lv2
-Libs: -L${libdir} -lsratom-@SRATOM_MAJOR_VERSION@
+Requires: lv2 @PKG_serd_0@ @PKG_sord_0@
+Libs: -L${libdir} -l@LIB_SRATOM@
 Cflags: -I${includedir}/sratom-@SRATOM_MAJOR_VERSION@
