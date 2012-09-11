@@ -14,6 +14,8 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#define __STDC_LIMIT_MACROS 1
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
