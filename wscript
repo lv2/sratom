@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import subprocess
-import waflib.Logs as Logs
 import waflib.Options as Options
 import waflib.extras.autowaf as autowaf
 
