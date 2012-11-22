@@ -130,7 +130,7 @@ sratom_set_pretty_numbers(Sratom* sratom,
 */
 SRATOM_API
 void
-sratom_set_object_mode(Sratom*        sratom,
+sratom_set_object_mode(Sratom*          sratom,
                        SratomObjectMode object_mode);
 
 /**
