@@ -91,6 +91,7 @@ SRATOM_API
 void
 sratom_free(Sratom* sratom)
 {
+	serd_node_free(&sratom->base_uri);
 	free(sratom);
 }
 
@@ -230,6 +231,7 @@ sratom_write(Sratom*         sratom,
 	} else if (type_urid == sratom->forge.Chunk) {
 		datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
 		object   = serd_node_new_blob(body, size, true);
+		new_node = true;
 	} else if (type_urid == sratom->forge.Literal) {
 		const LV2_Atom_Literal_Body* lit = (const LV2_Atom_Literal_Body*)body;
 		const uint8_t*         str = USTR(lit + 1);
@@ -476,6 +478,7 @@ sratom_to_turtle(Sratom*         sratom,
 
 	serd_writer_free(writer);
 	serd_env_free(env);
+	serd_node_free(&base);
 	return (char*)serd_chunk_sink_finish(&str);
 }
 
@@ -787,6 +790,7 @@ sratom_from_turtle(Sratom*         sratom,
 	serd_env_free(env);
 	sord_free(model);
 	sord_world_free(world);
+	serd_node_free(&base);
 
 	return (LV2_Atom*)out.buf;
 }
