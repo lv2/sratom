@@ -2,8 +2,9 @@ sratom (0.4.1) unstable;
 
   * Fix memory leaks
   * Disable timestamps in HTML documentation for reproducible build
+  * Update to waf 1.7.8 and autowaf r90 (install docs to versioned directory)
 
- -- David Robillard <d@drobilla.net>  Thu, 22 Nov 2012 22:45:27 -0500
+ -- David Robillard <d@drobilla.net>  Sat, 22 Dec 2012 20:18:15 -0500
 
 sratom (0.4.0) stable;
 
