@@ -105,8 +105,9 @@ test(bool top_level)
 	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/n-blob");
 	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/o-blank");
 	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/p-tuple");
-	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/q-vector");
-	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/r-seq");
+	LV2_URID eg_rectup  = urid_map(NULL, "http://example.org/q-rectup");
+	LV2_URID eg_vector  = urid_map(NULL, "http://example.org/r-vector");
+	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/s-seq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -202,6 +203,19 @@ test(bool top_level)
 	lv2_atom_forge_string(&forge, "foo", strlen("foo"));
 	lv2_atom_forge_bool(&forge, true);
 	lv2_atom_forge_pop(&forge, &tuple_frame);
+
+	// eg_rectup = "foo",true,("bar",false)
+	lv2_atom_forge_property_head(&forge, eg_rectup, 0);
+	LV2_Atom_Forge_Frame rectup_frame;
+	lv2_atom_forge_tuple(&forge, &rectup_frame);
+	lv2_atom_forge_string(&forge, "foo", strlen("foo"));
+	lv2_atom_forge_bool(&forge, true);
+	LV2_Atom_Forge_Frame subrectup_frame;
+	lv2_atom_forge_tuple(&forge, &subrectup_frame);
+	lv2_atom_forge_string(&forge, "bar", strlen("bar"));
+	lv2_atom_forge_bool(&forge, false);
+	lv2_atom_forge_pop(&forge, &subrectup_frame);
+	lv2_atom_forge_pop(&forge, &rectup_frame);
 
 	// eg_vector = (Vector<Int32>)1,2,3,4
 	lv2_atom_forge_property_head(&forge, eg_vector, 0);

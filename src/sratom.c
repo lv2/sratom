@@ -186,7 +186,11 @@ start_object(Sratom*         sratom,
 	if (subject && predicate) {
 		sratom->write_statement(sratom->handle, *flags|SERD_ANON_O_BEGIN, NULL,
 		                        subject, predicate, node, NULL, NULL);
+		// Start abbreviating object properties
 		*flags |= SERD_ANON_CONT;
+
+		// Object is in a list, stop list abbreviating if necessary
+		*flags &= ~SERD_LIST_CONT;
 	}
 	if (type) {
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "type");
