@@ -486,23 +486,6 @@ sratom_to_turtle(Sratom*         sratom,
 	return (char*)serd_chunk_sink_finish(&str);
 }
 
-static const SordNode*
-get_object(SordModel*      model,
-           const SordNode* subject,
-           const SordNode* predicate)
-{
-	const SordNode* object = NULL;
-	SordQuad        q      = { subject, predicate, 0, 0 };
-	SordIter*       i      = sord_find(model, q);
-	if (!sord_iter_end(i)) {
-		SordQuad quad;
-		sord_iter_get(i, quad);
-		object = quad[SORD_OBJECT];
-	}
-	sord_iter_free(i);
-	return object;
-}
-
 static void
 read_list_value(Sratom*         sratom,
                 LV2_Atom_Forge* forge,
@@ -511,12 +494,14 @@ read_list_value(Sratom*         sratom,
                 const SordNode* node,
                 ReadMode        mode)
 {
-	const SordNode* first = get_object(model, node, sratom->nodes.rdf_first);
-	const SordNode* rest  = get_object(model, node, sratom->nodes.rdf_rest);
-	if (first && rest) {
-		read_node(sratom, forge, world, model, first, mode);
-		read_list_value(sratom, forge, world, model, rest, mode);
+	SordNode* fst = sord_get(model, node, sratom->nodes.rdf_first, NULL, NULL);
+	SordNode* rst = sord_get(model, node, sratom->nodes.rdf_rest, NULL, NULL);
+	if (fst && rst) {
+		read_node(sratom, forge, world, model, fst, mode);
+		read_list_value(sratom, forge, world, model, rst, mode);
 	}
+	sord_node_free(world, rst);
+	sord_node_free(world, fst);
 }
 
 static void
@@ -645,8 +630,10 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));
 		}
 	} else {
-		const SordNode* type  = get_object(model, node, sratom->nodes.rdf_type);
-		const SordNode* value = get_object(model, node, sratom->nodes.rdf_value);
+		SordNode* type = sord_get(
+			model, node, sratom->nodes.rdf_type, NULL, NULL);
+		SordNode* value = sord_get(
+			model, node, sratom->nodes.rdf_value, NULL, NULL);
 
 		const uint8_t* type_uri  = NULL;
 		uint32_t       type_urid = 0;
@@ -657,13 +644,14 @@ read_node(Sratom*         sratom,
 
 		LV2_Atom_Forge_Frame frame = { 0, 0 };
 		if (mode == MODE_SEQUENCE) {
-			const SordNode* frame_time = get_object(
-				model, node, sratom->nodes.atom_frameTime);
+			SordNode* frame_time = sord_get(
+				model, node, sratom->nodes.atom_frameTime, NULL, NULL);
 			const char* frame_time_str = frame_time
 				? (const char*)sord_node_get_string(frame_time)
 				: "";
 			lv2_atom_forge_frame_time(forge, serd_strtod(frame_time_str, NULL));
 			read_node(sratom, forge, world, model, value, MODE_BODY);
+			sord_node_free(world, frame_time);
 		} else if (type_urid == sratom->forge.Tuple) {
 			lv2_atom_forge_tuple(forge, &frame);
 			read_list_value(sratom, forge, world, model, value, MODE_BODY);
@@ -671,8 +659,8 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_sequence_head(forge, &frame, 0);
 			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
 		} else if (type_urid == sratom->forge.Vector) {
-			const SordNode* child_type_node = get_object(
-				model, node, sratom->nodes.atom_childType);
+			SordNode* child_type_node = sord_get(
+				model, node, sratom->nodes.atom_childType, NULL, NULL);
 			uint32_t child_type = map->map(
 				map->handle, (const char*)sord_node_get_string(child_type_node));
 			uint32_t child_size = atom_size(sratom, child_type);
@@ -680,6 +668,7 @@ read_node(Sratom*         sratom,
 				lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
 				read_list_value(sratom, forge, world, model, value, MODE_BODY);
 			}
+			sord_node_free(world, child_type_node);
 		} else if (value && sord_node_equals(sord_node_get_datatype(value),
 		                                     sratom->nodes.xsd_base64Binary)) {
 			size_t         vlen = 0;
@@ -700,6 +689,8 @@ read_node(Sratom*         sratom,
 		if (frame.ref) {
 			lv2_atom_forge_pop(forge, &frame);
 		}
+		sord_node_free(world, value);
+		sord_node_free(world, type);
 	}
 }
 
@@ -773,16 +764,13 @@ sratom_from_turtle(Sratom*         sratom,
 			&sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
 		if (subject && predicate) {
 			SordNode* p = sord_node_from_serd_node(world, env, predicate, 0, 0);
-			SordQuad  q = { s, p, 0, 0 };
-			SordIter* i = sord_find(model, q);
-			if (!sord_iter_end(i)) {
-				SordQuad result;
-				sord_iter_get(i, result);
-				sratom_read(sratom, &sratom->forge, world, model, result[SORD_OBJECT]);
+			SordNode* o = sord_get(model, s, p, NULL, NULL);
+			if (o) {
+				sratom_read(sratom, &sratom->forge, world, model, o);
+				sord_node_free(world, o);
 			} else {
 				fprintf(stderr, "Failed to find node\n");
 			}
-			sord_iter_free(i);
 		} else {
 			sratom_read(sratom, &sratom->forge, world, model, s);
 		}
