@@ -1,11 +1,12 @@
-sratom (0.4.1) unstable;
+sratom (0.4.2) stable;
 
   * Fix serialisation of nested tuples
   * Fix memory leaks
+  * Use new sord API to clean up and shrink code
   * Disable timestamps in HTML documentation for reproducible build
-  * Update to waf 1.7.8 and autowaf r90 (install docs to versioned directory)
+  * Update to waf 1.7.9 and autowaf r90 (install docs to versioned directory)
 
- -- David Robillard <d@drobilla.net>  Tue, 22 Jan 2013 00:06:31 -0500
+ -- David Robillard <d@drobilla.net>  Mon, 18 Feb 2013 11:17:01 -0500
 
 sratom (0.4.0) stable;
 

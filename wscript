@@ -8,7 +8,7 @@ import waflib.extras.autowaf as autowaf
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-SRATOM_VERSION       = '0.4.1'
+SRATOM_VERSION       = '0.4.2'
 SRATOM_MAJOR_VERSION = '0'
 
 # Mandatory waf variables
@@ -51,7 +51,7 @@ def configure(conf):
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.14.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
-                      atleast_version='0.8.0', mandatory=True)
+                      atleast_version='0.12.0', mandatory=True)
 
     autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
