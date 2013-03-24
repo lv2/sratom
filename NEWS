@@ -1,3 +1,9 @@
+sratom (0.4.3) unstable;
+
+  * Escape invalid characters when writing paths as URIs
+
+ -- David Robillard <d@drobilla.net>  Sun, 24 Mar 2013 17:51:07 -0400
+
 sratom (0.4.2) stable;
 
   * Fix serialisation of nested tuples
