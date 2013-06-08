@@ -424,6 +424,14 @@ sratom_write(Sratom*         sratom,
 	}
 
 	if (object.buf) {
+		SerdNode def_s = serd_node_from_string(SERD_BLANK, USTR("atom"));
+		SerdNode def_p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
+		if (!subject) {
+			subject = &def_s;
+		}
+		if (!predicate) {
+			predicate = &def_p;
+		}
 		sratom->write_statement(sratom->handle, flags, NULL,
 		                        subject, predicate, &object, &datatype, &language);
 	}
