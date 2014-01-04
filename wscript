@@ -8,7 +8,7 @@ import waflib.extras.autowaf as autowaf
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-SRATOM_VERSION       = '0.4.3'
+SRATOM_VERSION       = '0.4.4'
 SRATOM_MAJOR_VERSION = '0'
 
 # Mandatory waf variables
