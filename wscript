@@ -47,7 +47,7 @@ def configure(conf):
                       mandatory=False)
 
     autowaf.check_pkg(conf, 'lv2', uselib_store='LV2',
-                      atleast_version='1.0.0', mandatory=True)
+                      atleast_version='1.8.1', mandatory=True)
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.14.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',

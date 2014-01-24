@@ -370,12 +370,12 @@ sratom_write(Sratom*         sratom,
 		if (sratom->end_anon) {
 			sratom->end_anon(sratom->handle, &id);
 		}
-	} else if (type_urid == sratom->forge.Blank ||
-	           type_urid == sratom->forge.Resource) {
+	} else if (lv2_atom_forge_is_object_type(&sratom->forge, type_urid)) {
 		const LV2_Atom_Object_Body* obj   = (const LV2_Atom_Object_Body*)body;
 		const char*                 otype = unmap->unmap(unmap->handle,
 		                                                 obj->otype);
-		if (type_urid == sratom->forge.Blank) {
+
+		if (lv2_atom_forge_is_blank(&sratom->forge, type_urid, obj)) {
 			gensym(&id, 'b', sratom->next_id++);
 			start_object(sratom, &flags, subject, predicate, &id, otype);
 		} else {
@@ -533,7 +533,7 @@ read_resource(Sratom*         sratom,
 		if (!(sord_node_equals(p, sratom->nodes.rdf_type) &&
 		      sord_node_get_type(o) == SORD_URI &&
 		      map->map(map->handle, (const char*)sord_node_get_string(o)) == otype)) {
-			lv2_atom_forge_property_head(forge, p_urid, 0);
+			lv2_atom_forge_key(forge, p_urid);
 			read_node(sratom, forge, world, model, o, MODE_BODY);
 		}
 	}
@@ -687,11 +687,11 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_write(forge, body, size);
 			free(body);
 		} else if (sord_node_get_type(node) == SORD_URI) {
-			lv2_atom_forge_resource(
+			lv2_atom_forge_object(
 				forge, &frame, map->map(map->handle, str), type_urid);
 			read_resource(sratom, forge, world, model, node, type_urid);
 		} else {
-			lv2_atom_forge_blank(forge, &frame, sratom->next_id++, type_urid);
+			lv2_atom_forge_object(forge, &frame, 0, type_urid);
 			read_resource(sratom, forge, world, model, node, type_urid);
 		}
 		if (frame.ref) {
