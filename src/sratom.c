@@ -465,8 +465,6 @@ sratom_to_turtle(Sratom*         sratom,
 	                                 USTR(LV2_ATOM_URI "#"));
 	serd_env_set_prefix_from_strings(env, USTR("rdf"), NS_RDF);
 	serd_env_set_prefix_from_strings(env, USTR("xsd"), NS_XSD);
-	serd_env_set_prefix_from_strings(env, USTR("eg"),
-	                                 USTR("http://example.org/"));
 
 	SerdWriter* writer = serd_writer_new(
 		SERD_TURTLE,
