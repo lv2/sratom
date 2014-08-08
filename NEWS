@@ -1,9 +1,10 @@
-sratom (0.4.5) unstable;
+sratom (0.4.6) stable;
 
   * Update for latest LV2 Atom Object simplification
   * Don't set eg prefix in sratom_to_turtle
+  * Upgrade to waf 1.7.16
 
- -- David Robillard <d@drobilla.net>  Thu, 23 Jan 2014 21:58:48 -0500
+ -- David Robillard <d@drobilla.net>  Fri, 08 Aug 2014 18:14:19 -0400
 
 sratom (0.4.4) stable;
 
