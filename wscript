@@ -138,6 +138,7 @@ def build(bld):
                   install_path = '',
                   defines      = defines,
                   cflags       = test_cflags)
+        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Documentation
     autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
