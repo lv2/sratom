@@ -57,7 +57,7 @@ def configure(conf):
     autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
 
-    autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
+    autowaf.display_msg(conf, "Unit tests", bool(conf.env.BUILD_TESTS))
     print('')
 
 lib_source = ['src/sratom.c']
