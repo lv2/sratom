@@ -551,9 +551,8 @@ atom_size(Sratom* sratom, uint32_t type_urid)
 		return sizeof(int32_t);
 	} else if (type_urid == sratom->forge.URID) {
 		return sizeof(uint32_t);
-	} else {
-		return 0;
 	}
+	return 0;
 }
 
 static void
