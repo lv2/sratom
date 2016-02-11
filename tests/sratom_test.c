@@ -114,7 +114,11 @@ test(bool top_level, bool pretty_numbers)
 	LV2_URID eg_bvector = urid_map(NULL, "http://example.org/v-bvector");
 	LV2_URID eg_seq     = urid_map(NULL, "http://example.org/x-seq");
 
-	uint8_t buf[1024];
+	LV2_URID eg_string_utf8  = urid_map(NULL, "http://example.org/z0-string_utf8");
+	LV2_URID eg_langlit_utf8 = urid_map(NULL, "http://example.org/z1-langlit_utf8");
+	LV2_URID eg_typelit_utf8 = urid_map(NULL, "http://example.org/z2-typelit_utf8");
+
+	uint8_t buf[2048];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
 
 	const char*          obj_uri = "http://example.org/obj";
@@ -172,7 +176,7 @@ test(bool top_level, bool pretty_numbers)
 		&forge, "bonjour", strlen("bonjour"),
 		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/fra"));
 
-	// eg_typelit = (Literal)"bonjour"@fr
+	// eg_typelit = (Literal)"value"^^<http://example.org/Type>
 	lv2_atom_forge_key(&forge, eg_typelit);
 	lv2_atom_forge_literal(
 		&forge, "value", strlen("value"),
@@ -266,6 +270,26 @@ test(bool top_level, bool pretty_numbers)
 	lv2_atom_forge_pad(&forge, sizeof(ev2));
 
 	lv2_atom_forge_pop(&forge, &seq_frame);
+
+	const char *klingon_str = "  ";
+	const size_t klingon_len = strlen(klingon_str);
+
+	// eg_string_utf8 = (String)"  "
+	lv2_atom_forge_key(&forge, eg_string_utf8);
+	lv2_atom_forge_string(&forge, klingon_str, klingon_len);
+
+	// eg_langlit_utf8 = (Literal)"  "@tlh
+	lv2_atom_forge_key(&forge, eg_langlit_utf8);
+	lv2_atom_forge_literal(
+		&forge, klingon_str, klingon_len,
+		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/tlh"));
+
+	// eg_typelit_utf8 = (Literal)"  "^^<http://example.org/Type>
+	lv2_atom_forge_key(&forge, eg_typelit_utf8);
+	lv2_atom_forge_literal(
+		&forge, klingon_str, klingon_len,
+		urid_map(NULL, "http://www.kli.org"), 0);
+
 	lv2_atom_forge_pop(&forge, &obj_frame);
 
 	const char* base_uri = "file:///tmp/base/";

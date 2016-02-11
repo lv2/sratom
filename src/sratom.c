@@ -591,7 +591,8 @@ read_node(Sratom*         sratom,
 				lv2_atom_forge_write(forge, body, size);
 				free(body);
 			} else if (!strcmp(type_uri, LV2_ATOM__Path)) {
-				lv2_atom_forge_path(forge, str, len);
+				const size_t str_len = str ? strlen(str) : 0;
+				lv2_atom_forge_path(forge, str, str_len);
 			} else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
 				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
 				for (const char* s = str; s < str + len; s += 2) {
@@ -602,8 +603,9 @@ read_node(Sratom*         sratom,
 				}
 				lv2_atom_forge_pad(forge, len / 2);
 			} else {
+				const size_t str_len = str ? strlen(str) : 0;
 				lv2_atom_forge_literal(
-					forge, str, len,
+					forge, str, str_len,
 					sratom->map->map(sratom->map->handle, type_uri),
 					0);
 			}
@@ -611,13 +613,15 @@ read_node(Sratom*         sratom,
 			const char*  prefix   = "http://lexvo.org/id/iso639-3/";
 			const size_t lang_len = strlen(prefix) + strlen(language);
 			char*        lang_uri = (char*)calloc(lang_len + 1, 1);
+			const size_t str_len = str ? strlen(str) : 0;
 			snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
 			lv2_atom_forge_literal(
-				forge, str, len, 0,
+				forge, str, str_len, 0,
 				sratom->map->map(sratom->map->handle, lang_uri));
 			free(lang_uri);
 		} else {
-			lv2_atom_forge_string(forge, str, len);
+			const size_t str_len = str ? strlen(str) : 0;
+			lv2_atom_forge_string(forge, str, str_len);
 		}
 	} else if (sord_node_get_type(node) == SORD_URI &&
 	           !(sratom->object_mode == SRATOM_OBJECT_MODE_BLANK_SUBJECT
