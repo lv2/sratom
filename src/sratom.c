@@ -41,6 +41,8 @@ struct SratomImpl {
 	LV2_URID_Map*     map;
 	LV2_Atom_Forge    forge;
 	LV2_URID          atom_Event;
+	LV2_URID          atom_frameTime;
+	LV2_URID          atom_beatTime;
 	LV2_URID          midi_MidiEvent;
 	unsigned          next_id;
 	SerdNode          base_uri;
@@ -49,9 +51,11 @@ struct SratomImpl {
 	void*             handle;
 	SratomObjectMode  object_mode;
 	bool              pretty_numbers;
+	uint32_t          seq_unit;
 	struct {
 		SordNode* atom_childType;
 		SordNode* atom_frameTime;
+		SordNode* atom_beatTime;
 		SordNode* rdf_first;
 		SordNode* rdf_rest;
 		SordNode* rdf_type;
@@ -75,6 +79,8 @@ sratom_new(LV2_URID_Map* map)
 	Sratom* sratom = (Sratom*)malloc(sizeof(Sratom));
 	sratom->map            = map;
 	sratom->atom_Event     = map->map(map->handle, LV2_ATOM__Event);
+	sratom->atom_frameTime = map->map(map->handle, LV2_ATOM__frameTime);
+	sratom->atom_beatTime  = map->map(map->handle, LV2_ATOM__beatTime);
 	sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 	sratom->next_id        = 0;
 	sratom->base_uri       = SERD_NODE_NULL;
@@ -320,11 +326,20 @@ sratom_write(Sratom*         sratom,
 		const LV2_Atom_Event* ev = (const LV2_Atom_Event*)body;
 		gensym(&id, 'e', sratom->next_id++);
 		start_object(sratom, &flags, subject, predicate, &id, NULL);
-		// TODO: beat time
-		SerdNode time = serd_node_new_integer(ev->time.frames);
-		SerdNode p    = serd_node_from_string(SERD_URI,
-		                                      USTR(LV2_ATOM__frameTime));
-		datatype = serd_node_from_string(SERD_URI, NS_XSD "decimal");
+		SerdNode time, p;
+		if(sratom->seq_unit == sratom->atom_beatTime) {
+			time = serd_node_new_decimal(ev->time.beats, 16);
+			p    = serd_node_from_string(SERD_URI,
+																	USTR(LV2_ATOM__beatTime));
+			datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
+																			 ? NS_XSD "decimal" : NS_XSD "double");
+		} else {
+			time = serd_node_new_integer(ev->time.frames);
+			p    = serd_node_from_string(SERD_URI,
+																	USTR(LV2_ATOM__frameTime));
+			datatype = serd_node_from_string(SERD_URI, (sratom->pretty_numbers)
+																			 ? NS_XSD "decimal" : NS_XSD "long");
+		}
 		sratom->write_statement(sratom->handle, SERD_ANON_CONT, NULL,
 		                        &id, &p, &time, &datatype, &language);
 		serd_node_free(&time);
@@ -399,6 +414,7 @@ sratom_write(Sratom*         sratom,
 		SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
 		flags |= SERD_LIST_O_BEGIN;
 		LV2_ATOM_SEQUENCE_BODY_FOREACH(seq, size, ev) {
+			sratom->seq_unit = seq->unit;
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            sizeof(LV2_Atom_Event) + ev->body.size,
 			            sratom->atom_Event,
@@ -646,20 +662,34 @@ read_node(Sratom*         sratom,
 
 		LV2_Atom_Forge_Frame frame = { 0, 0 };
 		if (mode == MODE_SEQUENCE) {
-			SordNode* frame_time = sord_get(
-				model, node, sratom->nodes.atom_frameTime, NULL, NULL);
-			const char* frame_time_str = frame_time
-				? (const char*)sord_node_get_string(frame_time)
-				: "";
-			lv2_atom_forge_frame_time(forge, serd_strtod(frame_time_str, NULL));
+			SordNode* time = sord_get(model, node,
+				sratom->nodes.atom_beatTime, NULL, NULL);
+			uint32_t seq_unit;
+			if(time) {
+				const char* time_str = (const char*)sord_node_get_string(time);
+				lv2_atom_forge_beat_time(forge, serd_strtod(time_str, NULL));
+				seq_unit = sratom->atom_beatTime;
+			} else {
+				time = sord_get(model, node,
+					sratom->nodes.atom_frameTime, NULL, NULL);
+				const char* time_str = time
+					? (const char*)sord_node_get_string(time)
+					: "";
+				lv2_atom_forge_frame_time(forge, serd_strtod(time_str, NULL));
+				seq_unit = sratom->atom_frameTime;
+			}
 			read_node(sratom, forge, world, model, value, MODE_BODY);
-			sord_node_free(world, frame_time);
+			sord_node_free(world, time);
+			sratom->seq_unit = seq_unit;
 		} else if (type_urid == sratom->forge.Tuple) {
 			lv2_atom_forge_tuple(forge, &frame);
 			read_list_value(sratom, forge, world, model, value, MODE_BODY);
 		} else if (type_urid == sratom->forge.Sequence) {
-			lv2_atom_forge_sequence_head(forge, &frame, 0);
+			const LV2_Atom_Forge_Ref ref = lv2_atom_forge_sequence_head(forge, &frame, 0);
+			LV2_Atom_Sequence *seq = (LV2_Atom_Sequence *)lv2_atom_forge_deref(forge, ref);
+			sratom->seq_unit = 0;
 			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
+			seq->body.unit = (sratom->seq_unit == sratom->atom_frameTime) ? 0 : sratom->seq_unit;
 		} else if (type_urid == sratom->forge.Vector) {
 			SordNode* child_type_node = sord_get(
 				model, node, sratom->nodes.atom_childType, NULL, NULL);
@@ -706,6 +736,7 @@ sratom_read(Sratom*         sratom,
 {
 	sratom->nodes.atom_childType   = sord_new_uri(world, USTR(LV2_ATOM__childType));
 	sratom->nodes.atom_frameTime   = sord_new_uri(world, USTR(LV2_ATOM__frameTime));
+	sratom->nodes.atom_beatTime    = sord_new_uri(world, USTR(LV2_ATOM__beatTime));
 	sratom->nodes.rdf_first        = sord_new_uri(world, NS_RDF "first");
 	sratom->nodes.rdf_rest         = sord_new_uri(world, NS_RDF "rest");
 	sratom->nodes.rdf_type         = sord_new_uri(world, NS_RDF "type");
@@ -721,6 +752,7 @@ sratom_read(Sratom*         sratom,
 	sord_node_free(world, sratom->nodes.rdf_rest);
 	sord_node_free(world, sratom->nodes.rdf_first);
 	sord_node_free(world, sratom->nodes.atom_frameTime);
+	sord_node_free(world, sratom->nodes.atom_beatTime);
 	sord_node_free(world, sratom->nodes.atom_childType);
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
 }
