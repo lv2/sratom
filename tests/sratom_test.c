@@ -172,7 +172,7 @@ test(bool top_level, bool pretty_numbers)
 		&forge, "bonjour", strlen("bonjour"),
 		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/fra"));
 
-	// eg_typelit = (Literal)"bonjour"@fr
+	// eg_typelit = (Literal)"value"^^<http://example.org/Type>
 	lv2_atom_forge_key(&forge, eg_typelit);
 	lv2_atom_forge_literal(
 		&forge, "value", strlen("value"),
