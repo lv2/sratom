@@ -1,9 +1,10 @@
-sratom (0.4.7) unstable;
+sratom (0.4.9) unstable;
 
+  * Support sequences with beat time stamps
   * Fix warnings when building with ISO C++ compilers
   * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Fri, 02 Oct 2015 21:03:46 -0400
+ -- David Robillard <d@drobilla.net>  Tue, 15 Mar 2016 17:57:49 -0400
 
 sratom (0.4.6) stable;
 
