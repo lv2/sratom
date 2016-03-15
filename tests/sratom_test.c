@@ -166,11 +166,12 @@ test(bool top_level, bool pretty_numbers)
 	lv2_atom_forge_key(&forge, eg_string);
 	lv2_atom_forge_string(&forge, "hello", strlen("hello"));
 
-	// eg_langlit = (Literal)"bonjour"@fr
+	// eg_langlit = (Literal)"ni hao"@cmn (but in actual mandarin)
+	const uint8_t ni_hao[] = { 0xE4, 0xBD, 0xA0, 0xE5, 0xA5, 0xBD };
 	lv2_atom_forge_key(&forge, eg_langlit);
 	lv2_atom_forge_literal(
-		&forge, "bonjour", strlen("bonjour"),
-		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/fra"));
+		&forge, (const char*)ni_hao, 6,
+		0, urid_map(NULL, "http://lexvo.org/id/iso639-3/cmn"));
 
 	// eg_typelit = (Literal)"value"^^<http://example.org/Type>
 	lv2_atom_forge_key(&forge, eg_typelit);
