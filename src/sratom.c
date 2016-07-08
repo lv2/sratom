@@ -592,21 +592,20 @@ read_node(Sratom*         sratom,
 	size_t        len = 0;
 	const char*   str = (const char*)sord_node_get_string_counted(node, &len);
 	if (sord_node_get_type(node) == SORD_LITERAL) {
-		char*       endptr;
 		SordNode*   datatype = sord_node_get_datatype(node);
 		const char* language = sord_node_get_language(node);
 		if (datatype) {
 			const char* type_uri = (const char*)sord_node_get_string(datatype);
 			if (!strcmp(type_uri, (const char*)NS_XSD "int") ||
 			    !strcmp(type_uri, (const char*)NS_XSD "integer")) {
-				lv2_atom_forge_int(forge, strtol(str, &endptr, 10));
+				lv2_atom_forge_int(forge, strtol(str, NULL, 10));
 			} else if (!strcmp(type_uri, (const char*)NS_XSD "long")) {
-				lv2_atom_forge_long(forge, strtol(str, &endptr, 10));
+				lv2_atom_forge_long(forge, strtol(str, NULL, 10));
 			} else if (!strcmp(type_uri, (const char*)NS_XSD "float") ||
 			           !strcmp(type_uri, (const char*)NS_XSD "decimal")) {
-				lv2_atom_forge_float(forge, serd_strtod(str, &endptr));
+				lv2_atom_forge_float(forge, serd_strtod(str, NULL));
 			} else if (!strcmp(type_uri, (const char*)NS_XSD "double")) {
-				lv2_atom_forge_double(forge, serd_strtod(str, &endptr));
+				lv2_atom_forge_double(forge, serd_strtod(str, NULL));
 			} else if (!strcmp(type_uri, (const char*)NS_XSD "boolean")) {
 				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
 			} else if (!strcmp(type_uri, (const char*)NS_XSD "base64Binary")) {
