@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import subprocess
+import waflib.Logs as Logs
 import waflib.Options as Options
 import waflib.extras.autowaf as autowaf
 
@@ -149,7 +150,8 @@ def build(bld):
 def test(ctx):
     autowaf.pre_test(ctx, APPNAME)
     os.environ['PATH'] = '.' + os.pathsep + os.getenv('PATH')
-    autowaf.run_tests(ctx, APPNAME, ['sratom_test'], dirs=['./src','./tests'])
+    Logs.pprint('GREEN', '')
+    autowaf.run_test(ctx, APPNAME, 'sratom_test', dirs=['./src','./tests'])
     autowaf.post_test(ctx, APPNAME)
 
 def lint(ctx):
