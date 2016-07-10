@@ -1,10 +1,11 @@
-sratom (0.4.9) unstable;
+sratom (0.4.10) unstable;
 
+  * Support round-trip serialisation of relative paths
   * Support sequences with beat time stamps
   * Fix warnings when building with ISO C++ compilers
   * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Tue, 15 Mar 2016 17:57:49 -0400
+ -- David Robillard <d@drobilla.net>  Sun, 10 Jul 2016 18:57:29 -0400
 
 sratom (0.4.6) stable;
 

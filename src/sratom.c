@@ -1,5 +1,5 @@
 /*
-  Copyright 2012-2014 David Robillard <http://drobilla.net>
+  Copyright 2012-2016 David Robillard <http://drobilla.net>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -46,6 +46,7 @@ struct SratomImpl {
 	LV2_URID          midi_MidiEvent;
 	unsigned          next_id;
 	SerdNode          base_uri;
+	SerdURI           base;
 	SerdStatementSink write_statement;
 	SerdEndSink       end_anon;
 	void*             handle;
@@ -84,6 +85,7 @@ sratom_new(LV2_URID_Map* map)
 	sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
 	sratom->next_id        = 0;
 	sratom->base_uri       = SERD_NODE_NULL;
+	sratom->base           = SERD_URI_NULL;
 	sratom->object_mode    = SRATOM_OBJECT_MODE_BLANK;
 	sratom->pretty_numbers = false;
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
@@ -111,6 +113,7 @@ sratom_set_sink(Sratom*           sratom,
 		serd_node_free(&sratom->base_uri);
 		sratom->base_uri = serd_node_new_uri_from_string(
 			USTR(base_uri), NULL, NULL);
+		serd_uri_parse(sratom->base_uri.buf, &sratom->base);
 	}
 	sratom->write_statement = write_statement;
 	sratom->end_anon        = end_anon;
@@ -284,7 +287,6 @@ sratom_write(Sratom*         sratom,
 			new_node = true;
 			object   = serd_node_new_file_uri(str, NULL, NULL, true);
 		} else {
-			SerdURI base_uri = SERD_URI_NULL;
 			if (!sratom->base_uri.buf ||
 			    strncmp((const char*)sratom->base_uri.buf, "file://", 7)) {
 				fprintf(stderr, "warning: Relative path but base is not a file URI.\n");
@@ -292,12 +294,9 @@ sratom_write(Sratom*         sratom,
 				object   = serd_node_from_string(SERD_LITERAL, str);
 				datatype = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__Path));
 			} else {
-				if (sratom->base_uri.buf) {
-					serd_uri_parse(sratom->base_uri.buf, &base_uri);
-				}
 				new_node = true;
 				SerdNode rel = serd_node_new_file_uri(str, NULL, NULL, true);
-				object = serd_node_new_uri_from_node(&rel, &base_uri, NULL);
+				object = serd_node_new_uri_from_node(&rel, &sratom->base, NULL);
 				serd_node_free(&rel);
 			}
 		}
@@ -478,7 +477,7 @@ sratom_to_turtle(Sratom*         sratom,
                  const void*     body)
 {
 	SerdURI   buri = SERD_URI_NULL;
-	SerdNode  base = serd_node_new_uri_from_string(USTR(base_uri), NULL, &buri);
+	SerdNode  base = serd_node_new_uri_from_string(USTR(base_uri), &sratom->base, &buri);
 	SerdEnv*  env  = serd_env_new(&base);
 	SerdChunk str  = { NULL, 0 };
 
@@ -649,7 +648,11 @@ read_node(Sratom*         sratom,
 		if (!strcmp(str, (const char*)NS_RDF "nil")) {
 			lv2_atom_forge_atom(forge, 0, 0);
 		} else if (!strncmp(str, "file://", 7)) {
-			uint8_t* path = serd_file_uri_parse((const uint8_t*)str, NULL);
+			SerdURI uri;
+			serd_uri_parse((const uint8_t*)str, &uri);
+
+			SerdNode rel = serd_node_new_relative_uri(&uri, &sratom->base, NULL, NULL);
+			uint8_t* path = serd_file_uri_parse(rel.buf, NULL);
 			lv2_atom_forge_path(forge, (const char*)path, strlen((const char*)path));
 			free(path);
 		} else {
@@ -794,7 +797,7 @@ sratom_from_turtle(Sratom*         sratom,
                    const char*     str)
 {
 	SerdChunk   out    = { NULL, 0 };
-	SerdNode    base   = serd_node_new_uri_from_string(USTR(base_uri), NULL, NULL);
+	SerdNode    base   = serd_node_new_uri_from_string(USTR(base_uri), &sratom->base, NULL);
 	SordWorld*  world  = sord_world_new();
 	SordModel*  model  = sord_new(world, SORD_SPO, false);
 	SerdEnv*    env    = serd_env_new(&base);
