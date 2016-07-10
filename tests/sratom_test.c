@@ -97,23 +97,24 @@ test(bool top_level, bool pretty_numbers)
 	LV2_URID eg_true    = urid_map(NULL, "http://example.org/e-true");
 	LV2_URID eg_false   = urid_map(NULL, "http://example.org/f-false");
 	LV2_URID eg_path    = urid_map(NULL, "http://example.org/g-path");
-	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/h-urid");
-	LV2_URID eg_string  = urid_map(NULL, "http://example.org/i-string");
-	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/j-langlit");
-	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/k-typelit");
-	LV2_URID eg_null    = urid_map(NULL, "http://example.org/l-null");
-	LV2_URID eg_chunk   = urid_map(NULL, "http://example.org/m-chunk");
-	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/n-blob");
-	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/o-blank");
-	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/p-tuple");
-	LV2_URID eg_rectup  = urid_map(NULL, "http://example.org/q-rectup");
-	LV2_URID eg_ivector = urid_map(NULL, "http://example.org/r-ivector");
-	LV2_URID eg_lvector = urid_map(NULL, "http://example.org/s-lvector");
-	LV2_URID eg_fvector = urid_map(NULL, "http://example.org/t-fvector");
-	LV2_URID eg_dvector = urid_map(NULL, "http://example.org/u-dvector");
-	LV2_URID eg_bvector = urid_map(NULL, "http://example.org/v-bvector");
-	LV2_URID eg_fseq    = urid_map(NULL, "http://example.org/w-fseq");
-	LV2_URID eg_bseq    = urid_map(NULL, "http://example.org/x-bseq");
+	LV2_URID eg_winpath = urid_map(NULL, "http://example.org/h-winpath");
+	LV2_URID eg_urid    = urid_map(NULL, "http://example.org/i-urid");
+	LV2_URID eg_string  = urid_map(NULL, "http://example.org/j-string");
+	LV2_URID eg_langlit = urid_map(NULL, "http://example.org/k-langlit");
+	LV2_URID eg_typelit = urid_map(NULL, "http://example.org/l-typelit");
+	LV2_URID eg_null    = urid_map(NULL, "http://example.org/m-null");
+	LV2_URID eg_chunk   = urid_map(NULL, "http://example.org/n-chunk");
+	LV2_URID eg_blob    = urid_map(NULL, "http://example.org/o-blob");
+	LV2_URID eg_blank   = urid_map(NULL, "http://example.org/p-blank");
+	LV2_URID eg_tuple   = urid_map(NULL, "http://example.org/q-tuple");
+	LV2_URID eg_rectup  = urid_map(NULL, "http://example.org/r-rectup");
+	LV2_URID eg_ivector = urid_map(NULL, "http://example.org/s-ivector");
+	LV2_URID eg_lvector = urid_map(NULL, "http://example.org/t-lvector");
+	LV2_URID eg_fvector = urid_map(NULL, "http://example.org/u-fvector");
+	LV2_URID eg_dvector = urid_map(NULL, "http://example.org/v-dvector");
+	LV2_URID eg_bvector = urid_map(NULL, "http://example.org/w-bvector");
+	LV2_URID eg_fseq    = urid_map(NULL, "http://example.org/x-fseq");
+	LV2_URID eg_bseq    = urid_map(NULL, "http://example.org/y-bseq");
 
 	uint8_t buf[1024];
 	lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
@@ -157,6 +158,12 @@ test(bool top_level, bool pretty_numbers)
 	const size_t pstr_len = strlen(pstr);
 	lv2_atom_forge_key(&forge, eg_path);
 	lv2_atom_forge_path(&forge, pstr, pstr_len);
+
+	// eg_winpath = (Path)"C:\Stupid\File System"
+	const char*  wpstr     = "C:/Stupid/File System";
+	const size_t wpstr_len = strlen(wpstr);
+	lv2_atom_forge_key(&forge, eg_winpath);
+	lv2_atom_forge_path(&forge, wpstr, wpstr_len);
 
 	// eg_urid = (URID)"http://example.org/value"
 	LV2_URID eg_value = urid_map(NULL, "http://example.org/value");
