@@ -709,8 +709,13 @@ read_node(Sratom*         sratom,
 				map->handle, (const char*)sord_node_get_string(child_type_node));
 			uint32_t child_size = atom_size(sratom, child_type);
 			if (child_size > 0) {
-				lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
+				LV2_Atom_Forge_Ref vec_ref = lv2_atom_forge_vector_head(forge, &frame, child_size, child_type);
 				read_list_value(sratom, forge, world, model, value, MODE_BODY);
+				const LV2_Atom *vec_atom = lv2_atom_forge_deref(forge, vec_ref);
+				const uint32_t body_size = vec_atom->size - sizeof(LV2_Atom_Vector_Body);
+				lv2_atom_forge_pop(forge, &frame);
+				frame.ref = 0;
+				lv2_atom_forge_pad(forge, body_size);
 			}
 			sord_node_free(world, child_type_node);
 		} else if (value && sord_node_equals(sord_node_get_datatype(value),
