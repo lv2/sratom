@@ -20,11 +20,7 @@ out     = 'build'         # Build directory
 
 def options(opt):
     opt.load('compiler_c')
-    autowaf.set_options(opt)
-    opt.add_option('--test', action='store_true', dest='build_tests',
-                   help="Build unit tests")
-    opt.add_option('--no-coverage', action='store_true', dest='no_coverage',
-                   help='Do not use gcov for code coverage')
+    autowaf.set_options(opt, test=True)
     opt.add_option('--static', action='store_true', dest='static',
                    help="Build static library")
     opt.add_option('--no-shared', action='store_true', dest='no_shared',
@@ -36,15 +32,11 @@ def configure(conf):
     autowaf.set_c99_mode(conf)
     autowaf.display_header('Sratom Configuration')
 
-    conf.env.BUILD_TESTS  = Options.options.build_tests
     conf.env.BUILD_SHARED = not Options.options.no_shared
     conf.env.BUILD_STATIC = Options.options.static
 
     if not conf.env.BUILD_SHARED and not conf.env.BUILD_STATIC:
         conf.fatal('Neither a shared nor a static build requested')
-
-    if conf.env.BUILD_TESTS and not Options.options.no_coverage:
-        conf.check_cc(lib='gcov', define_name='HAVE_GCOV', mandatory=False)
 
     autowaf.check_pkg(conf, 'lv2', uselib_store='LV2',
                       atleast_version='1.8.1', mandatory=True)
@@ -112,9 +104,10 @@ def build(bld):
     if bld.env.BUILD_TESTS:
         test_libs   = libs
         test_cflags = ['']
-        if bld.is_defined('HAVE_GCOV'):
-            test_libs   += ['gcov']
-            test_cflags += ['-fprofile-arcs', '-ftest-coverage']
+        test_linkflags  = ['']
+        if not bld.env.NO_COVERAGE:
+            test_cflags    += ['--coverage']
+            test_linkflags += ['--coverage']
 
         # Static library (for unit test code coverage)
         obj = bld(features     = 'c cstlib',
@@ -125,7 +118,8 @@ def build(bld):
                   target       = 'sratom_profiled',
                   install_path = '',
                   defines      = defines + ['SRATOM_INTERNAL'],
-                  cflags       = test_cflags)
+                  cflags       = test_cflags,
+                  linkflags    = test_linkflags)
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
         # Unit test program
@@ -137,7 +131,9 @@ def build(bld):
                   target       = 'sratom_test',
                   install_path = '',
                   defines      = defines,
-                  cflags       = test_cflags)
+                  cflags       = test_cflags,
+                  linkflags    = test_linkflags)
+
         autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Documentation
