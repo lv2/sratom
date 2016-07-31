@@ -1,12 +1,13 @@
-sratom (0.4.10) unstable;
+sratom (0.5.1) unstable;
 
+  * Add sratom_set_env() for setting prefixes
   * Fix padding of constructed vectors (thanks Hanspeter Portner)
   * Support round-trip serialisation of relative paths
   * Support sequences with beat time stamps
   * Fix warnings when building with ISO C++ compilers
   * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Sun, 24 Jul 2016 09:50:32 -0400
+ -- David Robillard <d@drobilla.net>  Sun, 31 Jul 2016 02:31:55 -0400
 
 sratom (0.4.6) stable;
 

@@ -76,7 +76,7 @@ test_fail(const char* fmt, ...)
 }
 
 static int
-test(bool top_level, bool pretty_numbers)
+test(SerdEnv* env, bool top_level, bool pretty_numbers)
 {
 	LV2_URID_Map   map   = { NULL, urid_map };
 	LV2_URID_Unmap unmap = { NULL, urid_unmap };
@@ -84,6 +84,7 @@ test(bool top_level, bool pretty_numbers)
 	lv2_atom_forge_init(&forge, &map);
 
 	Sratom* sratom = sratom_new(&map);
+	sratom_set_env(sratom, env);
 	sratom_set_pretty_numbers(sratom, pretty_numbers);
 	sratom_set_object_mode(
 		sratom,
@@ -357,18 +358,36 @@ test(bool top_level, bool pretty_numbers)
 	return 0;
 }
 
+static int
+test_env(SerdEnv* env)
+{
+	if (test(env, false, false)) {
+		return 1;
+	} else if (test(env, true, false)) {
+		return 1;
+	} else if (test(env, false, true)) {
+		return 1;
+	} else if (test(env, true, true)) {
+		return 1;
+	}
+
+	return 0;
+}
+
 int
 main(void)
 {
-	if (test(false, false)) {
-		return 1;
-	} else if (test(true, false)) {
-		return 1;
-	} else if (test(false, true)) {
-		return 1;
-	} else if (test(true, true)) {
+	// Test with no environment
+	if (test_env(NULL)) {
 		return 1;
 	}
+
+	// Test with a prefix defined
+	SerdEnv* env = serd_env_new(NULL);
+	serd_env_set_prefix_from_strings(
+		env, (const uint8_t*)"eg", (const uint8_t*)"http://example.org/");
+	test_env(env);
+	serd_env_free(env);
 
 	return 0;
 }

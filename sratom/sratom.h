@@ -1,5 +1,5 @@
 /*
-  Copyright 2012 David Robillard <http://drobilla.net>
+  Copyright 2012-2016 David Robillard <http://drobilla.net>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -99,6 +99,17 @@ sratom_new(LV2_URID_Map* map);
 SRATOM_API
 void
 sratom_free(Sratom* sratom);
+
+/**
+   Set the environment for reading or writing Turtle.
+
+   This can be used to set namespace prefixes and a base URI for
+   sratom_to_turtle() and sratom_from_turtle().
+*/
+SRATOM_API
+void
+sratom_set_env(Sratom*  sratom,
+               SerdEnv* env);
 
 /**
    Set the sink(s) where sratom will write its output.

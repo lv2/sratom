@@ -31,6 +31,9 @@
 
 #define USTR(str) ((const uint8_t*)(str))
 
+static const SerdStyle style = (SerdStyle)(
+	SERD_STYLE_ABBREVIATED|SERD_STYLE_RESOLVED|SERD_STYLE_CURIED);
+
 typedef enum {
 	MODE_SUBJECT,
 	MODE_BODY,
@@ -45,6 +48,7 @@ struct SratomImpl {
 	LV2_URID          atom_beatTime;
 	LV2_URID          midi_MidiEvent;
 	unsigned          next_id;
+	SerdEnv*          env;
 	SerdNode          base_uri;
 	SerdURI           base;
 	SerdStatementSink write_statement;
@@ -77,19 +81,16 @@ SRATOM_API
 Sratom*
 sratom_new(LV2_URID_Map* map)
 {
-	Sratom* sratom = (Sratom*)malloc(sizeof(Sratom));
-	sratom->map            = map;
-	sratom->atom_Event     = map->map(map->handle, LV2_ATOM__Event);
-	sratom->atom_frameTime = map->map(map->handle, LV2_ATOM__frameTime);
-	sratom->atom_beatTime  = map->map(map->handle, LV2_ATOM__beatTime);
-	sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
-	sratom->next_id        = 0;
-	sratom->base_uri       = SERD_NODE_NULL;
-	sratom->base           = SERD_URI_NULL;
-	sratom->object_mode    = SRATOM_OBJECT_MODE_BLANK;
-	sratom->pretty_numbers = false;
-	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
-	lv2_atom_forge_init(&sratom->forge, map);
+	Sratom* sratom = (Sratom*)calloc(1, sizeof(Sratom));
+	if (sratom) {
+		sratom->map            = map;
+		sratom->atom_Event     = map->map(map->handle, LV2_ATOM__Event);
+		sratom->atom_frameTime = map->map(map->handle, LV2_ATOM__frameTime);
+		sratom->atom_beatTime  = map->map(map->handle, LV2_ATOM__beatTime);
+		sratom->midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
+		sratom->object_mode    = SRATOM_OBJECT_MODE_BLANK;
+		lv2_atom_forge_init(&sratom->forge, map);
+	}
 	return sratom;
 }
 
@@ -99,6 +100,13 @@ sratom_free(Sratom* sratom)
 {
 	serd_node_free(&sratom->base_uri);
 	free(sratom);
+}
+
+SRATOM_API
+void
+sratom_set_env(Sratom* sratom, SerdEnv* env)
+{
+	sratom->env = env;
 }
 
 SRATOM_API
@@ -476,30 +484,14 @@ sratom_to_turtle(Sratom*         sratom,
                  uint32_t        size,
                  const void*     body)
 {
-	SerdURI   buri = SERD_URI_NULL;
-	SerdNode  base = serd_node_new_uri_from_string(USTR(base_uri), &sratom->base, &buri);
-	SerdEnv*  env  = serd_env_new(&base);
-	SerdChunk str  = { NULL, 0 };
-
-	serd_env_set_prefix_from_strings(env, USTR("midi"),
-	                                 USTR(LV2_MIDI_PREFIX));
-	serd_env_set_prefix_from_strings(env, USTR("atom"),
-	                                 USTR(LV2_ATOM_URI "#"));
-	serd_env_set_prefix_from_strings(env, USTR("rdf"), NS_RDF);
-	serd_env_set_prefix_from_strings(env, USTR("xsd"), NS_XSD);
-
+	SerdURI     buri   = SERD_URI_NULL;
+	SerdNode    base   = serd_node_new_uri_from_string(USTR(base_uri), &sratom->base, &buri);
+	SerdEnv*    env    = sratom->env ? sratom->env : serd_env_new(NULL);
+	SerdChunk   str    = { NULL, 0 };
 	SerdWriter* writer = serd_writer_new(
-		SERD_TURTLE,
-		(SerdStyle)(SERD_STYLE_ABBREVIATED |
-		            SERD_STYLE_RESOLVED |
-		            SERD_STYLE_CURIED),
-		env, &buri, serd_chunk_sink, &str);
+		SERD_TURTLE, style, env, &buri, serd_chunk_sink, &str);
 
-	// Write @prefix directives
-	serd_env_foreach(env,
-	                 (SerdPrefixSink)serd_writer_set_prefix,
-	                 writer);
-
+	serd_env_set_base_uri(env, &base);
 	sratom_set_sink(sratom, base_uri,
 	                (SerdStatementSink)serd_writer_write_statement,
 	                (SerdEndSink)serd_writer_end_anon,
@@ -509,7 +501,9 @@ sratom_to_turtle(Sratom*         sratom,
 	serd_writer_finish(writer);
 
 	serd_writer_free(writer);
-	serd_env_free(env);
+	if (!sratom->env) {
+		serd_env_free(env);
+	}
 	serd_node_free(&base);
 	return (char*)serd_chunk_sink_finish(&str);
 }
@@ -806,7 +800,7 @@ sratom_from_turtle(Sratom*         sratom,
 	SerdNode    base   = serd_node_new_uri_from_string(USTR(base_uri), &sratom->base, NULL);
 	SordWorld*  world  = sord_world_new();
 	SordModel*  model  = sord_new(world, SORD_SPO, false);
-	SerdEnv*    env    = serd_env_new(&base);
+	SerdEnv*    env    = sratom->env ? sratom->env : serd_env_new(&base);
 	SerdReader* reader = sord_new_reader(model, env, SERD_TURTLE, NULL);
 
 	if (!serd_reader_read_string(reader, (const uint8_t*)str)) {
@@ -830,7 +824,9 @@ sratom_from_turtle(Sratom*         sratom,
 	}
 
 	serd_reader_free(reader);
-	serd_env_free(env);
+	if (!sratom->env) {
+		serd_env_free(env);
+	}
 	sord_free(model);
 	sord_world_free(world);
 	serd_node_free(&base);
