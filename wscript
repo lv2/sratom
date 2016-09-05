@@ -168,5 +168,5 @@ def posts(ctx):
          'description'  : autowaf.get_blurb(os.path.join(path, 'README')),
          'dist_pattern' : 'http://download.drobilla.net/sratom-%s.tar.bz2'},
         { 'Author' : 'drobilla',
-          'Tags'   : 'Hacking, LAD, LV2, RDF' },
+          'Tags'   : 'Hacking, LAD, LV2, RDF, Sratom' },
         os.path.join(out, 'posts'))
