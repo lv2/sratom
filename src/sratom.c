@@ -43,19 +43,18 @@ typedef enum {
 struct SratomImpl {
 	LV2_URID_Map*     map;
 	LV2_Atom_Forge    forge;
-	LV2_URID          atom_Event;
-	LV2_URID          atom_frameTime;
-	LV2_URID          atom_beatTime;
-	LV2_URID          midi_MidiEvent;
-	unsigned          next_id;
 	SerdEnv*          env;
 	SerdNode          base_uri;
 	SerdURI           base;
 	SerdStatementSink write_statement;
 	SerdEndSink       end_anon;
 	void*             handle;
+	LV2_URID          atom_Event;
+	LV2_URID          atom_frameTime;
+	LV2_URID          atom_beatTime;
+	LV2_URID          midi_MidiEvent;
+	unsigned          next_id;
 	SratomObjectMode  object_mode;
-	bool              pretty_numbers;
 	uint32_t          seq_unit;
 	struct {
 		SordNode* atom_childType;
@@ -67,6 +66,8 @@ struct SratomImpl {
 		SordNode* rdf_value;
 		SordNode* xsd_base64Binary;
 	} nodes;
+
+	bool pretty_numbers;
 };
 
 static void
