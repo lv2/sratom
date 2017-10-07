@@ -29,7 +29,6 @@ def options(opt):
 def configure(conf):
     conf.load('compiler_c')
     autowaf.configure(conf)
-    autowaf.set_c99_mode(conf)
     autowaf.display_header('Sratom Configuration')
 
     conf.env.BUILD_SHARED = not Options.options.no_shared
