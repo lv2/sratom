@@ -18,13 +18,14 @@ VERSION = SRATOM_VERSION  # Package version for waf dist
 top     = '.'             # Source directory
 out     = 'build'         # Build directory
 
-def options(opt):
-    opt.load('compiler_c')
-    autowaf.set_options(opt, test=True)
+def options(ctx):
+    ctx.load('compiler_c')
+    autowaf.set_options(ctx, test=True)
+    opt = ctx.get_option_group('Configuration options')
     opt.add_option('--static', action='store_true', dest='static',
-                   help="Build static library")
+                   help='build static library')
     opt.add_option('--no-shared', action='store_true', dest='no_shared',
-                   help='Do not build shared library')
+                   help='do not build shared library')
 
 def configure(conf):
     conf.load('compiler_c')
