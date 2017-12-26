@@ -28,9 +28,9 @@ def options(ctx):
                    help='do not build shared library')
 
 def configure(conf):
-    conf.load('compiler_c')
-    autowaf.configure(conf)
     autowaf.display_header('Sratom Configuration')
+    conf.load('compiler_c', cache=True)
+    conf.load('autowaf', cache=True)
 
     conf.env.BUILD_SHARED = not Options.options.no_shared
     conf.env.BUILD_STATIC = Options.options.static
@@ -49,6 +49,7 @@ def configure(conf):
     autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
 
+    autowaf.display_summary(conf)
     autowaf.display_msg(conf, "Unit tests", bool(conf.env.BUILD_TESTS))
     print('')
 
