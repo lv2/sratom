@@ -236,7 +236,7 @@ number_type(const Sratom* sratom, const uint8_t* type)
 	            !strcmp((const char*)type, (const char*)NS_XSD "double"))) {
 		return serd_node_from_string(SERD_URI, NS_XSD "decimal");
 	} else {
-		return serd_node_from_string(SERD_URI, (const uint8_t*)type);
+		return serd_node_from_string(SERD_URI, type);
 	}
 }
 
