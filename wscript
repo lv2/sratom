@@ -152,7 +152,17 @@ def test(ctx):
     autowaf.post_test(ctx, APPNAME)
 
 def lint(ctx):
-    subprocess.call('cpplint.py --filter=+whitespace/comments,-whitespace/tab,-whitespace/braces,-whitespace/labels,-build/header_guard,-readability/casting,-readability/todo,-build/include src/* sratom/*', shell=True)
+    "checks code for style issues"
+    import subprocess
+    cmd = ("clang-tidy -p=. -header-filter=.* -checks=\"*," +
+           "-clang-analyzer-alpha.*," +
+           "-google-readability-todo," +
+           "-llvm-header-guard," +
+           "-llvm-include-order," +
+           "-misc-unused-parameters," +
+           "-readability-else-after-return\" " +
+           "$(find .. -name '*.c')")
+    subprocess.call(cmd, cwd='build', shell=True)
 
 def fix_docs(ctx):
     if ctx.cmd == 'build':
