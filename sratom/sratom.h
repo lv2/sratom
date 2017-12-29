@@ -156,7 +156,7 @@ sratom_write(Sratom*         sratom,
              uint32_t        flags,
              const SerdNode* subject,
              const SerdNode* predicate,
-             uint32_t        type,
+             uint32_t        type_urid,
              uint32_t        size,
              const void*     body);
 
@@ -170,7 +170,7 @@ sratom_read(Sratom*         sratom,
             LV2_Atom_Forge* forge,
             SordWorld*      world,
             SordModel*      model,
-            const SordNode* subject);
+            const SordNode* node);
 
 /**
    Serialise an Atom to a Turtle string.

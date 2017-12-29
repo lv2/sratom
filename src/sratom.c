@@ -114,8 +114,8 @@ SRATOM_API
 void
 sratom_set_sink(Sratom*           sratom,
                 const char*       base_uri,
-                SerdStatementSink write_statement,
-                SerdEndSink       end_anon,
+                SerdStatementSink sink,
+                SerdEndSink       end_sink,
                 void*             handle)
 {
 	if (base_uri) {
@@ -124,8 +124,8 @@ sratom_set_sink(Sratom*           sratom,
 			USTR(base_uri), NULL, NULL);
 		serd_uri_parse(sratom->base_uri.buf, &sratom->base);
 	}
-	sratom->write_statement = write_statement;
-	sratom->end_anon        = end_anon;
+	sratom->write_statement = sink;
+	sratom->end_anon        = end_sink;
 	sratom->handle          = handle;
 }
 
