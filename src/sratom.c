@@ -649,7 +649,7 @@ read_node(Sratom*         sratom,
 			SerdNode rel  = serd_node_new_relative_uri(&uri, &sratom->base, NULL, NULL);
 			uint8_t* path = serd_file_uri_parse(rel.buf, NULL);
 			lv2_atom_forge_path(forge, (const char*)path, strlen((const char*)path));
-			free(path);
+			serd_free(path);
 			serd_node_free(&rel);
 		} else {
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));
