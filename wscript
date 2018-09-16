@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+
 import os
 import subprocess
-import waflib.Logs as Logs
-import waflib.Options as Options
-import waflib.extras.autowaf as autowaf
+
+from waflib import Logs, Options
+from waflib.extras import autowaf
 
 # Library and package version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
@@ -22,10 +23,10 @@ def options(ctx):
     ctx.load('compiler_c')
     autowaf.set_options(ctx, test=True)
     opt = ctx.get_option_group('Configuration options')
-    opt.add_option('--static', action='store_true', dest='static',
-                   help='build static library')
-    opt.add_option('--no-shared', action='store_true', dest='no_shared',
-                   help='do not build shared library')
+    autowaf.add_flags(
+        opt,
+        {'static':    'build static library',
+         'no-shared': 'do not build shared library'})
 
 def configure(conf):
     autowaf.display_header('Sratom Configuration')
@@ -45,13 +46,10 @@ def configure(conf):
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',
                       atleast_version='0.14.0', mandatory=True)
 
-    autowaf.define(conf, 'SRATOM_VERSION', SRATOM_VERSION)
     autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
     conf.write_config_header('sratom_config.h', remove=False)
 
-    autowaf.display_summary(conf)
-    autowaf.display_msg(conf, "Unit tests", bool(conf.env.BUILD_TESTS))
-    print('')
+    autowaf.display_summary(conf, {'Unit tests': bool(conf.env.BUILD_TESTS)})
 
 lib_source = ['src/sratom.c']
 
