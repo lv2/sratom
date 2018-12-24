@@ -32,6 +32,7 @@ def configure(conf):
     autowaf.display_header('Sratom Configuration')
     conf.load('compiler_c', cache=True)
     conf.load('autowaf', cache=True)
+    autowaf.set_c_lang(conf, 'c99')
 
     conf.env.BUILD_SHARED = not Options.options.no_shared
     conf.env.BUILD_STATIC = Options.options.static
