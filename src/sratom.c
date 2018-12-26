@@ -575,6 +575,100 @@ atom_size(Sratom* sratom, uint32_t type_urid)
 }
 
 static void
+read_object(Sratom*         sratom,
+            LV2_Atom_Forge* forge,
+            SordWorld*      world,
+            SordModel*      model,
+            const SordNode* node,
+            ReadMode        mode)
+{
+	LV2_URID_Map* map = sratom->map;
+	size_t        len = 0;
+	const char*   str = (const char*)sord_node_get_string_counted(node, &len);
+
+	SordNode* type = sord_get(
+		model, node, sratom->nodes.rdf_type, NULL, NULL);
+	SordNode* value = sord_get(
+		model, node, sratom->nodes.rdf_value, NULL, NULL);
+
+	const uint8_t* type_uri  = NULL;
+	uint32_t       type_urid = 0;
+	if (type) {
+		type_uri  = sord_node_get_string(type);
+		type_urid = map->map(map->handle, (const char*)type_uri);
+	}
+
+	LV2_Atom_Forge_Frame frame = { 0, 0 };
+	if (mode == MODE_SEQUENCE) {
+		SordNode* time = sord_get(
+			model, node, sratom->nodes.atom_beatTime, NULL, NULL);
+		uint32_t seq_unit;
+		if (time) {
+			const char* time_str = (const char*)sord_node_get_string(time);
+			lv2_atom_forge_beat_time(forge, serd_strtod(time_str, NULL));
+			seq_unit = sratom->atom_beatTime;
+		} else {
+			time = sord_get(model, node, sratom->nodes.atom_frameTime, NULL, NULL);
+			const char* time_str = time
+				? (const char*)sord_node_get_string(time)
+				: "";
+			lv2_atom_forge_frame_time(forge, serd_strtod(time_str, NULL));
+			seq_unit = sratom->atom_frameTime;
+		}
+		read_node(sratom, forge, world, model, value, MODE_BODY);
+		sord_node_free(world, time);
+		sratom->seq_unit = seq_unit;
+	} else if (type_urid == sratom->forge.Tuple) {
+		lv2_atom_forge_tuple(forge, &frame);
+		read_list_value(sratom, forge, world, model, value, MODE_BODY);
+	} else if (type_urid == sratom->forge.Sequence) {
+		const LV2_Atom_Forge_Ref ref = lv2_atom_forge_sequence_head(forge, &frame, 0);
+		sratom->seq_unit = 0;
+		read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
+
+		LV2_Atom_Sequence* seq = (LV2_Atom_Sequence*)lv2_atom_forge_deref(forge, ref);
+		seq->body.unit = (sratom->seq_unit == sratom->atom_frameTime) ? 0 : sratom->seq_unit;
+	} else if (type_urid == sratom->forge.Vector) {
+		SordNode* child_type_node = sord_get(
+			model, node, sratom->nodes.atom_childType, NULL, NULL);
+		uint32_t child_type = map->map(
+			map->handle, (const char*)sord_node_get_string(child_type_node));
+		uint32_t child_size = atom_size(sratom, child_type);
+		if (child_size > 0) {
+			LV2_Atom_Forge_Ref ref = lv2_atom_forge_vector_head(
+				forge, &frame, child_size, child_type);
+			read_list_value(sratom, forge, world, model, value, MODE_BODY);
+			lv2_atom_forge_pop(forge, &frame);
+			frame.ref = 0;
+			lv2_atom_forge_pad(forge, lv2_atom_forge_deref(forge, ref)->size);
+		}
+		sord_node_free(world, child_type_node);
+	} else if (value && sord_node_equals(sord_node_get_datatype(value),
+	                                     sratom->nodes.xsd_base64Binary)) {
+		size_t         vlen = 0;
+		const uint8_t* vstr = sord_node_get_string_counted(value, &vlen);
+		size_t         size = 0;
+		void*          body = serd_base64_decode(vstr, vlen, &size);
+		lv2_atom_forge_atom(forge, size, type_urid);
+		lv2_atom_forge_write(forge, body, size);
+		free(body);
+	} else if (sord_node_get_type(node) == SORD_URI) {
+		lv2_atom_forge_object(
+			forge, &frame, map->map(map->handle, str), type_urid);
+		read_resource(sratom, forge, world, model, node, type_urid);
+	} else {
+		lv2_atom_forge_object(forge, &frame, 0, type_urid);
+		read_resource(sratom, forge, world, model, node, type_urid);
+	}
+
+	if (frame.ref) {
+		lv2_atom_forge_pop(forge, &frame);
+	}
+	sord_node_free(world, value);
+	sord_node_free(world, type);
+}
+
+static void
 read_node(Sratom*         sratom,
           LV2_Atom_Forge* forge,
           SordWorld*      world,
@@ -655,86 +749,7 @@ read_node(Sratom*         sratom,
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));
 		}
 	} else {
-		SordNode* type = sord_get(
-			model, node, sratom->nodes.rdf_type, NULL, NULL);
-		SordNode* value = sord_get(
-			model, node, sratom->nodes.rdf_value, NULL, NULL);
-
-		const uint8_t* type_uri  = NULL;
-		uint32_t       type_urid = 0;
-		if (type) {
-			type_uri  = sord_node_get_string(type);
-			type_urid = map->map(map->handle, (const char*)type_uri);
-		}
-
-		LV2_Atom_Forge_Frame frame = { 0, 0 };
-		if (mode == MODE_SEQUENCE) {
-			SordNode* time = sord_get(
-				model, node, sratom->nodes.atom_beatTime, NULL, NULL);
-			uint32_t seq_unit;
-			if (time) {
-				const char* time_str = (const char*)sord_node_get_string(time);
-				lv2_atom_forge_beat_time(forge, serd_strtod(time_str, NULL));
-				seq_unit = sratom->atom_beatTime;
-			} else {
-				time = sord_get(model, node, sratom->nodes.atom_frameTime, NULL, NULL);
-				const char* time_str = time
-					? (const char*)sord_node_get_string(time)
-					: "";
-				lv2_atom_forge_frame_time(forge, serd_strtod(time_str, NULL));
-				seq_unit = sratom->atom_frameTime;
-			}
-			read_node(sratom, forge, world, model, value, MODE_BODY);
-			sord_node_free(world, time);
-			sratom->seq_unit = seq_unit;
-		} else if (type_urid == sratom->forge.Tuple) {
-			lv2_atom_forge_tuple(forge, &frame);
-			read_list_value(sratom, forge, world, model, value, MODE_BODY);
-		} else if (type_urid == sratom->forge.Sequence) {
-			const LV2_Atom_Forge_Ref ref = lv2_atom_forge_sequence_head(forge, &frame, 0);
-			sratom->seq_unit = 0;
-			read_list_value(sratom, forge, world, model, value, MODE_SEQUENCE);
-
-			LV2_Atom_Sequence* seq = (LV2_Atom_Sequence*)lv2_atom_forge_deref(forge, ref);
-			seq->body.unit = (sratom->seq_unit == sratom->atom_frameTime) ? 0 : sratom->seq_unit;
-		} else if (type_urid == sratom->forge.Vector) {
-			SordNode* child_type_node = sord_get(
-				model, node, sratom->nodes.atom_childType, NULL, NULL);
-			uint32_t child_type = map->map(
-				map->handle, (const char*)sord_node_get_string(child_type_node));
-			uint32_t child_size = atom_size(sratom, child_type);
-			if (child_size > 0) {
-				LV2_Atom_Forge_Ref ref = lv2_atom_forge_vector_head(
-					forge, &frame, child_size, child_type);
-				read_list_value(sratom, forge, world, model, value, MODE_BODY);
-				lv2_atom_forge_pop(forge, &frame);
-				frame.ref = 0;
-				lv2_atom_forge_pad(forge, lv2_atom_forge_deref(forge, ref)->size);
-			}
-			sord_node_free(world, child_type_node);
-		} else if (value && sord_node_equals(sord_node_get_datatype(value),
-		                                     sratom->nodes.xsd_base64Binary)) {
-			size_t         vlen = 0;
-			const uint8_t* vstr = sord_node_get_string_counted(value, &vlen);
-			size_t         size = 0;
-			void*          body = serd_base64_decode(vstr, vlen, &size);
-			lv2_atom_forge_atom(forge, size, type_urid);
-			lv2_atom_forge_write(forge, body, size);
-			free(body);
-		} else if (sord_node_get_type(node) == SORD_URI) {
-			lv2_atom_forge_object(
-				forge, &frame, map->map(map->handle, str), type_urid);
-			read_resource(sratom, forge, world, model, node, type_urid);
-		} else {
-			lv2_atom_forge_object(forge, &frame, 0, type_urid);
-			read_resource(sratom, forge, world, model, node, type_urid);
-		}
-
-		if (frame.ref) {
-			lv2_atom_forge_pop(forge, &frame);
-		}
-		sord_node_free(world, value);
-		sord_node_free(world, type);
+		read_object(sratom, forge, world, model, node, mode);
 	}
 }
 
