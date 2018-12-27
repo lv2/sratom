@@ -154,11 +154,10 @@ def lint(ctx):
     "checks code for style issues"
     import subprocess
     cmd = ("clang-tidy -p=. -header-filter=.* -checks=\"*," +
+           "-bugprone-suspicious-string-compare," +
            "-clang-analyzer-alpha.*," +
-           "-google-readability-todo," +
+           "-hicpp-signed-bitwise," +
            "-llvm-header-guard," +
-           "-llvm-include-order," +
-           "-misc-unused-parameters," +
            "-readability-else-after-return\" " +
            "$(find .. -name '*.c')")
     subprocess.call(cmd, cwd='build', shell=True)
