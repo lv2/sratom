@@ -21,14 +21,14 @@
 #ifndef SRATOM_SRATOM_H
 #define SRATOM_SRATOM_H
 
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 #include "lv2/lv2plug.in/ns/ext/atom/atom.h"
 #include "lv2/lv2plug.in/ns/ext/atom/forge.h"
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 #include "serd/serd.h"
 #include "sord/sord.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef SRATOM_SHARED
 #    ifdef _WIN32
