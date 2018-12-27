@@ -78,7 +78,6 @@ read_node(Sratom*         sratom,
           const SordNode* node,
           ReadMode        mode);
 
-SRATOM_API
 Sratom*
 sratom_new(LV2_URID_Map* map)
 {
@@ -95,7 +94,6 @@ sratom_new(LV2_URID_Map* map)
 	return sratom;
 }
 
-SRATOM_API
 void
 sratom_free(Sratom* sratom)
 {
@@ -103,14 +101,12 @@ sratom_free(Sratom* sratom)
 	free(sratom);
 }
 
-SRATOM_API
 void
 sratom_set_env(Sratom* sratom, SerdEnv* env)
 {
 	sratom->env = env;
 }
 
-SRATOM_API
 void
 sratom_set_sink(Sratom*           sratom,
                 const char*       base_uri,
@@ -129,7 +125,6 @@ sratom_set_sink(Sratom*           sratom,
 	sratom->handle          = handle;
 }
 
-SRATOM_API
 void
 sratom_set_pretty_numbers(Sratom* sratom,
                           bool    pretty_numbers)
@@ -137,7 +132,6 @@ sratom_set_pretty_numbers(Sratom* sratom,
 	sratom->pretty_numbers = pretty_numbers;
 }
 
-SRATOM_API
 void
 sratom_set_object_mode(Sratom*          sratom,
                        SratomObjectMode object_mode)
@@ -240,7 +234,6 @@ number_type(const Sratom* sratom, const uint8_t* type)
 	}
 }
 
-SRATOM_API
 int
 sratom_write(Sratom*         sratom,
              LV2_URID_Unmap* unmap,
@@ -474,7 +467,6 @@ sratom_write(Sratom*         sratom,
 	return 0;
 }
 
-SRATOM_API
 char*
 sratom_to_turtle(Sratom*         sratom,
                  LV2_URID_Unmap* unmap,
@@ -763,7 +755,6 @@ read_node(Sratom*         sratom,
 	}
 }
 
-SRATOM_API
 void
 sratom_read(Sratom*         sratom,
             LV2_Atom_Forge* forge,
@@ -794,7 +785,6 @@ sratom_read(Sratom*         sratom,
 	memset(&sratom->nodes, 0, sizeof(sratom->nodes));
 }
 
-SRATOM_API
 LV2_Atom_Forge_Ref
 sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
                   const void*                buf,
@@ -806,7 +796,6 @@ sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
 	return ref;
 }
 
-SRATOM_API
 LV2_Atom*
 sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
 {
@@ -814,7 +803,6 @@ sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
 	return (LV2_Atom*)(chunk->buf + ref - 1);
 }
 
-SRATOM_API
 LV2_Atom*
 sratom_from_turtle(Sratom*         sratom,
                    const char*     base_uri,
