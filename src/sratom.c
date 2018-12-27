@@ -575,6 +575,66 @@ atom_size(Sratom* sratom, uint32_t type_urid)
 }
 
 static void
+read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
+{
+	assert(sord_node_get_type(node) == SORD_LITERAL);
+
+	size_t        len = 0;
+	const char*   str = (const char*)sord_node_get_string_counted(node, &len);
+	SordNode*   datatype = sord_node_get_datatype(node);
+	const char* language = sord_node_get_language(node);
+	if (datatype) {
+		const char* type_uri = (const char*)sord_node_get_string(datatype);
+		if (!strcmp(type_uri, (const char*)NS_XSD "int") ||
+		    !strcmp(type_uri, (const char*)NS_XSD "integer")) {
+			lv2_atom_forge_int(forge, strtol(str, NULL, 10));
+		} else if (!strcmp(type_uri, (const char*)NS_XSD "long")) {
+			lv2_atom_forge_long(forge, strtol(str, NULL, 10));
+		} else if (!strcmp(type_uri, (const char*)NS_XSD "float") ||
+		           !strcmp(type_uri, (const char*)NS_XSD "decimal")) {
+			lv2_atom_forge_float(forge, serd_strtod(str, NULL));
+		} else if (!strcmp(type_uri, (const char*)NS_XSD "double")) {
+			lv2_atom_forge_double(forge, serd_strtod(str, NULL));
+		} else if (!strcmp(type_uri, (const char*)NS_XSD "boolean")) {
+			lv2_atom_forge_bool(forge, !strcmp(str, "true"));
+		} else if (!strcmp(type_uri, (const char*)NS_XSD "base64Binary")) {
+			size_t size = 0;
+			void*  body = serd_base64_decode(USTR(str), len, &size);
+			lv2_atom_forge_atom(forge, size, forge->Chunk);
+			lv2_atom_forge_write(forge, body, size);
+			free(body);
+		} else if (!strcmp(type_uri, LV2_ATOM__Path)) {
+			lv2_atom_forge_path(forge, str, len);
+		} else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
+			lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
+			for (const char* s = str; s < str + len; s += 2) {
+				unsigned num;
+				sscanf(s, "%2X", &num);
+				const uint8_t c = num;
+				lv2_atom_forge_raw(forge, &c, 1);
+			}
+			lv2_atom_forge_pad(forge, len / 2);
+		} else {
+			lv2_atom_forge_literal(
+				forge, str, len,
+				sratom->map->map(sratom->map->handle, type_uri),
+				0);
+		}
+	} else if (language) {
+		const char*  prefix   = "http://lexvo.org/id/iso639-3/";
+		const size_t lang_len = strlen(prefix) + strlen(language);
+		char*        lang_uri = (char*)calloc(lang_len + 1, 1);
+		snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
+		lv2_atom_forge_literal(
+			forge, str, len, 0,
+			sratom->map->map(sratom->map->handle, lang_uri));
+		free(lang_uri);
+	} else {
+		lv2_atom_forge_string(forge, str, len);
+	}
+}
+
+static void
 read_object(Sratom*         sratom,
             LV2_Atom_Forge* forge,
             SordWorld*      world,
@@ -680,57 +740,7 @@ read_node(Sratom*         sratom,
 	size_t        len = 0;
 	const char*   str = (const char*)sord_node_get_string_counted(node, &len);
 	if (sord_node_get_type(node) == SORD_LITERAL) {
-		SordNode*   datatype = sord_node_get_datatype(node);
-		const char* language = sord_node_get_language(node);
-		if (datatype) {
-			const char* type_uri = (const char*)sord_node_get_string(datatype);
-			if (!strcmp(type_uri, (const char*)NS_XSD "int") ||
-			    !strcmp(type_uri, (const char*)NS_XSD "integer")) {
-				lv2_atom_forge_int(forge, strtol(str, NULL, 10));
-			} else if (!strcmp(type_uri, (const char*)NS_XSD "long")) {
-				lv2_atom_forge_long(forge, strtol(str, NULL, 10));
-			} else if (!strcmp(type_uri, (const char*)NS_XSD "float") ||
-			           !strcmp(type_uri, (const char*)NS_XSD "decimal")) {
-				lv2_atom_forge_float(forge, serd_strtod(str, NULL));
-			} else if (!strcmp(type_uri, (const char*)NS_XSD "double")) {
-				lv2_atom_forge_double(forge, serd_strtod(str, NULL));
-			} else if (!strcmp(type_uri, (const char*)NS_XSD "boolean")) {
-				lv2_atom_forge_bool(forge, !strcmp(str, "true"));
-			} else if (!strcmp(type_uri, (const char*)NS_XSD "base64Binary")) {
-				size_t size = 0;
-				void*  body = serd_base64_decode(USTR(str), len, &size);
-				lv2_atom_forge_atom(forge, size, forge->Chunk);
-				lv2_atom_forge_write(forge, body, size);
-				free(body);
-			} else if (!strcmp(type_uri, LV2_ATOM__Path)) {
-				lv2_atom_forge_path(forge, str, len);
-			} else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
-				lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
-				for (const char* s = str; s < str + len; s += 2) {
-					unsigned num;
-					sscanf(s, "%2X", &num);
-					const uint8_t c = num;
-					lv2_atom_forge_raw(forge, &c, 1);
-				}
-				lv2_atom_forge_pad(forge, len / 2);
-			} else {
-				lv2_atom_forge_literal(
-					forge, str, len,
-					sratom->map->map(sratom->map->handle, type_uri),
-					0);
-			}
-		} else if (language) {
-			const char*  prefix   = "http://lexvo.org/id/iso639-3/";
-			const size_t lang_len = strlen(prefix) + strlen(language);
-			char*        lang_uri = (char*)calloc(lang_len + 1, 1);
-			snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
-			lv2_atom_forge_literal(
-				forge, str, len, 0,
-				sratom->map->map(sratom->map->handle, lang_uri));
-			free(lang_uri);
-		} else {
-			lv2_atom_forge_string(forge, str, len);
-		}
+		read_literal(sratom, forge, node);
 	} else if (sord_node_get_type(node) == SORD_URI &&
 	           !(sratom->object_mode == SRATOM_OBJECT_MODE_BLANK_SUBJECT
 	             && mode == MODE_SUBJECT)) {
