@@ -97,8 +97,10 @@ sratom_new(LV2_URID_Map* map)
 void
 sratom_free(Sratom* sratom)
 {
-	serd_node_free(&sratom->base_uri);
-	free(sratom);
+	if (sratom) {
+		serd_node_free(&sratom->base_uri);
+		free(sratom);
+	}
 }
 
 void
