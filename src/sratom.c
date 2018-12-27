@@ -176,13 +176,13 @@ list_append(Sratom*           sratom,
 static void
 list_end(SerdStatementSink sink,
          void*             handle,
-         unsigned*         flags,
+         const unsigned    flags,
          SerdNode*         s,
          SerdNode*         p)
 {
 	// _:node rdf:rest rdf:nil
 	const SerdNode nil = serd_node_from_string(SERD_URI, NS_RDF "nil");
-	sink(handle, *flags, NULL, s, p, &nil, NULL, NULL);
+	sink(handle, flags, NULL, s, p, &nil, NULL, NULL);
 }
 
 static void
@@ -369,7 +369,7 @@ sratom_write(Sratom*         sratom,
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            i->size, i->type, LV2_ATOM_BODY(i));
 		}
-		list_end(sratom->write_statement, sratom->handle, &flags, &id, &p);
+		list_end(sratom->write_statement, sratom->handle, flags, &id, &p);
 		if (sratom->end_anon) {
 			sratom->end_anon(sratom->handle, &id);
 		}
@@ -389,7 +389,7 @@ sratom_write(Sratom*         sratom,
 			list_append(sratom, unmap, &flags, &id, &p, &node,
 			            vec->child_size, vec->child_type, i);
 		}
-		list_end(sratom->write_statement, sratom->handle, &flags, &id, &p);
+		list_end(sratom->write_statement, sratom->handle, flags, &id, &p);
 		if (sratom->end_anon) {
 			sratom->end_anon(sratom->handle, &id);
 		}
@@ -430,7 +430,7 @@ sratom_write(Sratom*         sratom,
 			            sratom->atom_Event,
 			            ev);
 		}
-		list_end(sratom->write_statement, sratom->handle, &flags, &id, &p);
+		list_end(sratom->write_statement, sratom->handle, flags, &id, &p);
 		if (sratom->end_anon && subject && predicate) {
 			sratom->end_anon(sratom->handle, &id);
 		}
