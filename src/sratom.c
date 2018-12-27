@@ -332,7 +332,7 @@ sratom_write(Sratom*         sratom,
 		uint8_t* str = (uint8_t*)calloc(size * 2 + 1, 1);
 		for (uint32_t i = 0; i < size; ++i) {
 			snprintf((char*)str + (2 * i), size * 2 + 1, "%02X",
-			         (unsigned)(uint8_t)*((const uint8_t*)body + i));
+			         (unsigned)*((const uint8_t*)body + i));
 		}
 		object = serd_node_from_string(SERD_LITERAL, USTR(str));
 	} else if (type_urid == sratom->atom_Event) {
