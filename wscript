@@ -21,15 +21,12 @@ out     = 'build'         # Build directory
 
 def options(ctx):
     ctx.load('compiler_c')
-    autowaf.set_options(ctx, test=True)
-    opt = ctx.get_option_group('Configuration options')
-    autowaf.add_flags(
-        opt,
+    ctx.add_flags(
+        ctx.configuration_options(),
         {'static':    'build static library',
          'no-shared': 'do not build shared library'})
 
 def configure(conf):
-    autowaf.display_header('Sratom Configuration')
     conf.load('compiler_c', cache=True)
     conf.load('autowaf', cache=True)
     autowaf.set_c_lang(conf, 'c99')
@@ -143,12 +140,8 @@ def build(bld):
     if bld.env.DOCS:
         bld.add_post_fun(fix_docs)
 
-def test(ctx):
-    autowaf.pre_test(ctx, APPNAME)
-    os.environ['PATH'] = '.' + os.pathsep + os.getenv('PATH')
-    Logs.pprint('GREEN', '')
-    autowaf.run_test(ctx, APPNAME, 'sratom_test', dirs=['./src','./tests'])
-    autowaf.post_test(ctx, APPNAME)
+def test(tst):
+    tst(['./sratom_test'])
 
 def lint(ctx):
     "checks code for style issues"
