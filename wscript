@@ -38,7 +38,7 @@ def configure(conf):
         conf.fatal('Neither a shared nor a static build requested')
 
     autowaf.check_pkg(conf, 'lv2', uselib_store='LV2',
-                      atleast_version='1.10.0', mandatory=True)
+                      atleast_version='1.16.0', mandatory=True)
     autowaf.check_pkg(conf, 'serd-0', uselib_store='SERD',
                       atleast_version='0.30.0', mandatory=True)
     autowaf.check_pkg(conf, 'sord-0', uselib_store='SORD',

@@ -21,9 +21,9 @@
 #ifndef SRATOM_SRATOM_H
 #define SRATOM_SRATOM_H
 
-#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
-#include "lv2/lv2plug.in/ns/ext/atom/forge.h"
-#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+#include "lv2/atom/atom.h"
+#include "lv2/atom/forge.h"
+#include "lv2/urid/urid.h"
 #include "serd/serd.h"
 #include "sord/sord.h"
 
