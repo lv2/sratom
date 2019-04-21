@@ -76,13 +76,13 @@ def build(bld):
                   source          = lib_source,
                   includes        = ['.', './src'],
                   lib             = libs,
+                  uselib          = 'SERD SORD LV2',
                   name            = 'libsratom',
                   target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
                   vnum            = SRATOM_VERSION,
                   install_path    = '${LIBDIR}',
                   defines         = defines + ['SRATOM_SHARED', 'SRATOM_INTERNAL'],
                   cflags          = libflags)
-        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Static library
     if bld.env.BUILD_STATIC:
@@ -91,12 +91,12 @@ def build(bld):
                   source          = lib_source,
                   includes        = ['.', './src'],
                   lib             = libs,
+                  uselib          = 'SERD SORD LV2',
                   name            = 'libsratom_static',
                   target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
                   vnum            = SRATOM_VERSION,
                   install_path    = '${LIBDIR}',
                   defines         = defines + ['SRATOM_INTERNAL'])
-        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     if bld.env.BUILD_TESTS:
         test_libs   = libs
@@ -111,13 +111,13 @@ def build(bld):
                   source       = lib_source,
                   includes     = ['.', './src'],
                   lib          = test_libs,
+                  uselib       = 'SERD SORD LV2',
                   name         = 'libsratom_profiled',
                   target       = 'sratom_profiled',
                   install_path = '',
                   defines      = defines + ['SRATOM_INTERNAL'],
                   cflags       = test_cflags,
                   linkflags    = test_linkflags)
-        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
         # Unit test program
         obj = bld(features     = 'c cprogram',
@@ -125,13 +125,12 @@ def build(bld):
                   includes     = ['.', './src'],
                   use          = 'libsratom_profiled',
                   lib          = test_libs,
+                  uselib       = 'SERD SORD LV2',
                   target       = 'sratom_test',
                   install_path = '',
                   defines      = defines,
                   cflags       = test_cflags,
                   linkflags    = test_linkflags)
-
-        autowaf.use_lib(bld, obj, 'SERD SORD LV2')
 
     # Documentation
     autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
