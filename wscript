@@ -136,8 +136,6 @@ def build(bld):
     autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
 
     bld.add_post_fun(autowaf.run_ldconfig)
-    if bld.env.DOCS:
-        bld.add_post_fun(fix_docs)
 
 def test(tst):
     tst(['./sratom_test'])
@@ -153,10 +151,6 @@ def lint(ctx):
            "-readability-else-after-return\" " +
            "$(find .. -name '*.c')")
     subprocess.call(cmd, cwd='build', shell=True)
-
-def fix_docs(ctx):
-    if ctx.cmd == 'build':
-        autowaf.make_simple_dox(APPNAME)
 
 def upload_docs(ctx):
     os.system("rsync -ravz --delete -e ssh build/doc/html/ drobilla@drobilla.net:~/drobilla.net/docs/sratom/")
