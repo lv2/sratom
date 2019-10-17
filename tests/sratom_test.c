@@ -220,10 +220,14 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
 	lv2_atom_forge_atom(&forge, sizeof(blob_buf), blob_type);
 	lv2_atom_forge_write(&forge, blob_buf, sizeof(blob_buf));
 
-	// eg_blank = [ a <http://example.org/Object> ]
+	// eg_blank = [ a eg:Object ; blank [ a eg:Object] ]
 	lv2_atom_forge_key(&forge, eg_blank);
 	LV2_Atom_Forge_Frame blank_frame;
 	lv2_atom_forge_object(&forge, &blank_frame, 0, eg_Object);
+	lv2_atom_forge_key(&forge, eg_blank);
+	LV2_Atom_Forge_Frame sub_blank_frame;
+	lv2_atom_forge_object(&forge, &sub_blank_frame, 0, eg_Object);
+	lv2_atom_forge_pop(&forge, &sub_blank_frame);
 	lv2_atom_forge_pop(&forge, &blank_frame);
 
 	// eg_tuple = "foo",true
