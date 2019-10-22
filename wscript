@@ -135,6 +135,13 @@ def build(bld):
     bld.add_post_fun(autowaf.run_ldconfig)
 
 def test(tst):
+    import sys
+
+    if sys.platform == 'win32' and '/DNDEBUG' not in tst.env.CFLAGS:
+        # FIXME: Sort out DLL memory freeing situation in next major version
+        Logs.warn("Skipping tests for Windows debug build")
+        return
+
     tst(['./sratom_test'])
 
 def lint(ctx):
