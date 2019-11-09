@@ -59,9 +59,9 @@ def build(bld):
     bld.install_files(includedir, bld.path.ant_glob('sratom/*.h'))
 
     # Pkgconfig file
-    autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION,
-                     ['SERD', 'SORD', 'LV2'],
-                     {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION})
+    autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION, [],
+                     {'SRATOM_MAJOR_VERSION' : SRATOM_MAJOR_VERSION,
+                      'SRATOM_PKG_DEPS' : 'lv2 serd-0 sord-0'})
 
     libflags = ['-fvisibility=hidden']
     libs     = ['m']
