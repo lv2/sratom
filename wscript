@@ -161,17 +161,3 @@ def lint(ctx):
            "-readability-else-after-return\" " +
            "$(find .. -name '*.c')")
     subprocess.call(cmd, cwd='build', shell=True)
-
-def upload_docs(ctx):
-    os.system("rsync -ravz --delete -e ssh build/doc/html/ drobilla@drobilla.net:~/drobilla.net/docs/sratom/")
-
-def posts(ctx):
-    path = str(ctx.path.abspath())
-    autowaf.news_to_posts(
-        os.path.join(path, 'NEWS'),
-        {'title'        : 'Sratom',
-         'description'  : autowaf.get_blurb(os.path.join(path, 'README')),
-         'dist_pattern' : 'http://download.drobilla.net/sratom-%s.tar.bz2'},
-        { 'Author' : 'drobilla',
-          'Tags'   : 'Hacking, LAD, LV2, RDF, Sratom' },
-        os.path.join(out, 'posts'))
