@@ -147,7 +147,8 @@ def test(tst):
         Logs.warn("Skipping tests for Windows debug build")
         return
 
-    tst(['./sratom_test'])
+    with tst.group('Integration') as check:
+        check(['./sratom_test'])
 
 def lint(ctx):
     "checks code for style issues"
