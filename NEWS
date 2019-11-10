@@ -1,9 +1,9 @@
-sratom (0.6.3) unstable;
+sratom (0.6.4) stable;
 
   * Make sratom_free() safe to call on NULL
   * Various minor code cleanups
 
- -- David Robillard <d@drobilla.net>  Thu, 27 Dec 2018 19:17:06 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 10 Nov 2019 21:20:40 +0000
 
 sratom (0.6.2) stable;
 
