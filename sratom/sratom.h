@@ -53,7 +53,9 @@ extern "C" {
 
 /**
    @defgroup sratom Sratom
-   An LV2 Atom RDF serialisation library.
+
+   A library for serialising LV2 Atoms.
+
    @{
 */
 
