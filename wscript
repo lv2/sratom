@@ -10,7 +10,7 @@ from waflib.extras import autowaf
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-SRATOM_VERSION       = '0.6.4'
+SRATOM_VERSION       = '0.6.5'
 SRATOM_MAJOR_VERSION = '0'
 
 # Mandatory waf variables
@@ -41,6 +41,30 @@ def configure(conf):
 
     if not conf.env.BUILD_SHARED and not conf.env.BUILD_STATIC:
         conf.fatal('Neither a shared nor a static build requested')
+
+    if Options.options.ultra_strict:
+        autowaf.add_compiler_flags(conf.env, 'c', {
+            'gcc': [
+                '-Wno-cast-align',
+                '-Wno-cast-qual',
+                '-Wno-conversion',
+                '-Wno-padded',
+            ],
+            'clang': [
+                '-Wno-cast-align',
+                '-Wno-cast-qual',
+                '-Wno-double-promotion',
+                '-Wno-float-conversion',
+                '-Wno-implicit-float-conversion',
+                '-Wno-implicit-int-conversion',
+                '-Wno-padded',
+                '-Wno-shorten-64-to-32',
+                '-Wno-sign-conversion',
+            ],
+            'msvc': [
+                '/wd4242'  # conversion with possible loss of data
+            ]
+        })
 
     conf.check_pkg('lv2 >= 1.16.0', uselib_store='LV2')
     conf.check_pkg('serd-0 >= 0.30.0', uselib_store='SERD')
