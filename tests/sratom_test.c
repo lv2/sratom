@@ -28,6 +28,12 @@
 
 #define USTR(s) ((const uint8_t*)(s))
 
+#if defined(__GNUC__)
+#    define SRATOM_LOG_FUNC(fmt, arg1) __attribute__((format(printf, fmt, arg1)))
+#else
+#    define SRATOM_LOG_FUNC(fmt, arg1)
+#endif
+
 /// Simple O(n) URI map
 typedef struct {
 	char** uris;
@@ -71,6 +77,7 @@ urid_unmap(LV2_URID_Unmap_Handle handle,
 	return NULL;
 }
 
+SRATOM_LOG_FUNC(1, 2)
 static int
 test_fail(const char* fmt, ...)
 {
