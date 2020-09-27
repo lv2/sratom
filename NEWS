@@ -1,8 +1,8 @@
-sratom (0.6.5) unstable;
+sratom (0.6.6) stable;
 
   * Fix various minor warnings and other code quality issues
 
- -- David Robillard <d@drobilla.net>  Sun, 27 Sep 2020 14:55:33 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 27 Sep 2020 15:18:12 +0000
 
 sratom (0.6.4) stable;
 
