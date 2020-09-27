@@ -49,6 +49,7 @@ def configure(conf):
                 '-Wno-cast-qual',
                 '-Wno-conversion',
                 '-Wno-padded',
+                '-Wno-suggest-attribute=pure',
             ],
             'clang': [
                 '-Wno-cast-align',
