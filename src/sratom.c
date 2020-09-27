@@ -604,7 +604,7 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
 		} else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
 			lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
 			for (const char* s = str; s < str + len; s += 2) {
-				unsigned num;
+				unsigned num = 0u;
 				sscanf(s, "%2X", &num);
 				const uint8_t c = num;
 				lv2_atom_forge_raw(forge, &c, 1);
@@ -658,7 +658,7 @@ read_object(Sratom*         sratom,
 	if (mode == MODE_SEQUENCE) {
 		SordNode* time = sord_get(
 			model, node, sratom->nodes.atom_beatTime, NULL, NULL);
-		uint32_t seq_unit;
+		uint32_t seq_unit = 0u;
 		if (time) {
 			const char* time_str = (const char*)sord_node_get_string(time);
 			lv2_atom_forge_beat_time(forge, serd_strtod(time_str, NULL));

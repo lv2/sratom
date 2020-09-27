@@ -7,7 +7,6 @@ Checks: >
   -bugprone-suspicious-string-compare,
   -cert-err34-c,
   -clang-analyzer-unix.Malloc,
-  -cppcoreguidelines-init-variables,
   -hicpp-signed-bitwise,
   -llvm-header-guard,
   -readability-else-after-return,
