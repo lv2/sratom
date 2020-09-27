@@ -14,17 +14,19 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "sratom/sratom.h"
+
+#include "lv2/atom/atom.h"
+#include "lv2/atom/forge.h"
+#include "lv2/atom/util.h"
+#include "lv2/midi/midi.h"
+#include "lv2/urid/urid.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "lv2/atom/forge.h"
-#include "lv2/atom/util.h"
-#include "lv2/midi/midi.h"
-
-#include "sratom/sratom.h"
 
 #define NS_RDF (const uint8_t*)"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define NS_XSD (const uint8_t*)"http://www.w3.org/2001/XMLSchema#"

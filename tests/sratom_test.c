@@ -14,15 +14,20 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <ctype.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "lv2/atom/atom.h"
 #include "lv2/atom/forge.h"
 #include "lv2/atom/util.h"
 #include "lv2/midi/midi.h"
+#include "lv2/urid/urid.h"
+#include "serd/serd.h"
 #include "sratom/sratom.h"
+
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
