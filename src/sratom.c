@@ -748,8 +748,15 @@ read_node(Sratom*         sratom,
 
 			SerdNode rel  = serd_node_new_relative_uri(&uri, &sratom->base, NULL, NULL);
 			uint8_t* path = serd_file_uri_parse(rel.buf, NULL);
-			lv2_atom_forge_path(forge, (const char*)path, strlen((const char*)path));
-			serd_free(path);
+			if (path) {
+				lv2_atom_forge_path(forge,
+				                    (const char*)path,
+				                    strlen((const char*)path));
+				serd_free(path);
+			} else {
+				// FIXME: Report errors (required API change)
+				lv2_atom_forge_atom(forge, 0, 0);
+			}
 			serd_node_free(&rel);
 		} else {
 			lv2_atom_forge_urid(forge, map->map(map->handle, str));

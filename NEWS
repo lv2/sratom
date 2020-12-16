@@ -1,3 +1,9 @@
+sratom (0.6.7) unstable;
+
+  * Fix potential null pointer dereference
+
+ -- David Robillard <d@drobilla.net>  Wed, 16 Dec 2020 09:51:51 +0000
+
 sratom (0.6.6) stable;
 
   * Fix various minor warnings and other code quality issues
