@@ -175,11 +175,6 @@ def build(bld):
 def test(tst):
     import sys
 
-    if sys.platform == 'win32' and '/DNDEBUG' not in tst.env.CFLAGS:
-        # FIXME: Sort out DLL memory freeing situation in next major version
-        Logs.warn("Skipping tests for Windows debug build")
-        return
-
     with tst.group('Integration') as check:
         check(['./sratom_test'])
 
