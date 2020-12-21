@@ -41,6 +41,9 @@ def configure(conf):
     if not conf.env.BUILD_SHARED and not conf.env.BUILD_STATIC:
         conf.fatal('Neither a shared nor a static build requested')
 
+    if conf.env.DOCS:
+        conf.load('sphinx')
+
     if Options.options.strict:
         # Check for programs used by lint target
         conf.find_program("flake8", var="FLAKE8", mandatory=False)
@@ -171,7 +174,8 @@ def build(bld):
             linkflags    = test_linkflags)
 
     # Documentation
-    autowaf.build_dox(bld, 'SRATOM', SRATOM_VERSION, top, out)
+    if bld.env.DOCS:
+        bld.recurse('doc/c')
 
     bld.add_post_fun(autowaf.run_ldconfig)
 
