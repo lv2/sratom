@@ -9,7 +9,6 @@ Checks: >
   -cert-err34-c,
   -clang-analyzer-unix.Malloc,
   -hicpp-signed-bitwise,
-  -llvm-header-guard,
   -llvmlibc-*,
   -misc-no-recursion,
 WarningsAsErrors: '*'

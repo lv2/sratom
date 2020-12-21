@@ -76,7 +76,10 @@ def configure(conf):
     conf.check_pkg('serd-0 >= 0.30.0', uselib_store='SERD')
     conf.check_pkg('sord-0 >= 0.14.0', uselib_store='SORD')
 
-    autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION)
+    # Set up environment for building/using as a subproject
+    autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION,
+                        include_path=str(conf.path.find_node('include')))
+
     conf.write_config_header('sratom_config.h', remove=False)
 
     autowaf.display_summary(conf, {'Unit tests': bool(conf.env.BUILD_TESTS)})
@@ -106,9 +109,9 @@ def build(bld):
     # Shared Library
     if bld.env.BUILD_SHARED:
         bld(features        = 'c cshlib',
-            export_includes = ['.'],
+            export_includes = ['include'],
             source          = lib_source,
-            includes        = ['.', './src'],
+            includes        = ['include'],
             lib             = libs,
             uselib          = 'SERD SORD LV2',
             name            = 'libsratom',
@@ -121,9 +124,9 @@ def build(bld):
     # Static library
     if bld.env.BUILD_STATIC:
         bld(features        = 'c cstlib',
-            export_includes = ['.'],
+            export_includes = ['include'],
             source          = lib_source,
-            includes        = ['.', './src'],
+            includes        = ['include'],
             lib             = libs,
             uselib          = 'SERD SORD LV2',
             name            = 'libsratom_static',
@@ -143,7 +146,7 @@ def build(bld):
         # Static library (for unit test code coverage)
         bld(features     = 'c cstlib',
             source       = lib_source,
-            includes     = ['.', './src'],
+            includes     = ['include'],
             lib          = test_libs,
             uselib       = 'SERD SORD LV2',
             name         = 'libsratom_profiled',
@@ -156,7 +159,7 @@ def build(bld):
         # Unit test program
         bld(features     = 'c cprogram',
             source       = 'tests/sratom_test.c',
-            includes     = ['.', './src'],
+            includes     = ['include'],
             use          = 'libsratom_profiled',
             lib          = test_libs,
             uselib       = 'SERD SORD LV2',
