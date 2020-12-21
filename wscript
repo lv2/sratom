@@ -63,6 +63,7 @@ def configure(conf):
                 '-Wno-float-conversion',
                 '-Wno-implicit-float-conversion',
                 '-Wno-implicit-int-conversion',
+                '-Wno-nullability-extension',
                 '-Wno-padded',
                 '-Wno-shorten-64-to-32',
                 '-Wno-sign-conversion',
