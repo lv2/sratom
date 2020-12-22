@@ -586,7 +586,7 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
 			lv2_atom_forge_long(forge, strtol(str, NULL, 10));
 		} else if (!strcmp(type_uri, (const char*)NS_XSD "float") ||
 		           !strcmp(type_uri, (const char*)NS_XSD "decimal")) {
-			lv2_atom_forge_float(forge, serd_strtod(str, NULL));
+			lv2_atom_forge_float(forge, (float)serd_strtod(str, NULL));
 		} else if (!strcmp(type_uri, (const char*)NS_XSD "double")) {
 			lv2_atom_forge_double(forge, serd_strtod(str, NULL));
 		} else if (!strcmp(type_uri, (const char*)NS_XSD "boolean")) {
