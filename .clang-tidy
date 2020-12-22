@@ -8,6 +8,7 @@ Checks: >
   -bugprone-suspicious-string-compare,
   -cert-err34-c,
   -clang-analyzer-unix.Malloc,
+  -clang-diagnostic-nullable-to-nonnull-conversion,
   -hicpp-signed-bitwise,
   -llvmlibc-*,
   -misc-no-recursion,
