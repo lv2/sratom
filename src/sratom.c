@@ -554,7 +554,7 @@ read_resource(Sratom*         sratom,
 static uint32_t
 atom_size(Sratom* sratom, uint32_t type_urid)
 {
-	if (type_urid == sratom->forge.Int) {
+	if (type_urid == sratom->forge.Int || type_urid == sratom->forge.Bool) {
 		return sizeof(int32_t);
 	} else if (type_urid == sratom->forge.Long) {
 		return sizeof(int64_t);
@@ -562,8 +562,6 @@ atom_size(Sratom* sratom, uint32_t type_urid)
 		return sizeof(float);
 	} else if (type_urid == sratom->forge.Double) {
 		return sizeof(double);
-	} else if (type_urid == sratom->forge.Bool) {
-		return sizeof(int32_t);
 	} else if (type_urid == sratom->forge.URID) {
 		return sizeof(uint32_t);
 	}

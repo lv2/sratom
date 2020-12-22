@@ -383,13 +383,10 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
 static int
 test_env(SerdEnv* env)
 {
-	if (test(env, false, false)) {
-		return 1;
-	} else if (test(env, true, false)) {
-		return 1;
-	} else if (test(env, false, true)) {
-		return 1;
-	} else if (test(env, true, true)) {
+	if (test(env, false, false) || //
+	    test(env, true, false) ||  //
+	    test(env, false, true) ||  //
+	    test(env, true, true)) {
 		return 1;
 	}
 
