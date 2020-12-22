@@ -229,13 +229,15 @@ number_type(const Sratom* sratom, const uint8_t* type)
 	    (!strcmp((const char*)type, (const char*)NS_XSD "int") ||
 	     !strcmp((const char*)type, (const char*)NS_XSD "long"))) {
 		return serd_node_from_string(SERD_URI, NS_XSD "integer");
-	} else if (sratom->pretty_numbers &&
-	           (!strcmp((const char*)type, (const char*)NS_XSD "float") ||
-	            !strcmp((const char*)type, (const char*)NS_XSD "double"))) {
-		return serd_node_from_string(SERD_URI, NS_XSD "decimal");
-	} else {
-		return serd_node_from_string(SERD_URI, type);
 	}
+
+	if (sratom->pretty_numbers &&
+	    (!strcmp((const char*)type, (const char*)NS_XSD "float") ||
+	     !strcmp((const char*)type, (const char*)NS_XSD "double"))) {
+		return serd_node_from_string(SERD_URI, NS_XSD "decimal");
+	}
+
+	return serd_node_from_string(SERD_URI, type);
 }
 
 int
@@ -556,15 +558,24 @@ atom_size(Sratom* sratom, uint32_t type_urid)
 {
 	if (type_urid == sratom->forge.Int || type_urid == sratom->forge.Bool) {
 		return sizeof(int32_t);
-	} else if (type_urid == sratom->forge.Long) {
+	}
+
+	if (type_urid == sratom->forge.Long) {
 		return sizeof(int64_t);
-	} else if (type_urid == sratom->forge.Float) {
+	}
+
+	if (type_urid == sratom->forge.Float) {
 		return sizeof(float);
-	} else if (type_urid == sratom->forge.Double) {
+	}
+
+	if (type_urid == sratom->forge.Double) {
 		return sizeof(double);
-	} else if (type_urid == sratom->forge.URID) {
+	}
+
+	if (type_urid == sratom->forge.URID) {
 		return sizeof(uint32_t);
 	}
+
 	return 0;
 }
 
