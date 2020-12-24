@@ -96,7 +96,7 @@ lib_source = ['src/sratom.c']
 def build(bld):
     # C Headers
     includedir = '${INCLUDEDIR}/sratom-%s/sratom' % SRATOM_MAJOR_VERSION
-    bld.install_files(includedir, bld.path.ant_glob('sratom/*.h'))
+    bld.install_files(includedir, bld.path.ant_glob('include/sratom/*.h'))
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'SRATOM', SRATOM_VERSION, SRATOM_MAJOR_VERSION, [],
