@@ -31,20 +31,20 @@
 #include <stdint.h>
 
 #ifdef SRATOM_SHARED
-#    ifdef _WIN32
-#        define SRATOM_LIB_IMPORT __declspec(dllimport)
-#        define SRATOM_LIB_EXPORT __declspec(dllexport)
-#    else
-#        define SRATOM_LIB_IMPORT __attribute__((visibility("default")))
-#        define SRATOM_LIB_EXPORT __attribute__((visibility("default")))
-#    endif
-#    ifdef SRATOM_INTERNAL
-#        define SRATOM_API SRATOM_LIB_EXPORT
-#    else
-#        define SRATOM_API SRATOM_LIB_IMPORT
-#    endif
+#  ifdef _WIN32
+#    define SRATOM_LIB_IMPORT __declspec(dllimport)
+#    define SRATOM_LIB_EXPORT __declspec(dllexport)
+#  else
+#    define SRATOM_LIB_IMPORT __attribute__((visibility("default")))
+#    define SRATOM_LIB_EXPORT __attribute__((visibility("default")))
+#  endif
+#  ifdef SRATOM_INTERNAL
+#    define SRATOM_API SRATOM_LIB_EXPORT
+#  else
+#    define SRATOM_API SRATOM_LIB_IMPORT
+#  endif
 #else
-#    define SRATOM_API
+#  define SRATOM_API
 #endif
 
 #ifdef __cplusplus
@@ -75,18 +75,18 @@ typedef struct SratomImpl Sratom;
    blank node IDs may be added in the future.
 */
 typedef enum {
-	/**
-	   Read blank nodes as Objects, and named resources as URIs.
-	*/
-	SRATOM_OBJECT_MODE_BLANK,
+  /**
+     Read blank nodes as Objects, and named resources as URIs.
+  */
+  SRATOM_OBJECT_MODE_BLANK,
 
-	/**
-	   Read blank nodes and the main subject as Objects, and any other named
-	   resources as URIs.  The "main subject" is the subject parameter passed
-	   to sratom_read(); if this is a resource it will be read as an Object,
-	   but all other named resources encountered will be read as URIs.
-	*/
-	SRATOM_OBJECT_MODE_BLANK_SUBJECT
+  /**
+     Read blank nodes and the main subject as Objects, and any other named
+     resources as URIs.  The "main subject" is the subject parameter passed
+     to sratom_read(); if this is a resource it will be read as an Object,
+     but all other named resources encountered will be read as URIs.
+  */
+  SRATOM_OBJECT_MODE_BLANK_SUBJECT
 } SratomObjectMode;
 
 /**
@@ -111,8 +111,7 @@ sratom_free(Sratom* sratom);
 */
 SRATOM_API
 void
-sratom_set_env(Sratom*  sratom,
-               SerdEnv* env);
+sratom_set_env(Sratom* sratom, SerdEnv* env);
 
 /**
    Set the sink(s) where sratom will write its output.
@@ -136,16 +135,14 @@ sratom_set_sink(Sratom*           sratom,
 */
 SRATOM_API
 void
-sratom_set_pretty_numbers(Sratom* sratom,
-                          bool    pretty_numbers);
+sratom_set_pretty_numbers(Sratom* sratom, bool pretty_numbers);
 
 /**
    Configure how resources will be read to form LV2 Objects.
 */
 SRATOM_API
 void
-sratom_set_object_mode(Sratom*          sratom,
-                       SratomObjectMode object_mode);
+sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
 
 /**
    Write an Atom to RDF.
@@ -217,15 +214,14 @@ sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
 */
 SRATOM_API
 LV2_Atom*
-sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle,
-                   LV2_Atom_Forge_Ref         ref);
+sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref);
 
 /**
    @}
 */
 
 #ifdef __cplusplus
-}  /* extern "C" */
+} /* extern "C" */
 #endif
 
-#endif  /* SRATOM_SRATOM_H */
+#endif /* SRATOM_SRATOM_H */
