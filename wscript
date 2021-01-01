@@ -161,12 +161,12 @@ def build(bld):
 
         # Unit test program
         bld(features     = 'c cprogram',
-            source       = 'tests/sratom_test.c',
+            source       = 'test/test_sratom.c',
             includes     = ['include'],
             use          = 'libsratom_profiled',
             lib          = test_libs,
             uselib       = 'SERD SORD LV2',
-            target       = 'sratom_test',
+            target       = 'test_sratom',
             install_path = '',
             defines      = defines,
             cflags       = test_cflags,
@@ -183,7 +183,7 @@ def test(tst):
     import sys
 
     with tst.group('Integration') as check:
-        check(['./sratom_test'])
+        check(['./test_sratom'])
 
 
 class LintContext(Build.BuildContext):
@@ -220,7 +220,7 @@ def lint(ctx):
 
     if "CLANG_TIDY" in ctx.env and "clang" in ctx.env.CC[0]:
         Logs.info("Running clang-tidy")
-        sources = glob.glob('src/*.c') + glob.glob('tests/*.c')
+        sources = glob.glob('src/*.c') + glob.glob('test/*.c')
         sources = list(map(os.path.abspath, sources))
         procs = []
         for source in sources:
