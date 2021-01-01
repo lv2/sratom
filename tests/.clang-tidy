@@ -3,13 +3,10 @@ Checks: >
   -*-magic-numbers,
   -*-uppercase-literal-suffix,
   -bugprone-suspicious-string-compare,
-  -cert-err34-c,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
-  -clang-analyzer-unix.Malloc,
   -hicpp-signed-bitwise,
   -llvm-header-guard,
   -llvmlibc-*,
-  -misc-no-recursion,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file
