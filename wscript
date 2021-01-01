@@ -85,8 +85,6 @@ def configure(conf):
     autowaf.set_lib_env(conf, 'sratom', SRATOM_VERSION,
                         include_path=str(conf.path.find_node('include')))
 
-    conf.write_config_header('sratom_config.h', remove=False)
-
     autowaf.display_summary(conf, {'Unit tests': bool(conf.env.BUILD_TESTS)})
 
 
