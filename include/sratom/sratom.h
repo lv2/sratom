@@ -30,19 +30,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef SRATOM_SHARED
-#  ifdef _WIN32
-#    define SRATOM_LIB_IMPORT __declspec(dllimport)
-#    define SRATOM_LIB_EXPORT __declspec(dllexport)
-#  else
-#    define SRATOM_LIB_IMPORT __attribute__((visibility("default")))
-#    define SRATOM_LIB_EXPORT __attribute__((visibility("default")))
-#  endif
-#  ifdef SRATOM_INTERNAL
-#    define SRATOM_API SRATOM_LIB_EXPORT
-#  else
-#    define SRATOM_API SRATOM_LIB_IMPORT
-#  endif
+#if defined(_WIN32) && !defined(SRATOM_STATIC) && defined(SRATOM_INTERNAL)
+#  define SRATOM_API __declspec(dllexport)
+#elif defined(_WIN32) && !defined(SRATOM_STATIC)
+#  define SRATOM_API __declspec(dllimport)
+#elif defined(__GNUC__)
+#  define SRATOM_API __attribute__((visibility("default")))
 #else
 #  define SRATOM_API
 #endif

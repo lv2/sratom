@@ -121,7 +121,7 @@ def build(bld):
             target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
             vnum            = SRATOM_VERSION,
             install_path    = '${LIBDIR}',
-            defines         = defines + ['SRATOM_SHARED', 'SRATOM_INTERNAL'],
+            defines         = defines + ['SRATOM_INTERNAL'],
             cflags          = libflags)
 
     # Static library
@@ -136,7 +136,7 @@ def build(bld):
             target          = 'sratom-%s' % SRATOM_MAJOR_VERSION,
             vnum            = SRATOM_VERSION,
             install_path    = '${LIBDIR}',
-            defines         = defines + ['SRATOM_INTERNAL'])
+            defines         = defines + ['SRATOM_STATIC', 'SRATOM_INTERNAL'])
 
     if bld.env.BUILD_TESTS:
         test_libs   = libs
@@ -155,7 +155,7 @@ def build(bld):
             name         = 'libsratom_profiled',
             target       = 'sratom_profiled',
             install_path = '',
-            defines      = defines + ['SRATOM_INTERNAL'],
+            defines      = defines + ['SRATOM_STATIC', 'SRATOM_INTERNAL'],
             cflags       = test_cflags,
             linkflags    = test_linkflags)
 
@@ -168,7 +168,7 @@ def build(bld):
             uselib       = 'SERD SORD LV2',
             target       = 'test_sratom',
             install_path = '',
-            defines      = defines,
+            defines      = defines + ['SRATOM_STATIC'],
             cflags       = test_cflags,
             linkflags    = test_linkflags)
 
