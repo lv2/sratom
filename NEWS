@@ -1,8 +1,8 @@
-sratom (0.6.7) unstable;
+sratom (0.6.8) stable;
 
   * Fix potential null pointer dereference
 
- -- David Robillard <d@drobilla.net>  Wed, 16 Dec 2020 09:51:51 +0000
+ -- David Robillard <d@drobilla.net>  Thu, 07 Jan 2021 21:36:14 +0000
 
 sratom (0.6.6) stable;
 
