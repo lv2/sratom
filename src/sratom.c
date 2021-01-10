@@ -140,7 +140,7 @@ sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode)
 static void
 gensym(SerdNode* out, char c, unsigned num)
 {
-  out->n_bytes = out->n_chars = snprintf((char*)out->buf, 10, "%c%u", c, num);
+  out->n_bytes = out->n_chars = snprintf((char*)out->buf, 12, "%c%u", c, num);
 }
 
 static void
