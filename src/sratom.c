@@ -676,10 +676,15 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
         forge, str, len, sratom->map->map(sratom->map->handle, type_uri), 0);
     }
   } else if (language) {
-    const char*  prefix   = "http://lexvo.org/id/iso639-3/";
-    const size_t lang_len = strlen(prefix) + strlen(language);
-    char*        lang_uri = (char*)calloc(lang_len + 1, 1);
-    snprintf(lang_uri, lang_len + 1, "%s%s", prefix, language);
+    static const char* const prefix       = "http://lexvo.org/id/iso639-3/";
+    const size_t             prefix_len   = strlen(prefix);
+    const size_t             language_len = strlen(language);
+    const size_t             lang_uri_len = prefix_len + language_len;
+    char*                    lang_uri     = (char*)calloc(lang_uri_len + 1, 1);
+
+    memcpy(lang_uri, prefix, prefix_len + 1);
+    memcpy(lang_uri + prefix_len, language, language_len + 1);
+
     lv2_atom_forge_literal(
       forge, str, len, 0, sratom->map->map(sratom->map->handle, lang_uri));
     free(lang_uri);
