@@ -14,9 +14,7 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-/**
-   @file sratom.h API for Sratom, an LV2 Atom RDF serialisation library.
-*/
+/// @file sratom.h Public API for Sratom
 
 #ifndef SRATOM_SRATOM_H
 #define SRATOM_SRATOM_H
@@ -45,16 +43,12 @@ extern "C" {
 #endif
 
 /**
-   @defgroup sratom Sratom
-
-   A library for serialising LV2 Atoms.
-
+   @defgroup sratom Sratom C API
+   This is the public C API of Sratom.
    @{
 */
 
-/**
-   Atom serialiser.
-*/
+/// Atom serializer
 typedef struct SratomImpl Sratom;
 
 /**
@@ -68,30 +62,26 @@ typedef struct SratomImpl Sratom;
    blank node IDs may be added in the future.
 */
 typedef enum {
-  /**
-     Read blank nodes as Objects, and named resources as URIs.
-  */
+  /// Read blank nodes as Objects, and named resources as URIs
   SRATOM_OBJECT_MODE_BLANK,
 
   /**
-     Read blank nodes and the main subject as Objects, and any other named
-     resources as URIs.  The "main subject" is the subject parameter passed
-     to sratom_read(); if this is a resource it will be read as an Object,
-     but all other named resources encountered will be read as URIs.
+     Read blank nodes and the main subject as Objects.
+
+     Any other named resources are read as URIs.  The "main subject" is the
+     subject parameter passed to sratom_read(); if this is a resource it will
+     be read as an Object, but all other named resources encountered will be
+     read as URIs.
   */
   SRATOM_OBJECT_MODE_BLANK_SUBJECT
 } SratomObjectMode;
 
-/**
-   Create a new Atom serialiser.
-*/
+/// Create a new Atom serializer
 SRATOM_API
 Sratom*
 sratom_new(LV2_URID_Map* map);
 
-/**
-   Free an Atom serialisation.
-*/
+/// Free an Atom serializer
 SRATOM_API
 void
 sratom_free(Sratom* sratom);
@@ -130,16 +120,16 @@ SRATOM_API
 void
 sratom_set_pretty_numbers(Sratom* sratom, bool pretty_numbers);
 
-/**
-   Configure how resources will be read to form LV2 Objects.
-*/
+/// Configure how resources will be read to form LV2 Objects
 SRATOM_API
 void
 sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
 
 /**
    Write an Atom to RDF.
-   The serialised atom is written to the sink set by sratom_set_sink().
+
+   The serialized atom is written to the sink set by sratom_set_sink().
+
    @return 0 on success, or a non-zero error code otherwise.
 */
 SRATOM_API
@@ -155,6 +145,7 @@ sratom_write(Sratom*         sratom,
 
 /**
    Read an Atom from RDF.
+
    The resulting atom will be written to `forge`.
 */
 SRATOM_API
@@ -166,7 +157,8 @@ sratom_read(Sratom*         sratom,
             const SordNode* node);
 
 /**
-   Serialise an Atom to a Turtle string.
+   Serialize an Atom to a Turtle string.
+
    The returned string must be free()'d by the caller.
 */
 SRATOM_API
@@ -182,6 +174,7 @@ sratom_to_turtle(Sratom*         sratom,
 
 /**
    Read an Atom from a Turtle string.
+
    The returned atom must be free()'d by the caller.
 */
 SRATOM_API
@@ -194,6 +187,7 @@ sratom_from_turtle(Sratom*         sratom,
 
 /**
    A convenient resizing sink for LV2_Atom_Forge.
+
    The handle must point to an initialized SerdChunk.
 */
 SRATOM_API
@@ -202,9 +196,7 @@ sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
                   const void*                buf,
                   uint32_t                   size);
 
-/**
-   The corresponding deref function for sratom_forge_sink.
-*/
+/// The corresponding deref function for sratom_forge_sink
 SRATOM_API
 LV2_Atom*
 sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref);
