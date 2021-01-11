@@ -1,5 +1,5 @@
 PROJECT_NAME           = Sratom
-PROJECT_BRIEF          = "A small library for serialising LV2 atoms to and from RDF"
+PROJECT_BRIEF          = "A library for serializing LV2 atoms"
 
 QUIET                  = YES
 WARN_AS_ERROR          = NO
@@ -21,6 +21,8 @@ SHOW_FILES             = NO
 MACRO_EXPANSION        = YES
 PREDEFINED             = SRATOM_API
 
-INPUT                  = ../../include/sratom/sratom.h
+RECURSIVE              = YES
+STRIP_FROM_PATH        = @SRATOM_SRCDIR@
+INPUT                  = @SRATOM_SRCDIR@/include
 
-OUTPUT_DIRECTORY       = .
+OUTPUT_DIRECTORY       = @DOX_OUTPUT@

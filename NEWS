@@ -1,8 +1,9 @@
 sratom (0.6.9) unstable;
 
   * Fix potential blank node ID truncation
+  * Switch to meson build system
 
- -- David Robillard <d@drobilla.net>  Sun, 10 Jan 2021 22:10:23 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 10 Jan 2021 22:12:54 +0000
 
 sratom (0.6.8) stable;
 
