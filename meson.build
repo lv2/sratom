@@ -1,5 +1,5 @@
 project('sratom', ['c'],
-        version: '0.6.9',
+        version: '1.0.0',
         license: 'ISC',
         meson_version: '>= 0.49.2',
         default_options: [
@@ -7,7 +7,7 @@ project('sratom', ['c'],
           'buildtype=release',
           'c_std=c99',
           'default_library=shared',
-          'warning_level=2',
+          'warning_level=3',
         ])
 
 sratom_src_root = meson.current_source_dir()
@@ -19,7 +19,12 @@ versioned_name = 'sratom' + version_suffix
 pkg = import('pkgconfig')
 cc = meson.get_compiler('c')
 
+if add_languages('cpp', required: get_option('bindings_cpp'))
+  cpp = meson.get_compiler('cpp')
+endif
+
 # Set ultra strict warnings for developers, if requested
+c_warnings = []
 if get_option('strict')
   subdir('meson')
 
@@ -55,9 +60,16 @@ if get_option('strict')
     ]
   endif
 
-  add_project_arguments(cc.get_supported_arguments(c_warnings),
-                        language: ['c'])
+else
+  if cc.get_id() == 'clang'
+    c_warnings += [
+      '-Wno-nullability-extension',
+    ]
+  endif
 endif
+
+add_project_arguments(cc.get_supported_arguments(c_warnings),
+                      language: ['c'])
 
 # Add special arguments for MSVC
 if cc.get_id() == 'msvc'
@@ -76,7 +88,8 @@ c_headers = ['include/sratom/sratom.h']
 c_header_files = files(c_headers)
 
 sources = [
-  'src/sratom.c',
+  'src/dumper.c',
+  'src/loader.c',
 ]
 
 # System libraries
@@ -85,16 +98,12 @@ m_dep = cc.find_library('m', required: false)
 # Dependencies
 
 lv2_dep = dependency('lv2',
-                     version: '>= 1.18.3',
+                     version: '>= 1.18.2',
                      fallback: ['lv2', 'lv2_dep'])
 
-serd_dep = dependency('serd-0',
-                      version: '>= 0.30.9',
+serd_dep = dependency('serd-1',
+                      version: '>= 1.0.0',
                       fallback: ['serd', 'serd_dep'])
-
-sord_dep = dependency('sord-0',
-                      version: '>= 0.16.9',
-                      fallback: ['sord', 'sord_dep'])
 
 # Determine library type and the flags needed to build it
 if get_option('default_library') == 'both'
@@ -122,14 +131,14 @@ libsratom = build_target(
   version: meson.project_version(),
   include_directories: include_directories(['include']),
   c_args: library_args,
-  dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
+  dependencies: [m_dep, lv2_dep, serd_dep],
   gnu_symbol_visibility: 'hidden',
   install: true,
   target_type: library_type)
 
 sratom_dep = declare_dependency(
   include_directories: include_directories(['include']),
-  dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
+  dependencies: [m_dep, lv2_dep, serd_dep],
   link_with: libsratom)
 
 pkg.generate(
@@ -149,6 +158,11 @@ endif
 
 if get_option('tests')
   subdir('test')
+endif
+
+# C++ bindings
+if is_variable('cpp')
+  subdir('bindings/cpp')
 endif
 
 if meson.version().version_compare('>=0.53.0')

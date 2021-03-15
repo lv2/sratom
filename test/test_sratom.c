@@ -1,5 +1,5 @@
 /*
-  Copyright 2012-2016 David Robillard <d@drobilla.net>
+  Copyright 2012-2016 David Robillard <http://drobilla.net>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -14,35 +14,28 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "sratom/sratom.h"
+
 #include "lv2/atom/atom.h"
 #include "lv2/atom/forge.h"
-#include "lv2/atom/util.h"
 #include "lv2/midi/midi.h"
 #include "lv2/urid/urid.h"
 #include "serd/serd.h"
-#include "sratom/sratom.h"
 
-#include <stdarg.h>
+#include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define NS_ATOM "http://lv2plug.in/ns/ext/atom#"
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-
-#define USTR(s) ((const uint8_t*)(s))
-
-#if defined(__GNUC__)
-#  define SRATOM_LOG_FUNC(fmt, arg1) __attribute__((format(printf, fmt, arg1)))
-#else
-#  define SRATOM_LOG_FUNC(fmt, arg1)
-#endif
+#define NS_XSD "http://www.w3.org/2001/XMLSchema#"
 
 /// Simple O(n) URI map
 typedef struct {
-  char** uris;
-  size_t n_uris;
+  char**   uris;
+  uint32_t n_uris;
 } Uris;
 
 static char*
@@ -59,7 +52,7 @@ urid_map(LV2_URID_Map_Handle handle, const char* uri)
 {
   Uris* const uris = (Uris*)handle;
 
-  for (size_t i = 0; i < uris->n_uris; ++i) {
+  for (uint32_t i = 0; i < uris->n_uris; ++i) {
     if (!strcmp(uris->uris[i], uri)) {
       return i + 1;
     }
@@ -82,20 +75,44 @@ urid_unmap(LV2_URID_Unmap_Handle handle, LV2_URID urid)
   return NULL;
 }
 
-SRATOM_LOG_FUNC(1, 2)
 static int
-test_fail(const char* fmt, ...)
+check_round_trip(Uris*                   uris,
+                 SerdEnv*                env,
+                 SratomDumper*           dumper,
+                 SratomLoader*           loader,
+                 const LV2_Atom*         obj,
+                 const SratomDumperFlags flags)
 {
-  va_list args;
-  va_start(args, fmt);
-  fprintf(stderr, "error: ");
-  vfprintf(stderr, fmt, args);
-  va_end(args);
-  return 1;
+  (void)uris; // FIXME
+
+  // Serialise atom and print string
+  char* const outstr = sratom_to_string(dumper, env, obj, flags);
+  assert(outstr);
+
+  printf("%s\n", outstr);
+
+  // Parse serialised string back into an atom
+  LV2_Atom* const parsed = sratom_from_string(loader, env, outstr);
+  assert(parsed);
+
+  if (!(flags & SRATOM_PRETTY_NUMBERS)) {
+    // Check that round tripped atom is identical to original
+    assert(obj->type == parsed->type);
+    assert(lv2_atom_equals(obj, parsed));
+
+    /* char* const instr = sratom_to_string(writer, env, parsed, flags); */
+    /* if ( */
+    /* printf("# Turtle => Atom\n\n%s", instr); */
+  }
+
+  sratom_free(parsed);
+  sratom_free(outstr);
+
+  return 0;
 }
 
 static int
-test(SerdEnv* env, bool top_level, bool pretty_numbers)
+test(SerdEnv* env, const char* name, const SratomDumperFlags flags)
 {
   Uris           uris  = {NULL, 0};
   LV2_URID_Map   map   = {&uris, urid_map};
@@ -103,12 +120,9 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
   LV2_Atom_Forge forge;
   lv2_atom_forge_init(&forge, &map);
 
-  Sratom* sratom = sratom_new(&map);
-  sratom_set_env(sratom, env);
-  sratom_set_pretty_numbers(sratom, pretty_numbers);
-  sratom_set_object_mode(sratom,
-                         top_level ? SRATOM_OBJECT_MODE_BLANK_SUBJECT
-                                   : SRATOM_OBJECT_MODE_BLANK);
+  SerdWorld*    world  = serd_world_new();
+  SratomDumper* dumper = sratom_dumper_new(world, &map, &unmap);
+  SratomLoader* loader = sratom_loader_new(world, &map);
 
   LV2_URID eg_Object  = urid_map(&uris, "http://example.org/Object");
   LV2_URID eg_one     = urid_map(&uris, "http://example.org/a-one");
@@ -141,15 +155,8 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
   uint8_t buf[1024];
   lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
 
-  const char*          obj_uri = "http://example.org/obj";
-  LV2_URID             obj_id  = urid_map(&uris, obj_uri);
   LV2_Atom_Forge_Frame obj_frame;
-  if (top_level) {
-    lv2_atom_forge_object(&forge, &obj_frame, obj_id, eg_Object);
-  } else {
-    lv2_atom_forge_object(&forge, &obj_frame, 0, eg_Object);
-  }
-
+  lv2_atom_forge_object(&forge, &obj_frame, 0, eg_Object);
   LV2_Atom* obj = lv2_atom_forge_deref(&forge, obj_frame.ref);
 
   // eg_one = (Int32)1
@@ -182,8 +189,8 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
   lv2_atom_forge_key(&forge, eg_path);
   lv2_atom_forge_path(&forge, pstr, pstr_len);
 
-  // eg_winpath = (Path)"C:\Stupid\File System"
-  const char*  wpstr     = "C:/Stupid/File System";
+  // eg_winpath = (Path)"C:/Weird/File System"
+  const char*  wpstr     = "C:/Weird/File System";
   const size_t wpstr_len = strlen(wpstr);
   lv2_atom_forge_key(&forge, eg_winpath);
   lv2_atom_forge_path(&forge, wpstr, wpstr_len);
@@ -333,77 +340,21 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
 
   lv2_atom_forge_pop(&forge, &obj_frame);
 
-  const char* base_uri = "file:///tmp/base/";
-
-  SerdNode s = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
-  SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
-
-  SerdNode* subj = top_level ? NULL : &s;
-  SerdNode* pred = top_level ? NULL : &p;
-
-  char* outstr = sratom_to_turtle(sratom,
-                                  &unmap,
-                                  base_uri,
-                                  subj,
-                                  pred,
-                                  obj->type,
-                                  obj->size,
-                                  LV2_ATOM_BODY(obj));
-
-  printf("# Atom => Turtle\n\n%s", outstr);
-
-  LV2_Atom* parsed = NULL;
-  if (top_level) {
-    SerdNode o = serd_node_from_string(SERD_URI, (const uint8_t*)obj_uri);
-    parsed     = sratom_from_turtle(sratom, base_uri, &o, NULL, outstr);
-  } else {
-    parsed = sratom_from_turtle(sratom, base_uri, subj, pred, outstr);
+  printf("\n# %s\n\n", name);
+  check_round_trip(&uris, env, dumper, loader, obj, flags);
+  printf("\n");
+  LV2_ATOM_OBJECT_FOREACH ((LV2_Atom_Object*)obj, prop) {
+    check_round_trip(&uris, env, dumper, loader, &prop->value, flags);
   }
 
-  if (!pretty_numbers) {
-    if (!lv2_atom_equals(obj, parsed)) {
-      return test_fail("Parsed atom does not match original\n");
-    }
-
-    char* instr = sratom_to_turtle(sratom,
-                                   &unmap,
-                                   base_uri,
-                                   subj,
-                                   pred,
-                                   parsed->type,
-                                   parsed->size,
-                                   LV2_ATOM_BODY(parsed));
-    printf("# Turtle => Atom\n\n%s", instr);
-
-    if (strcmp(outstr, instr)) {
-      return test_fail("Re-serialised string differs from original\n");
-    }
-    free(instr);
-  }
-
-  printf("All tests passed.\n");
-
-  free(parsed);
-  free(outstr);
-  sratom_free(sratom);
+  sratom_dumper_free(dumper);
+  sratom_loader_free(loader);
   for (uint32_t i = 0; i < uris.n_uris; ++i) {
     free(uris.uris[i]);
   }
+  serd_world_free(world);
 
   free(uris.uris);
-
-  return 0;
-}
-
-static int
-test_env(SerdEnv* env)
-{
-  if (test(env, false, false) || //
-      test(env, true, false) ||  //
-      test(env, false, true) ||  //
-      test(env, true, true)) {
-    return 1;
-  }
 
   return 0;
 }
@@ -411,18 +362,27 @@ test_env(SerdEnv* env)
 int
 main(void)
 {
-  // Test with no environment
-  if (test_env(NULL)) {
-    return 1;
-  }
+  SerdEnv* const env = serd_env_new(SERD_STATIC_STRING("file:///tmp/base/"));
 
-  // Test with a prefix defined
-  SerdEnv* env = serd_env_new(NULL);
-  serd_env_set_prefix_from_strings(
-    env, (const uint8_t*)"eg", (const uint8_t*)"http://example.org/");
+  serd_env_set_prefix(
+    env, SERD_STATIC_STRING("eg"), SERD_STATIC_STRING("http://example.org/"));
 
-  test_env(env);
+  serd_env_set_prefix(
+    env, SERD_STATIC_STRING("atom"), SERD_STATIC_STRING(NS_ATOM));
+
+  serd_env_set_prefix(
+    env, SERD_STATIC_STRING("rdf"), SERD_STATIC_STRING(NS_RDF));
+
+  serd_env_set_prefix(
+    env, SERD_STATIC_STRING("xsd"), SERD_STATIC_STRING(NS_XSD));
+
+  const int st =
+    (test(env, "Default", 0) || //
+     test(env, "Pretty", SRATOM_PRETTY_NUMBERS) ||
+     test(env, "Terse", SRATOM_TERSE) ||
+     test(env, "Pretty + Terse", SRATOM_PRETTY_NUMBERS | SRATOM_TERSE));
+
   serd_env_free(env);
 
-  return 0;
+  return st;
 }

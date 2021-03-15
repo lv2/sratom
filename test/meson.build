@@ -10,7 +10,7 @@ foreach unit : unit_tests
                   'test_@0@.c'.format(unit),
                   c_args: prog_args,
                   include_directories: include_directories(['../src']),
-                  dependencies: [sratom_dep, serd_dep, sord_dep]),
+                  dependencies: [sratom_dep, serd_dep]),
        suite: 'unit')
 endforeach
 
