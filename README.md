@@ -1,9 +1,11 @@
 Sratom
 ======
 
-Sratom is a small library for serialising LV2 atoms to and from RDF, for
-converting between binary and text or storing in a model.  For more
-information, see <http://drobilla.net/software/sratom>.
+Sratom is a small library for reading and writing LV2 atoms in RDF, for
+representing them as strings or storing them in a data model.  Sratom is useful
+for representing LV2 atoms in a portable and human-readable form.
+
+For more information, see <http://drobilla.net/software/sratom>.
 
 More information about LV2 atoms can be found at
 <http://lv2plug.in/ns/ext/atom>
