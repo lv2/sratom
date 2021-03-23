@@ -322,6 +322,9 @@ def dox_to_rst(index, lang, node):
     if node.tag == "ulink":
         return "`%s <%s>`_" % (node.text, node.get("url"))
 
+    if node.tag == "verbatim":
+        return "::\n\n" + indent(plain_text(node), 1)
+
     raise RuntimeError("Unknown documentation command: %s" % node.tag)
 
 

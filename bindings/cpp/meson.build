@@ -67,10 +67,12 @@ install_headers(cpp_headers, subdir: versioned_cpp_name / 'sratom')
 
 cpp_test_args = cpp.get_supported_arguments(['-Wno-float-equal'])
 
-test('bindings',
-     executable('test_sratom_hpp',
-                'test/test_sratom_hpp.cpp',
-                include_directories: include_directories(['include']),
-                cpp_args: exess_cpp_args + cpp_test_args,
-                dependencies: [sratom_dep, serdpp_dep, sratompp_dep]),
-     suite: 'cpp')
+test(
+  'bindings',
+  executable(
+    'test_sratom_hpp',
+    'test/test_sratom_hpp.cpp',
+    include_directories: include_directories(['include', '../../test']),
+    cpp_args: exess_cpp_args + cpp_test_args,
+    dependencies: [sratom_dep, serdpp_dep, sratompp_dep]),
+  suite: 'cpp')

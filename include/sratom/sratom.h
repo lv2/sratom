@@ -43,9 +43,16 @@ extern "C" {
 
 /**
    @defgroup sratom Sratom C API
-   This is the complete public C API of sratom.
    @{
 */
+
+/// Return status code
+typedef enum {
+  SRATOM_SUCCESS,      ///< No error
+  SRATOM_BAD_FILE_URI, ///< Invalid file URI encountered
+  SRATOM_BAD_VECTOR,   ///< Invalid vector (missing atom:childType)
+  SRATOM_BAD_FORGE,    ///< Error forging output atom (likely overflow)
+} SratomStatus;
 
 /// Free memory allocated in the sratom library
 SRATOM_API
@@ -71,16 +78,23 @@ typedef enum {
   /**
      Write pretty numeric literals in Turtle or TriG.
 
-     If set, numbers may be written as pretty literals instead of string
-     literals with explicit data types.  Note that enabling this means that
-     types will not survive a round trip.
+     If set, numbers may be written as "pretty" xsd:integer or xsd:decimal
+     literals (without quoting or an explicit datatype) instead of string
+     literals with explicit data types.  It is best to leave this off in
+     contexts where human readability doesn't matter very much, since the
+     explicit form is more consistent and likely to survive storage,
+     transmission, and transformation with perfect fidelity.
   */
   SRATOM_PRETTY_NUMBERS = 1u << 2u,
 
   /**
      Write terse output without newlines.
 
-     If set, top level atoms will be written as a single long line.
+     If set when writing to a string, top-level atoms will be written as a
+     single long line.  From a machine perspective, the output is identical,
+     but this can be convenient in contexts where taking up less space for the
+     representation of atoms is desirable, such as developer logs or
+     transmission over a network.
   */
   SRATOM_TERSE = 1u << 3u,
 } SratomDumperFlag;
@@ -117,30 +131,40 @@ sratom_dumper_free(SratomDumper* dumper);
    series of statements.  It can be used with any sink, such as a Turtle
    writer, model inserter, or a custom sink provided by the application.
 
-   This function takes the `type`, `size`, and `body` separately to allow
-   writing atoms from data in memory that does not have an atom header.  For
-   true atom pointers, the simpler sratom_dump_atom() can be used instead.
+   This function takes the `type`, `size`, and `body` separately to enable
+   writing values that are not a contiguous `LV2_Atom` in memory.  For writing
+   existing atoms, the simpler sratom_dump_atom() can be used instead.
 
-   Since all statements must be triples, a subject and predicate can be
-   provided to serialise literals like `subject predicate "literal"`.  If
-   `subject` and `predicate` are null, resources will be written as the
-   subject, but literals will be written as the only element of an anonymous
-   list.  A subject and predicate should always be given for lossless
-   round-tripping.  This corresponds to using atoms as property values.
+   A subject and predicate can be provided so that writing simple atoms will
+   produce a statement like `subject predicate "literal"`.  If either `subject`
+   or `predicate` are null, objects will be written as the subject, and
+   literals will be written as the only element of an anonymous list.  For
+   example:
 
-   @param dumper Dumper instance
-   @param env Environment defining the base URI and any prefixes
-   @param sink Sink which receives the serialised statements
-   @param subject Subject of first statement, or NULL
-   @param predicate Predicate of first statement, or NULL
-   @param type Type of the atom
-   @param size Size of the atom body in bytes
-   @param body Atom body
-   @param flags Option flags
-   @return Zero on success
+   @verbatim
+   my:object some:property 42 .
+   [ some:property 42 ] .
+   ( "literal" ) .
+   @endverbatim
+
+   Generally, this function is intended for writing the value of some property
+   (for example, the current value of a plugin parameter in a preset), and the
+   appropriate subject and predicate for the context should always be provided.
+   This avoids any ambiguities and guarantees lossless round-tripping.
+
+   @param dumper Dumper instance.
+   @param env Environment defining the base URI and any prefixes.
+   @param sink Sink which receives the statements describing the atom.
+   @param subject Subject of first statement, or NULL.
+   @param predicate Predicate of first statement, or NULL.
+   @param type Type of the atom.
+   @param size Size of the atom body in bytes.
+   @param body Atom body.
+   @param flags Option flags.
+   @return Zero on success.
 */
 SRATOM_API
-int
+SratomStatus
 sratom_dump(SratomDumper*     dumper,
             const SerdEnv*    env,
             const SerdSink*   sink,
@@ -157,17 +181,17 @@ sratom_dump(SratomDumper*     dumper,
    Convenience wrapper that takes a pointer to a complete atom, see the
    sratom_dump() documentation for details.
 
-   @param dumper Dumper instance
-   @param env Environment defining the base URI and any prefixes
-   @param sink Sink which receives the serialised statements
-   @param subject Subject of first statement, or NULL
-   @param predicate Predicate of first statement, or NULL
-   @param atom Atom to serialise
-   @param flags Option flags
-   @return Zero on success
+   @param dumper Dumper instance.
+   @param env Environment defining the base URI and any prefixes.
+   @param sink Sink which receives the statements describing the atom.
+   @param subject Subject of first statement, or NULL.
+   @param predicate Predicate of first statement, or NULL.
+   @param atom Atom to write.
+   @param flags Option flags.
+   @return Zero on success.
 */
 SRATOM_API
-int
+SratomStatus
 sratom_dump_atom(SratomDumper*     dumper,
                  const SerdEnv*    env,
                  const SerdSink*   sink,
@@ -182,10 +206,10 @@ sratom_dump_atom(SratomDumper*     dumper,
    The returned string can be forged back into an atom using
    sratom_from_string().
 
-   @param dumper Dumper instance
-   @param env Environment for namespaces and relative URIs
-   @param atom Atom to serialise
-   @param flags Option flags
+   @param dumper Dumper instance.
+   @param env Environment for namespaces and relative URIs.
+   @param atom Atom to write.
+   @param flags Option flags.
    @return A string that must be freed using sratom_free(), or NULL on error.
 */
 SRATOM_API
@@ -207,9 +231,9 @@ typedef struct SratomLoaderImpl SratomLoader;
 /**
    Create a new loader for forging atoms from a document.
 
-   @param world RDF world
-   @param map URID mapper
-   @return A new object that must be freed with sratom_loader_free()
+   @param world RDF world.
+   @param map URID mapper.
+   @return A new object that must be freed with sratom_loader_free().
 */
 SRATOM_API
 SratomLoader*
@@ -243,10 +267,10 @@ sratom_loader_free(SratomLoader* loader);
    primitive atoms, or the subject resource for more complex structures like
    objects and vectors.
 
-   @return Zero on success.
+   @return A status code which is zero on success.
 */
 SRATOM_API
-int
+SratomStatus
 sratom_load(SratomLoader*    loader,
             const SerdNode*  base_uri,
             LV2_Atom_Forge*  forge,

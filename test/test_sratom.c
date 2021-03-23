@@ -1,5 +1,5 @@
 /*
-  Copyright 2012-2016 David Robillard <http://drobilla.net>
+  Copyright 2012-2021 David Robillard <d@drobilla.net>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -14,16 +14,20 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "test_utils.h"
+
 #include "sratom/sratom.h"
 
 #include "lv2/atom/atom.h"
 #include "lv2/atom/forge.h"
+#include "lv2/atom/util.h"
 #include "lv2/midi/midi.h"
 #include "lv2/urid/urid.h"
 #include "serd/serd.h"
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,49 +35,6 @@
 #define NS_ATOM "http://lv2plug.in/ns/ext/atom#"
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define NS_XSD "http://www.w3.org/2001/XMLSchema#"
-
-/// Simple O(n) URI map
-typedef struct {
-  char**   uris;
-  uint32_t n_uris;
-} Uris;
-
-static char*
-copy_string(const char* str)
-{
-  const size_t len = strlen(str);
-  char*        dup = (char*)malloc(len + 1);
-  memcpy(dup, str, len + 1);
-  return dup;
-}
-
-static LV2_URID
-urid_map(LV2_URID_Map_Handle handle, const char* uri)
-{
-  Uris* const uris = (Uris*)handle;
-
-  for (uint32_t i = 0; i < uris->n_uris; ++i) {
-    if (!strcmp(uris->uris[i], uri)) {
-      return i + 1;
-    }
-  }
-
-  uris->uris = (char**)realloc(uris->uris, ++uris->n_uris * sizeof(char*));
-  uris->uris[uris->n_uris - 1] = copy_string(uri);
-  return uris->n_uris;
-}
-
-static const char*
-urid_unmap(LV2_URID_Unmap_Handle handle, LV2_URID urid)
-{
-  Uris* const uris = (Uris*)handle;
-
-  if (urid > 0 && urid <= uris->n_uris) {
-    return uris->uris[urid - 1];
-  }
-
-  return NULL;
-}
 
 static int
 check_round_trip(Uris*                   uris,

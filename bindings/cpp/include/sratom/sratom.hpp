@@ -79,21 +79,21 @@ public:
     : BasicWrapper(sratom_dumper_new(world.cobj(), &map, &unmap))
   {}
 
-  int write(const serd::Env& env,
-            serd::SinkView   sink,
-            const LV2_Atom&  atom,
-            const Flags      flags)
+  SratomStatus write(const serd::Env& env,
+                     serd::SinkView   sink,
+                     const LV2_Atom&  atom,
+                     const Flags      flags)
   {
     return sratom_dump_atom(
       cobj(), env.cobj(), sink.cobj(), nullptr, nullptr, &atom, flags);
   }
 
-  int write(const serd::Env&  env,
-            serd::SinkView    sink,
-            const serd::Node& subject,
-            const serd::Node& predicate,
-            const LV2_Atom&   atom,
-            const Flags       flags)
+  SratomStatus write(const serd::Env&  env,
+                     serd::SinkView    sink,
+                     const serd::Node& subject,
+                     const serd::Node& predicate,
+                     const LV2_Atom&   atom,
+                     const Flags       flags)
   {
     return sratom_dump_atom(cobj(),
                             env.cobj(),
@@ -104,14 +104,14 @@ public:
                             flags);
   }
 
-  int write(const serd::Env&  env,
-            serd::SinkView    sink,
-            const serd::Node& subject,
-            const serd::Node& predicate,
-            LV2_URID          type,
-            uint32_t          size,
-            const void*       body,
-            const Flags       flags)
+  SratomStatus write(const serd::Env&  env,
+                     serd::SinkView    sink,
+                     const serd::Node& subject,
+                     const serd::Node& predicate,
+                     LV2_URID          type,
+                     uint32_t          size,
+                     const void*       body,
+                     const Flags       flags)
   {
     return sratom_dump(cobj(),
                        env.cobj(),
@@ -153,10 +153,10 @@ public:
     : BasicWrapper(sratom_loader_new(world.cobj(), &map))
   {}
 
-  int load(const serd::Optional<serd::Node>& base_uri,
-           LV2_Atom_Forge&                   forge,
-           const serd::Model&                model,
-           const serd::Node&                 node)
+  SratomStatus load(const serd::Optional<serd::Node>& base_uri,
+                    LV2_Atom_Forge&                   forge,
+                    const serd::Model&                model,
+                    const serd::Node&                 node)
   {
     return sratom_load(
       cobj(), base_uri.cobj(), &forge, model.cobj(), node.cobj());

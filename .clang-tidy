@@ -9,6 +9,7 @@ Checks: >
   -hicpp-signed-bitwise,
   -llvm-header-guard,
   -llvmlibc-*,
+  -misc-misplaced-const,
   -misc-no-recursion,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
