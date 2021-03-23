@@ -27,8 +27,8 @@
 #include <sstream>
 
 /**
-   @defgroup sratomxx Sratomxx
-   C++ bindings for Sratom, a library for serialising LV2 atoms.
+   @defgroup sratompp Sratompp
+   C++ bindings for Sratom, a library for reading and writing LV2 atoms.
    @{
 */
 
@@ -37,13 +37,13 @@ namespace sratom {
 namespace detail {
 
 struct Deleter {
-  void operator()(void* ptr) { sratom_free(ptr); }
+  void operator()(void* const ptr) { sratom_free(ptr); }
 };
 
 } // namespace detail
 
 /// Flags to control how atoms are written and read
-typedef enum {
+enum class Flag {
   /**
      Write the main subject with a label.
 
@@ -67,7 +67,7 @@ typedef enum {
      If set, top level atoms will be written as a single long line.
   */
   terse = SRATOM_TERSE,
-} Flag;
+};
 
 using Flags = serd::detail::Flags<Flag>;
 
@@ -82,7 +82,7 @@ public:
   int write(const serd::Env& env,
             serd::SinkView   sink,
             const LV2_Atom&  atom,
-            const Flags      flags = {})
+            const Flags      flags)
   {
     return sratom_dump_atom(
       cobj(), env.cobj(), sink.cobj(), nullptr, nullptr, &atom, flags);
@@ -93,7 +93,7 @@ public:
             const serd::Node& subject,
             const serd::Node& predicate,
             const LV2_Atom&   atom,
-            const Flags       flags = {})
+            const Flags       flags)
   {
     return sratom_dump_atom(cobj(),
                             env.cobj(),
@@ -111,7 +111,7 @@ public:
             LV2_URID          type,
             uint32_t          size,
             const void*       body,
-            const Flags       flags = {})
+            const Flags       flags)
   {
     return sratom_dump(cobj(),
                        env.cobj(),
@@ -126,9 +126,9 @@ public:
 
   std::string to_string(const serd::Env& env,
                         const LV2_Atom&  atom,
-                        const Flags      flags = {})
+                        const Flags      flags)
   {
-    char*       c_str  = sratom_to_string(cobj(), env.cobj(), &atom, flags);
+    char* const c_str  = sratom_to_string(cobj(), env.cobj(), &atom, flags);
     std::string result = c_str;
     sratom_free(c_str);
     return result;
@@ -137,7 +137,7 @@ public:
 private:
   static size_t string_sink(const void* buf, size_t, size_t nmemb, void* stream)
   {
-    std::string& string = *(std::string*)stream;
+    std::string& string = *static_cast<std::string*>(stream);
     string.insert(string.size(), static_cast<const char*>(buf), nmemb);
     return nmemb;
   }
@@ -153,7 +153,7 @@ public:
     : BasicWrapper(sratom_loader_new(world.cobj(), &map))
   {}
 
-  int read(const serd::Optional<serd::Node>& base_uri,
+  int load(const serd::Optional<serd::Node>& base_uri,
            LV2_Atom_Forge&                   forge,
            const serd::Model&                model,
            const serd::Node&                 node)
@@ -162,12 +162,12 @@ public:
       cobj(), base_uri.cobj(), &forge, model.cobj(), node.cobj());
   }
 
-  AtomPtr read_string(serd::Env& env, const char* str)
+  AtomPtr from_string(serd::Env& env, const char* const str)
   {
     return AtomPtr{sratom_from_string(cobj(), env.cobj(), str)};
   }
 
-  AtomPtr read_model(const serd::Optional<serd::Node>& base_uri,
+  AtomPtr from_model(const serd::Optional<serd::Node>& base_uri,
                      const serd::Model&                model,
                      const serd::Node&                 subject)
   {
