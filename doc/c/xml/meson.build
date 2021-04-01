@@ -1,9 +1,9 @@
 doxygen = find_program('doxygen')
 
 c_doxygen_input = []
-foreach h : c_headers
-  c_doxygen_input += ['..' / h]
-endforeach
+# foreach h : sratom_c_headers
+#   c_doxygen_input += ['..' / h]
+# endforeach
 
 config = configuration_data()
 config.set('SRATOM_SRCDIR', sratom_src_root)
@@ -15,5 +15,5 @@ c_doxyfile = configure_file(configuration: config,
 
 c_index_xml = custom_target('sratom-c-index.xml',
                             command: [doxygen, '@INPUT0@'],
-                            input: [c_doxyfile] + c_header_files,
+                            input: [c_doxyfile] + sratom_c_header_files,
                             output: 'index.xml')

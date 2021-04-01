@@ -17,6 +17,7 @@ if get_option('strict')
       '-Wno-inline',
       '-Wno-multiple-inheritance',
       '-Wno-padded',
+      '-Wno-parentheses',
       '-Wno-suggest-attribute=pure',
       '-Wno-switch-default',
       '-Wno-unused-const-variable',
@@ -39,6 +40,10 @@ else
     cpp_suppressions += [
       '-Wno-nullability-extension',
     ]
+  elif cpp.get_id() == 'gcc'
+    cpp_suppressions += [
+      '-Wno-parentheses',
+    ]
   endif
 endif
 
@@ -49,7 +54,8 @@ cpp_headers = [
 ]
 
 serdpp_dep = dependency('serdxx-1',
-                        version: '>= 1.0.0')
+                        version: '>= 1.0.0',
+                        fallback: ['serd', 'serdxx_dep'])
 
 sratompp_dep = declare_dependency(
   include_directories: include_directories(['include']),

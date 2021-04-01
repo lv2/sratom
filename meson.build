@@ -53,6 +53,9 @@ if get_option('strict')
       '-Wno-suggest-attribute=pure',
       '-Wno-unsuffixed-float-constants',
       '-Wno-unused-const-variable',
+
+      # FIXME: Just for tests
+      '-Wno-parentheses',
     ]
   elif cc.get_id() == 'msvc'
     c_warnings += [
@@ -84,8 +87,8 @@ if cc.get_id() == 'msvc'
   add_project_arguments(msvc_args, language: ['c'])
 endif
 
-c_headers = ['include/sratom/sratom.h']
-c_header_files = files(c_headers)
+sratom_c_headers = ['include/sratom/sratom.h']
+sratom_c_header_files = files(sratom_c_headers)
 
 sources = [
   'src/dumper.c',
@@ -150,7 +153,7 @@ pkg.generate(
   description: 'A library for serializing LV2 atoms')
 
 # Install header to a versioned include directory
-install_headers(c_headers, subdir: versioned_name / 'sratom')
+install_headers(sratom_c_header_files, subdir: versioned_name / 'sratom')
 
 if not get_option('docs').disabled()
   subdir('doc')
@@ -165,7 +168,7 @@ if is_variable('cpp')
   subdir('bindings/cpp')
 endif
 
-if meson.version().version_compare('>=0.53.0')
+if not meson.is_subproject() and meson.version().version_compare('>=0.53.0')
   summary('Tests', get_option('tests'), bool_yn: true)
 
   summary('Install prefix', get_option('prefix'))
