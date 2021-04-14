@@ -34,12 +34,11 @@
 #define NS_XSD "http://www.w3.org/2001/XMLSchema#"
 
 #define DUMP_WARN(msg) \
-  serd_world_logf(     \
-    writer->world, "sratom", SERD_LOG_LEVEL_WARNING, 0, NULL, msg);
+  serd_world_logf(writer->world, "sratom", SERD_LOG_LEVEL_WARNING, 0, NULL, msg)
 
 #define DUMP_ERRORF(msg, ...) \
   serd_world_logf(            \
-    writer->world, "sratom", SERD_LOG_LEVEL_ERROR, 0, NULL, msg, __VA_ARGS__);
+    writer->world, "sratom", SERD_LOG_LEVEL_ERROR, 0, NULL, msg, __VA_ARGS__)
 
 struct SratomDumperImpl {
   LV2_URID_Unmap* unmap;

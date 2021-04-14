@@ -32,7 +32,7 @@
 #define NS_XSD "http://www.w3.org/2001/XMLSchema#"
 
 #define LOAD_ERROR(msg) \
-  serd_world_logf(loader->world, "sratom", SERD_LOG_LEVEL_ERROR, 0, NULL, msg);
+  serd_world_logf(loader->world, "sratom", SERD_LOG_LEVEL_ERROR, 0, NULL, msg)
 
 typedef enum { MODE_SUBJECT, MODE_BODY, MODE_SEQUENCE } ReadMode;
 
