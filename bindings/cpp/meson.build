@@ -53,9 +53,9 @@ cpp_headers = [
   'include/sratom/sratom.hpp',
 ]
 
-serdpp_dep = dependency('serdxx-1',
+serdpp_dep = dependency('serdpp-1',
                         version: '>= 1.0.0',
-                        fallback: ['serd', 'serdxx_dep'])
+                        fallback: ['serd', 'serdpp_dep'])
 
 sratompp_dep = declare_dependency(
   include_directories: include_directories(['include']),

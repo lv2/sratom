@@ -323,19 +323,14 @@ test(SerdEnv* env, const char* name, const SratomDumperFlags flags)
 int
 main(void)
 {
-  SerdEnv* const env = serd_env_new(SERD_STATIC_STRING("file:///tmp/base/"));
+  SerdEnv* const env = serd_env_new(SERD_STRING("file:///tmp/base/"));
 
   serd_env_set_prefix(
-    env, SERD_STATIC_STRING("eg"), SERD_STATIC_STRING("http://example.org/"));
+    env, SERD_STRING("eg"), SERD_STRING("http://example.org/"));
 
-  serd_env_set_prefix(
-    env, SERD_STATIC_STRING("atom"), SERD_STATIC_STRING(NS_ATOM));
-
-  serd_env_set_prefix(
-    env, SERD_STATIC_STRING("rdf"), SERD_STATIC_STRING(NS_RDF));
-
-  serd_env_set_prefix(
-    env, SERD_STATIC_STRING("xsd"), SERD_STATIC_STRING(NS_XSD));
+  serd_env_set_prefix(env, SERD_STRING("atom"), SERD_STRING(NS_ATOM));
+  serd_env_set_prefix(env, SERD_STRING("rdf"), SERD_STRING(NS_RDF));
+  serd_env_set_prefix(env, SERD_STRING("xsd"), SERD_STRING(NS_XSD));
 
   const int st =
     (test(env, "Default", 0) || //

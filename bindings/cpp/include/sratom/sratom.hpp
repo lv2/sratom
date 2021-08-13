@@ -69,14 +69,14 @@ enum class Flag {
   terse = SRATOM_TERSE,
 };
 
-using Flags = serd::detail::Flags<Flag>;
+using Flags = serd::Flags<Flag>;
 
 class Dumper
-  : public serd::detail::BasicWrapper<SratomDumper, sratom_dumper_free>
+  : public serd::detail::StaticWrapper<SratomDumper, sratom_dumper_free>
 {
 public:
   Dumper(serd::World& world, LV2_URID_Map& map, LV2_URID_Unmap& unmap)
-    : BasicWrapper(sratom_dumper_new(world.cobj(), &map, &unmap))
+    : StaticWrapper(sratom_dumper_new(world.cobj(), &map, &unmap))
   {}
 
   SratomStatus write(const serd::Env& env,
@@ -144,13 +144,13 @@ private:
 };
 
 class Loader
-  : public serd::detail::BasicWrapper<SratomLoader, sratom_loader_free>
+  : public serd::detail::StaticWrapper<SratomLoader, sratom_loader_free>
 {
 public:
   using AtomPtr = std::unique_ptr<LV2_Atom, detail::Deleter>;
 
   Loader(serd::World& world, LV2_URID_Map& map)
-    : BasicWrapper(sratom_loader_new(world.cobj(), &map))
+    : StaticWrapper(sratom_loader_new(world.cobj(), &map))
   {}
 
   SratomStatus load(const serd::Optional<serd::Node>& base_uri,
