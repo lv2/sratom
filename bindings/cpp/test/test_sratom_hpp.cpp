@@ -30,7 +30,7 @@ void
 test_dumper()
 {
   serd::World    world;
-  serd::Env      env;
+  serd::Env      env{world};
   Uris           uris{nullptr, 0};
   LV2_URID_Map   map{&uris, urid_map};
   LV2_URID_Unmap unmap{&uris, urid_unmap};
