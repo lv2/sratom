@@ -83,7 +83,7 @@ sratom_free(void* ptr)
 {
   /* The only sratom memory the user frees comes from sratom_from_model(),
      which is allocated by serd_buffer_sink. */
-  serd_free(ptr);
+  serd_free(NULL, ptr);
 }
 
 SratomDumper*
@@ -154,7 +154,7 @@ list_append(StreamContext* const   ctx,
 {
   // Generate a list node
   SerdNode* const node =
-    serd_node_copy(serd_world_get_blank(ctx->writer->world));
+    serd_node_copy(NULL, serd_world_get_blank(ctx->writer->world));
   serd_sink_write(ctx->sink, ctx->sflags, *s, *p, node, NULL);
 
   // _:node rdf:first value
@@ -163,7 +163,7 @@ list_append(StreamContext* const   ctx,
   write_atom(ctx, node, *p, type, size, body);
 
   // Set subject to node and predicate to rdf:rest for next time
-  serd_node_free(*s);
+  serd_node_free(NULL, *s);
   *s = node;
   *p = ctx->writer->nodes.rdf_rest;
 }
@@ -192,12 +192,12 @@ start_object(StreamContext* const  ctx,
   }
 
   if (type) {
-    SerdNode* const o = serd_new_uri(SERD_STRING(type));
+    SerdNode* const o = serd_new_uri(NULL, SERD_STRING(type));
 
     serd_sink_write(
       ctx->sink, ctx->sflags, node, ctx->writer->nodes.rdf_type, o, NULL);
 
-    serd_node_free(o);
+    serd_node_free(NULL, o);
   }
 }
 
@@ -266,26 +266,28 @@ write_atom(StreamContext* const  ctx,
   SratomStatus          st       = SRATOM_SUCCESS;
 
   if (type == 0 && size == 0) {
-    object = serd_node_copy(writer->nodes.rdf_nil);
+    object = serd_node_copy(NULL, writer->nodes.rdf_nil);
   } else if (type == writer->forge.String) {
-    object = serd_new_string(SERD_STRING((const char*)body));
+    object = serd_new_string(NULL, SERD_STRING((const char*)body));
   } else if (type == writer->forge.Chunk) {
-    object = serd_new_base64(body, size, SERD_EMPTY_STRING());
+    object = serd_new_base64(NULL, body, size, SERD_EMPTY_STRING());
   } else if (type == writer->forge.Literal) {
     const LV2_Atom_Literal_Body* lit = (const LV2_Atom_Literal_Body*)body;
     const char*                  str = (const char*)(lit + 1);
     if (lit->datatype) {
       const SerdStringView datatype_uri =
         SERD_STRING(unmap->unmap(unmap->handle, lit->datatype));
-      object =
-        serd_new_literal(SERD_STRING(str), SERD_HAS_DATATYPE, datatype_uri);
+      object = serd_new_literal(
+        NULL, SERD_STRING(str), SERD_HAS_DATATYPE, datatype_uri);
     } else if (lit->lang) {
       const char*  lang       = unmap->unmap(unmap->handle, lit->lang);
       const char*  prefix     = "http://lexvo.org/id/iso639-3/";
       const size_t prefix_len = strlen(prefix);
       if (lang && !strncmp(lang, prefix, prefix_len)) {
-        object = serd_new_literal(
-          SERD_STRING(str), SERD_HAS_LANGUAGE, SERD_STRING(lang + prefix_len));
+        object = serd_new_literal(NULL,
+                                  SERD_STRING(str),
+                                  SERD_HAS_LANGUAGE,
+                                  SERD_STRING(lang + prefix_len));
       } else {
         DUMP_ERRORF("Unknown language URID %u\n", lit->lang);
       }
@@ -294,43 +296,46 @@ write_atom(StreamContext* const  ctx,
     const uint32_t urid = *(const uint32_t*)body;
     const char*    str  = unmap->unmap(unmap->handle, urid);
 
-    object = serd_new_uri(SERD_STRING(str));
+    object = serd_new_uri(NULL, SERD_STRING(str));
   } else if (type == writer->forge.Path) {
     const SerdStringView str = SERD_STRING((const char*)body);
     if (path_is_absolute(str.buf)) {
-      object = serd_new_file_uri(str, SERD_EMPTY_STRING());
+      object = serd_new_file_uri(NULL, str, SERD_EMPTY_STRING());
     } else {
       const SerdNode* base_uri = serd_env_base_uri(env);
       if (!base_uri || strncmp(serd_node_string(base_uri), "file://", 7)) {
         DUMP_WARN("Relative path but base is not a file URI.\n");
         DUMP_WARN("Writing ambiguous atom:Path literal.\n");
         object =
-          serd_new_literal(str,
+          serd_new_literal(NULL,
+                           str,
                            SERD_HAS_DATATYPE,
                            serd_node_string_view(writer->nodes.atom_Path));
       } else {
-        SerdNode* const rel = serd_new_file_uri(str, SERD_EMPTY_STRING());
+        SerdNode* const rel = serd_new_file_uri(NULL, str, SERD_EMPTY_STRING());
 
-        object = serd_new_parsed_uri(serd_resolve_uri(
-          serd_node_uri_view(rel), serd_node_uri_view(base_uri)));
+        object =
+          serd_new_parsed_uri(NULL,
+                              serd_resolve_uri(serd_node_uri_view(rel),
+                                               serd_node_uri_view(base_uri)));
 
-        serd_node_free(rel);
+        serd_node_free(NULL, rel);
       }
     }
   } else if (type == writer->forge.URI) {
-    object = serd_new_uri(SERD_STRING((const char*)body));
+    object = serd_new_uri(NULL, SERD_STRING((const char*)body));
   } else if (type == writer->forge.Int) {
-    object = serd_new_integer(*(const int32_t*)body,
-                              number_type(ctx, writer->nodes.xsd_int));
+    object = serd_new_integer(
+      NULL, *(const int32_t*)body, number_type(ctx, writer->nodes.xsd_int));
   } else if (type == writer->forge.Long) {
-    object = serd_new_integer(*(const int64_t*)body,
-                              number_type(ctx, writer->nodes.xsd_long));
+    object = serd_new_integer(
+      NULL, *(const int64_t*)body, number_type(ctx, writer->nodes.xsd_long));
   } else if (type == writer->forge.Float) {
-    object = serd_new_float(*(const float*)body);
+    object = serd_new_float(NULL, *(const float*)body);
   } else if (type == writer->forge.Double) {
-    object = serd_new_double(*(const double*)body);
+    object = serd_new_double(NULL, *(const double*)body);
   } else if (type == writer->forge.Bool) {
-    object = serd_new_boolean(*(const int32_t*)body);
+    object = serd_new_boolean(NULL, *(const int32_t*)body);
   } else if (type == writer->midi_MidiEvent) {
     const size_t len = 2 * size;
     char* const  str = (char*)calloc(len + 1, 1);
@@ -342,7 +347,8 @@ write_atom(StreamContext* const  ctx,
     }
 
     object =
-      serd_new_literal(SERD_SUBSTRING(str, len),
+      serd_new_literal(NULL,
+                       SERD_SUBSTRING(str, len),
                        SERD_HAS_DATATYPE,
                        serd_node_string_view(writer->nodes.midi_MidiEvent));
 
@@ -355,22 +361,22 @@ write_atom(StreamContext* const  ctx,
     const SerdNode* p    = NULL;
     if (ctx->seq_unit == writer->atom_beatTime) {
       p    = writer->nodes.atom_beatTime;
-      time = serd_new_double(ev->time.beats);
+      time = serd_new_double(NULL, ev->time.beats);
     } else {
       p    = writer->nodes.atom_frameTime;
-      time = serd_new_integer(ev->time.frames,
-                              number_type(ctx, writer->nodes.xsd_long));
+      time = serd_new_integer(
+        NULL, ev->time.frames, number_type(ctx, writer->nodes.xsd_long));
     }
     serd_sink_write(sink, 0, id, p, time, NULL);
-    serd_node_free(time);
+    serd_node_free(NULL, time);
 
     p = writer->nodes.rdf_value;
     write_atom(
       ctx, id, p, ev->body.type, ev->body.size, LV2_ATOM_BODY_CONST(&ev->body));
     end_object(ctx, subject, predicate, id);
   } else if (type == writer->forge.Tuple) {
-    SerdNode*       id = serd_node_copy(serd_world_get_blank(writer->world));
-    const SerdNode* p  = writer->nodes.rdf_value;
+    SerdNode* id = serd_node_copy(NULL, serd_world_get_blank(writer->world));
+    const SerdNode* p = writer->nodes.rdf_value;
     start_object(ctx, subject, predicate, id, type_uri);
 
     ctx->sflags |= SERD_LIST_O | SERD_TERSE_O;
@@ -386,20 +392,20 @@ write_atom(StreamContext* const  ctx,
 
     serd_sink_write(ctx->sink, 0, id, p, ctx->writer->nodes.rdf_nil, NULL);
     end_object(ctx, subject, predicate, id);
-    serd_node_free(id);
+    serd_node_free(NULL, id);
   } else if (type == writer->forge.Vector) {
     const LV2_Atom_Vector_Body* const vec = (const LV2_Atom_Vector_Body*)body;
 
-    SerdNode* id = serd_node_copy(serd_world_get_blank(writer->world));
+    SerdNode* id = serd_node_copy(NULL, serd_world_get_blank(writer->world));
     start_object(ctx, subject, predicate, id, type_uri);
 
-    const SerdNode* p = writer->nodes.atom_childType;
-    SerdNode* const child_type =
-      serd_new_uri(SERD_STRING(unmap->unmap(unmap->handle, vec->child_type)));
+    const SerdNode* p          = writer->nodes.atom_childType;
+    SerdNode* const child_type = serd_new_uri(
+      NULL, SERD_STRING(unmap->unmap(unmap->handle, vec->child_type)));
 
     serd_sink_write(sink, ctx->sflags, id, p, child_type, NULL);
     p = writer->nodes.rdf_value;
-    serd_node_free(child_type);
+    serd_node_free(NULL, child_type);
     ctx->sflags |= SERD_LIST_O;
     if (is_primitive_type(ctx, vec->child_type)) {
       ctx->sflags |= SERD_TERSE_O;
@@ -412,36 +418,38 @@ write_atom(StreamContext* const  ctx,
 
     serd_sink_write(ctx->sink, 0, id, p, ctx->writer->nodes.rdf_nil, NULL);
     end_object(ctx, subject, predicate, id);
-    serd_node_free(id);
+    serd_node_free(NULL, id);
   } else if (lv2_atom_forge_is_object_type(&writer->forge, type)) {
     const LV2_Atom_Object_Body* obj   = (const LV2_Atom_Object_Body*)body;
     const char* const           otype = unmap->unmap(unmap->handle, obj->otype);
 
     SerdNode* id = NULL;
     if (lv2_atom_forge_is_blank(&writer->forge, type, obj)) {
-      id = serd_node_copy(serd_world_get_blank(writer->world));
+      id = serd_node_copy(NULL, serd_world_get_blank(writer->world));
       start_object(ctx, subject, predicate, id, otype);
     } else {
-      id = serd_new_uri(SERD_STRING(unmap->unmap(unmap->handle, obj->id)));
+      id =
+        serd_new_uri(NULL, SERD_STRING(unmap->unmap(unmap->handle, obj->id)));
+
       ctx->sflags = 0;
       start_object(ctx, NULL, NULL, id, otype);
     }
     LV2_ATOM_OBJECT_BODY_FOREACH (obj, size, prop) {
       const char* const key  = unmap->unmap(unmap->handle, prop->key);
-      SerdNode* const   pred = serd_new_uri(SERD_STRING(key));
+      SerdNode* const   pred = serd_new_uri(NULL, SERD_STRING(key));
       write_atom(ctx,
                  id,
                  pred,
                  prop->value.type,
                  prop->value.size,
                  LV2_ATOM_BODY(&prop->value));
-      serd_node_free(pred);
+      serd_node_free(NULL, pred);
     }
     end_object(ctx, subject, predicate, id);
-    serd_node_free(id);
+    serd_node_free(NULL, id);
   } else if (type == writer->forge.Sequence) {
     const LV2_Atom_Sequence_Body* seq = (const LV2_Atom_Sequence_Body*)body;
-    SerdNode* id = serd_node_copy(serd_world_get_blank(writer->world));
+    SerdNode* id = serd_node_copy(NULL, serd_world_get_blank(writer->world));
     start_object(ctx, subject, predicate, id, type_uri);
     const SerdNode* p = writer->nodes.rdf_value;
     ctx->sflags |= SERD_LIST_O;
@@ -456,15 +464,15 @@ write_atom(StreamContext* const  ctx,
     }
     list_end(ctx, id, p);
     end_object(ctx, subject, predicate, id);
-    serd_node_free(id);
+    serd_node_free(NULL, id);
   } else {
     const SerdNode* id = serd_world_get_blank(writer->world);
     start_object(ctx, subject, predicate, id, type_uri);
     const SerdNode* p = writer->nodes.rdf_value;
-    SerdNode*       o = serd_new_base64(body, size, SERD_EMPTY_STRING());
+    SerdNode*       o = serd_new_base64(NULL, body, size, SERD_EMPTY_STRING());
     serd_sink_write(sink, ctx->sflags, id, p, o, NULL);
     end_object(ctx, subject, predicate, id);
-    serd_node_free(o);
+    serd_node_free(NULL, o);
   }
 
   if (object) {
@@ -487,7 +495,7 @@ write_atom(StreamContext* const  ctx,
     }
   }
 
-  serd_node_free(object);
+  serd_node_free(NULL, object);
 
   return st;
 }
@@ -539,21 +547,23 @@ sratom_to_string(SratomDumper* const     writer,
                  const LV2_Atom* const   atom,
                  const SratomDumperFlags flags)
 {
-  SerdBuffer          buffer = {NULL, 0};
-  SerdByteSink* const out    = serd_byte_sink_new_buffer(&buffer);
+  SerdDynamicBuffer buffer = {NULL, NULL, 0};
+  SerdOutputStream  out    = serd_open_output_buffer(&buffer);
 
   SerdWriter* const ttl_writer =
     serd_writer_new(writer->world,
                     SERD_TURTLE,
                     flags & SRATOM_TERSE ? SERD_WRITE_TERSE : 0,
                     env,
-                    out);
+                    &out,
+                    1);
 
   const SerdSink* const sink = serd_writer_sink(ttl_writer);
 
   sratom_dump_atom(writer, env, sink, NULL, NULL, atom, flags);
   serd_writer_finish(ttl_writer);
   serd_writer_free(ttl_writer);
+  serd_close_output(&out);
 
-  return serd_buffer_sink_finish(&buffer);
+  return (char*)buffer.buf;
 }

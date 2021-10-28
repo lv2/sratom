@@ -197,25 +197,27 @@ read_uri(LoadContext* const    ctx,
     const SerdURIView uri = serd_parse_uri(str);
     if (ctx->base_uri &&
         serd_uri_is_within(uri, serd_node_uri_view(ctx->base_uri))) {
-      SerdNode* const rel = serd_new_parsed_uri(serd_relative_uri(
-        serd_parse_uri(str), serd_node_uri_view(ctx->base_uri)));
+      SerdNode* const rel = serd_new_parsed_uri(
+        NULL,
+        serd_relative_uri(serd_parse_uri(str),
+                          serd_node_uri_view(ctx->base_uri)));
 
-      char* const path = serd_parse_file_uri(serd_node_string(rel), NULL);
+      char* const path = serd_parse_file_uri(NULL, serd_node_string(rel), NULL);
       if (!path) {
         return SRATOM_BAD_FILE_URI;
       }
 
       ref = lv2_atom_forge_path(forge, path, strlen(path));
-      serd_free(path);
-      serd_node_free(rel);
+      serd_free(NULL, path);
+      serd_node_free(NULL, rel);
     } else {
-      char* const path = serd_parse_file_uri(str, NULL);
+      char* const path = serd_parse_file_uri(NULL, str, NULL);
       if (!path) {
         return SRATOM_BAD_FILE_URI;
       }
 
       ref = lv2_atom_forge_path(forge, path, strlen(path));
-      serd_free(path);
+      serd_free(NULL, path);
     }
   } else {
     ref = lv2_atom_forge_urid(forge, map->map(map->handle, str));
@@ -477,18 +479,21 @@ model_from_string(SratomLoader* const loader,
   SerdModel* const model    = serd_model_new(loader->world, SERD_ORDER_SPO, 0u);
   SerdSink* const  inserter = serd_inserter_new(model, NULL);
 
-  SerdNode* const       name   = serd_new_string(SERD_STRING("string"));
-  SerdByteSource* const source = serd_byte_source_new_string(str, name);
-  SerdReader* const     reader = serd_reader_new(
+  SerdNode* const   name     = serd_new_string(NULL, SERD_STRING("string"));
+  const char*       position = str;
+  SerdInputStream   in       = serd_open_input_string(&position);
+  SerdReader* const reader   = serd_reader_new(
     loader->world, SERD_TURTLE, SERD_READ_LAX, env, inserter, 4096);
 
-  serd_reader_start(reader, source);
+  SerdStatus st = serd_reader_start(reader, &in, name, 4096);
 
-  const SerdStatus st = serd_reader_read_document(reader);
+  if (!st) {
+    st = serd_reader_read_document(reader);
+  }
 
   serd_reader_free(reader);
-  serd_byte_source_free(source);
-  serd_node_free(name);
+  serd_close_input(&in);
+  serd_node_free(NULL, name);
   serd_sink_free(inserter);
 
   if (st) {
@@ -542,10 +547,10 @@ sratom_forge_sink(const LV2_Atom_Forge_Sink_Handle handle,
                   const void* const                buf,
                   const uint32_t                   size)
 {
-  SerdBuffer* const        chunk = (SerdBuffer*)handle;
+  SerdDynamicBuffer* const chunk = (SerdDynamicBuffer*)handle;
   const LV2_Atom_Forge_Ref ref   = chunk->len + 1;
 
-  serd_buffer_sink(buf, 1, size, chunk);
+  serd_buffer_write(buf, 1, size, chunk);
   return ref;
 }
 
@@ -553,7 +558,7 @@ static LV2_Atom*
 sratom_forge_deref(const LV2_Atom_Forge_Sink_Handle handle,
                    const LV2_Atom_Forge_Ref         ref)
 {
-  SerdBuffer* const chunk = (SerdBuffer*)handle;
+  SerdDynamicBuffer* const chunk = (SerdDynamicBuffer*)handle;
 
   return (LV2_Atom*)((char*)chunk->buf + ref - 1);
 }
@@ -568,7 +573,7 @@ sratom_from_model(SratomLoader* const    loader,
     return NULL;
   }
 
-  SerdBuffer out = {NULL, 0};
+  SerdDynamicBuffer out = {NULL, NULL, 0};
   lv2_atom_forge_set_sink(
     &loader->forge, sratom_forge_sink, sratom_forge_deref, &out);
 

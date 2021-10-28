@@ -81,7 +81,7 @@ test(SerdEnv* env, const char* name, const SratomDumperFlags flags)
   LV2_Atom_Forge forge;
   lv2_atom_forge_init(&forge, &map);
 
-  SerdWorld*    world  = serd_world_new();
+  SerdWorld*    world  = serd_world_new(NULL);
   SratomDumper* dumper = sratom_dumper_new(world, &map, &unmap);
   SratomLoader* loader = sratom_loader_new(world, &map);
 
@@ -323,7 +323,8 @@ test(SerdEnv* env, const char* name, const SratomDumperFlags flags)
 int
 main(void)
 {
-  SerdEnv* const env = serd_env_new(SERD_STRING("file:///tmp/base/"));
+  SerdWorld* const world = serd_world_new(NULL);
+  SerdEnv* const   env = serd_env_new(world, SERD_STRING("file:///tmp/base/"));
 
   serd_env_set_prefix(
     env, SERD_STRING("eg"), SERD_STRING("http://example.org/"));
