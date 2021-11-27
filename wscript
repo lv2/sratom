@@ -174,6 +174,7 @@ def build(bld):
 
     # Documentation
     if bld.env.DOCS:
+        bld.env.SRATOM_MAJOR_VERSION = SRATOM_MAJOR_VERSION
         bld.recurse('doc/c')
 
     bld.add_post_fun(autowaf.run_ldconfig)
