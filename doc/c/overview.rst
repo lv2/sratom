@@ -51,13 +51,13 @@ For example:
 
 .. code-block:: c
 
-   SerdStringView base = SERD_STRING("file:///tmp/state/");
+   SerdStringView base = serd_string("file:///tmp/state/");
    SerdEnv*       env  = serd_env_new(base);
 
    serd_env_set_prefix(
      env,
-     SERD_STRING("atom"),
-     SERD_STRING("http://lv2plug.in/ns/ext/atom#"));
+     serd_string("atom"),
+     serd_string("http://lv2plug.in/ns/ext/atom#"));
 
 With the environment configured,
 :func:`sratom_to_string` can be used to convert atoms to strings:

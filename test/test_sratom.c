@@ -324,14 +324,14 @@ int
 main(void)
 {
   SerdWorld* const world = serd_world_new(NULL);
-  SerdEnv* const   env = serd_env_new(world, SERD_STRING("file:///tmp/base/"));
+  SerdEnv* const   env = serd_env_new(world, serd_string("file:///tmp/base/"));
 
   serd_env_set_prefix(
-    env, SERD_STRING("eg"), SERD_STRING("http://example.org/"));
+    env, serd_string("eg"), serd_string("http://example.org/"));
 
-  serd_env_set_prefix(env, SERD_STRING("atom"), SERD_STRING(NS_ATOM));
-  serd_env_set_prefix(env, SERD_STRING("rdf"), SERD_STRING(NS_RDF));
-  serd_env_set_prefix(env, SERD_STRING("xsd"), SERD_STRING(NS_XSD));
+  serd_env_set_prefix(env, serd_string("atom"), serd_string(NS_ATOM));
+  serd_env_set_prefix(env, serd_string("rdf"), serd_string(NS_RDF));
+  serd_env_set_prefix(env, serd_string("xsd"), serd_string(NS_XSD));
 
   const int st =
     (test(env, "Default", 0) || //
