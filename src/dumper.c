@@ -23,12 +23,15 @@
 #include "lv2/urid/urid.h"
 #include "serd/serd.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// IWYU pragma: no_forward_declare SratomDumperImpl
 
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define NS_XSD "http://www.w3.org/2001/XMLSchema#"
@@ -321,7 +324,8 @@ write_atom(StreamContext* const  ctx,
     char* const  str = (char*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
       snprintf(str + (2 * i),
-               size * 2 + 1,
+               size - (2 * i),
+               /* 3, */
                "%02X",
                (unsigned)*((const uint8_t*)body + i));
     }
@@ -457,6 +461,7 @@ write_atom(StreamContext* const  ctx,
   if (object) {
     if (!subject || !predicate) {
       const SerdNode* const blank = serd_world_get_blank(writer->world);
+      assert(writer->nodes.rdf_first);
       serd_sink_write(sink,
                       ctx->sflags | SERD_LIST_S | SERD_TERSE_S,
                       blank,

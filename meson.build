@@ -49,6 +49,7 @@ if get_option('strict')
       '-Wno-cast-align',
       '-Wno-cast-qual',
       '-Wno-conversion',
+      '-Wno-inline',
       '-Wno-padded',
       '-Wno-suggest-attribute=pure',
       '-Wno-unsuffixed-float-constants',

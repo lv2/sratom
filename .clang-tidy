@@ -2,6 +2,10 @@ Checks: >
   *,
   -*-magic-numbers,
   -*-uppercase-literal-suffix,
+  -altera-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-not-null-terminated-result,
   -bugprone-suspicious-string-compare,
   -cert-err34-c,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
@@ -11,6 +15,9 @@ Checks: >
   -llvmlibc-*,
   -misc-misplaced-const,
   -misc-no-recursion,
+  -narrowing-conversions,
+  -performance-no-int-to-ptr,
+  -readability-function-cognitive-complexity,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file

@@ -2,11 +2,14 @@ Checks: >
   *,
   -*-magic-numbers,
   -*-uppercase-literal-suffix,
+  -altera-*,
+  -bugprone-implicit-widening-of-multiplication-result,
   -bugprone-suspicious-string-compare,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -hicpp-signed-bitwise,
   -llvm-header-guard,
   -llvmlibc-*,
+  -performance-no-int-to-ptr,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file

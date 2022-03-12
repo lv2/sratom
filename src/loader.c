@@ -23,10 +23,13 @@
 #include "serd/serd.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// IWYU pragma: no_forward_declare SratomLoaderImpl
 
 #define NS_RDF "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define NS_XSD "http://www.w3.org/2001/XMLSchema#"
@@ -289,14 +292,16 @@ read_plain_literal(SratomLoader* const   loader,
 {
   static const char* const prefix = "http://lexvo.org/id/iso639-3/";
 
-  const char* const str        = serd_node_string(node);
-  const size_t      len        = serd_node_length(node);
-  const char*       lang_str   = serd_node_string(language);
-  const size_t      prefix_len = strlen(prefix);
-  const size_t      lang_len   = prefix_len + strlen(lang_str);
-  char* const       lang_uri   = (char*)calloc(lang_len + 1, 1);
+  const char* const str          = serd_node_string(node);
+  const size_t      len          = serd_node_length(node);
+  const char*       lang_str     = serd_node_string(language);
+  const size_t      lang_str_len = serd_node_length(language);
+  const size_t      prefix_len   = strlen(prefix);
+  const size_t      lang_uri_len = prefix_len + lang_str_len;
+  char* const       lang_uri     = (char*)calloc(lang_uri_len + 1, 1);
 
-  snprintf(lang_uri, lang_len + 1, "%s%s", prefix, lang_str);
+  memcpy(lang_uri, prefix, prefix_len);
+  memcpy(lang_uri + prefix_len, lang_str, lang_str_len);
 
   const LV2_Atom_Forge_Ref ref = lv2_atom_forge_literal(
     forge, str, len, 0, loader->map->map(loader->map->handle, lang_uri));
@@ -549,7 +554,7 @@ sratom_forge_sink(const LV2_Atom_Forge_Sink_Handle handle,
                   const uint32_t                   size)
 {
   SerdBuffer* const        chunk = (SerdBuffer*)handle;
-  const LV2_Atom_Forge_Ref ref   = chunk->len + 1;
+  const LV2_Atom_Forge_Ref ref   = (LV2_Atom_Forge_Ref)(chunk->len + 1);
 
   serd_buffer_write(buf, 1, size, chunk);
   return ref;
