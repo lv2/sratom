@@ -324,8 +324,7 @@ write_atom(StreamContext* const  ctx,
     char* const  str = (char*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
       snprintf(str + (2 * i),
-               size - (2 * i),
-               /* 3, */
+               3,
                "%02X",
                (unsigned)*((const uint8_t*)body + i));
     }
