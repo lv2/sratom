@@ -14,6 +14,8 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#undef NDEBUG
+
 #include "test_utils.h"
 
 #include "sratom/sratom.h"
