@@ -342,6 +342,7 @@ main(void)
      test(env, "Pretty + Terse", SRATOM_PRETTY_NUMBERS | SRATOM_TERSE));
 
   serd_env_free(env);
+  serd_world_free(world);
 
   return st;
 }

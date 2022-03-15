@@ -60,9 +60,9 @@ struct SratomLoaderImpl {
 };
 
 typedef struct {
-  SratomLoader* SERD_NONNULL   loader;
-  const SerdNode* SERD_NONNULL base_uri;
-  LV2_URID                     seq_unit;
+  SratomLoader* SERD_NONNULL    loader;
+  const SerdNode* SERD_NULLABLE base_uri;
+  LV2_URID                      seq_unit;
 } LoadContext;
 
 static SratomStatus

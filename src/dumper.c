@@ -323,10 +323,7 @@ write_atom(StreamContext* const  ctx,
     const size_t len = 2 * size;
     char* const  str = (char*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
-      snprintf(str + (2 * i),
-               3,
-               "%02X",
-               (unsigned)*((const uint8_t*)body + i));
+      snprintf(str + (2 * i), 3, "%02X", (unsigned)*((const uint8_t*)body + i));
     }
 
     object =
@@ -364,7 +361,7 @@ write_atom(StreamContext* const  ctx,
     ctx->sflags |= SERD_LIST_O | SERD_TERSE_O;
     LV2_ATOM_TUPLE_BODY_FOREACH (body, size, i) {
       if (!is_primitive_type(ctx, i->type)) {
-        ctx->sflags &= ~SERD_TERSE_O;
+        ctx->sflags &= ~(SerdStatementFlags)SERD_TERSE_O;
       }
     }
 
