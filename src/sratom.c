@@ -334,13 +334,15 @@ sratom_write(Sratom*         sratom,
     new_node = true;
     datatype = serd_node_from_string(SERD_URI, USTR(LV2_MIDI__MidiEvent));
 
-    uint8_t* str = (uint8_t*)calloc(size * 2 + 1, 1);
+    const size_t   len = size * 2;
+    uint8_t* const str = (uint8_t*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
       snprintf((char*)str + (2 * i),
-               size * 2 + 1,
+               len - (2 * i) + 1,
                "%02X",
                (unsigned)*((const uint8_t*)body + i));
     }
+
     object = serd_node_from_string(SERD_LITERAL, USTR(str));
   } else if (type_urid == sratom->atom_Event) {
     const LV2_Atom_Event* ev = (const LV2_Atom_Event*)body;
