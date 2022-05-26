@@ -334,11 +334,11 @@ sratom_write(Sratom*         sratom,
     new_node = true;
     datatype = serd_node_from_string(SERD_URI, USTR(LV2_MIDI__MidiEvent));
 
-    const size_t   len = size * 2;
+    const size_t   len = size * 2ul;
     uint8_t* const str = (uint8_t*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
-      snprintf((char*)str + (2 * i),
-               len - (2 * i) + 1,
+      snprintf((char*)str + (2ul * i),
+               len - (2ul * i) + 1ul,
                "%02X",
                (unsigned)*((const uint8_t*)body + i));
     }

@@ -1,7 +1,10 @@
 Checks: >
   *,
   -*-magic-numbers,
+  -*-narrowing-conversions,
   -*-uppercase-literal-suffix,
+  -altera-*,
+  -bugprone-easily-swappable-parameters,
   -bugprone-suspicious-string-compare,
   -cert-err34-c,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
@@ -10,6 +13,8 @@ Checks: >
   -llvm-header-guard,
   -llvmlibc-*,
   -misc-no-recursion,
+  -performance-no-int-to-ptr,
+  -readability-function-cognitive-complexity,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file
