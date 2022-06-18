@@ -202,7 +202,7 @@ start_object(Sratom*         sratom,
     *flags |= SERD_ANON_CONT;
 
     // Object is in a list, stop list abbreviating if necessary
-    *flags &= ~SERD_LIST_CONT;
+    *flags &= ~(uint32_t)SERD_LIST_CONT;
   }
 
   if (type) {
