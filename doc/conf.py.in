@@ -49,7 +49,7 @@ if tags.has("singlehtml"):
     html_theme_options = {
         "body_max_width": "48em",
         "body_min_width": "48em",
-        "description": "A small library for serialising LV2 atoms to and from RDF",
+        "description": "A small library for serializing LV2 atoms",
         "globaltoc_collapse": False,
         "globaltoc_maxdepth": 3,
         "logo_name": True,
@@ -64,7 +64,7 @@ else:
     html_theme_options = {
         "body_max_width": "60em",
         "body_min_width": "40em",
-        "description": "A small library for serialising LV2 atoms to and from RDF",
+        "description": "A small library for serializing LV2 atoms",
         "globaltoc_collapse": True,
         "globaltoc_maxdepth": 1,
         "logo_name": True,

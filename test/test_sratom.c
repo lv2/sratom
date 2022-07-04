@@ -376,7 +376,7 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
     printf("# Turtle => Atom\n\n%s", instr);
 
     if (strcmp(outstr, instr)) {
-      return test_fail("Re-serialised string differs from original\n");
+      return test_fail("Re-serialized string differs from original\n");
     }
     free(instr);
   }

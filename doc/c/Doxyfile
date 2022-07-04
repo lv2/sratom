@@ -1,5 +1,5 @@
 PROJECT_NAME           = Sratom
-PROJECT_BRIEF          = "A small library for serialising LV2 atoms to and from RDF"
+PROJECT_BRIEF          = "A small library for serializing LV2 atoms"
 
 QUIET                  = YES
 WARN_AS_ERROR          = NO
