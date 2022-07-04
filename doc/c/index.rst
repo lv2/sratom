@@ -1,5 +1,10 @@
+######
+Sratom
+######
+
+.. include:: summary.rst
+
 .. toctree::
 
-   sratom
    overview
-   reference
+   api/sratom

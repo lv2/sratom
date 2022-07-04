@@ -35,9 +35,9 @@ nitpick_ignore = list(map(lambda x: ("c:identifier", x), _opaque))
 
 # HTML output
 
-html_theme = "sphinx_lv2_theme"
 html_copy_source = False
 html_short_title = "Sratom"
+html_theme = "sphinx_lv2_theme"
 
 if tags.has("singlehtml"):
     html_sidebars = {

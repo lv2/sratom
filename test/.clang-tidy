@@ -3,6 +3,7 @@ Checks: >
   -*-magic-numbers,
   -*-uppercase-literal-suffix,
   -altera-*,
+  -bugprone-macro-parentheses,
   -bugprone-suspicious-string-compare,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -hicpp-signed-bitwise,

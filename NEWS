@@ -1,3 +1,9 @@
+sratom (0.6.11) unstable;
+
+  * Switch to meson build system
+
+ -- David Robillard <d@drobilla.net>  Sat, 28 May 2022 00:54:06 +0000
+
 sratom (0.6.10) stable;
 
   * Fix documentation installation directory

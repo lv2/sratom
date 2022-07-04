@@ -5,6 +5,7 @@ Checks: >
   -*-uppercase-literal-suffix,
   -altera-*,
   -bugprone-easily-swappable-parameters,
+  -bugprone-macro-parentheses,
   -bugprone-suspicious-string-compare,
   -cert-err34-c,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,

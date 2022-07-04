@@ -21,6 +21,8 @@ SHOW_FILES             = NO
 MACRO_EXPANSION        = YES
 PREDEFINED             = SRATOM_API
 
-INPUT                  = ../../include/sratom/sratom.h
+RECURSIVE              = YES
+STRIP_FROM_PATH        = @SRATOM_SRCDIR@
+INPUT                  = @SRATOM_SRCDIR@/include
 
-OUTPUT_DIRECTORY       = .
+OUTPUT_DIRECTORY       = @DOX_OUTPUT@
