@@ -1,5 +1,5 @@
 project('sratom', ['c'],
-        version: '0.6.11',
+        version: '0.6.12',
         license: 'ISC',
         meson_version: '>= 0.56.0',
         default_options: [

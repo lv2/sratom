@@ -1,8 +1,8 @@
-sratom (0.6.11) unstable;
+sratom (0.6.12) stable;
 
   * Switch to meson build system
 
- -- David Robillard <d@drobilla.net>  Sat, 28 May 2022 00:54:06 +0000
+ -- David Robillard <d@drobilla.net>  Tue, 19 Jul 2022 01:13:03 +0000
 
 sratom (0.6.10) stable;
 
