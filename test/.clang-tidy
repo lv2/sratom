@@ -5,11 +5,13 @@ Checks: >
   -altera-*,
   -bugprone-macro-parentheses,
   -bugprone-suspicious-string-compare,
+  -cert-err33-c,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -hicpp-signed-bitwise,
   -llvm-header-guard,
   -llvmlibc-*,
   -performance-no-int-to-ptr,
+  -readability-identifier-length,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file
