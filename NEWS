@@ -1,3 +1,9 @@
+sratom (0.6.13) unstable; urgency=medium
+
+  * Add project metadata
+
+ -- David Robillard <d@drobilla.net>  Tue, 16 Aug 2022 00:35:13 +0000
+
 sratom (0.6.12) stable; urgency=medium
 
   * Switch to meson build system
