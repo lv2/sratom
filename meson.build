@@ -34,15 +34,15 @@ subdir('meson/suppressions')
 m_dep = cc.find_library('m', required: false)
 
 lv2_dep = dependency('lv2',
-                     version: '>= 1.18.3',
+                     version: '>= 1.18.4',
                      fallback: ['lv2', 'lv2_dep'])
 
 serd_dep = dependency('serd-0',
-                      version: '>= 0.30.9',
+                      version: '>= 0.30.10',
                       fallback: ['serd', 'serd_dep'])
 
 sord_dep = dependency('sord-0',
-                      version: '>= 0.16.9',
+                      version: '>= 0.16.10',
                       fallback: ['sord', 'sord_dep'])
 
 ###########
