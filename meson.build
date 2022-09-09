@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: 0BSD OR ISC
 
 project('sratom', ['c'],
-        version: '0.6.13',
+        version: '0.6.14',
         license: 'ISC',
         meson_version: '>= 0.56.0',
         default_options: [

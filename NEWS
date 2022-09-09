@@ -1,9 +1,9 @@
-sratom (0.6.13) unstable; urgency=medium
+sratom (0.6.14) stable; urgency=medium
 
   * Add project metadata
   * Adopt REUSE machine-readable licensing standard
 
- -- David Robillard <d@drobilla.net>  Thu, 01 Sep 2022 18:20:58 +0000
+ -- David Robillard <d@drobilla.net>  Fri, 09 Sep 2022 17:29:00 +0000
 
 sratom (0.6.12) stable; urgency=medium
 
