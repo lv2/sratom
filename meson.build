@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: 0BSD OR ISC
 
 project('sratom', ['c'],
-        version: '0.6.14',
+        version: '0.6.15',
         license: 'ISC',
         meson_version: '>= 0.56.0',
         default_options: [
@@ -90,6 +90,7 @@ pkg.generate(
   extra_cflags: extra_c_args,
   filebase: versioned_name,
   name: 'Sratom',
+  requires: ['serd-0', 'sord-0', 'lv2'],
   subdirs: [versioned_name],
   version: meson.project_version(),
 )
