@@ -1,8 +1,9 @@
 sratom (0.6.15) unstable; urgency=medium
 
   * Fix dependencies in pkg-config file
+  * Override pkg-config dependency within meson
 
- -- David Robillard <d@drobilla.net>  Wed, 05 Oct 2022 19:44:43 +0000
+ -- David Robillard <d@drobilla.net>  Fri, 07 Oct 2022 17:28:31 +0000
 
 sratom (0.6.14) stable; urgency=medium
 

@@ -36,17 +36,9 @@ subdir('meson/suppressions')
 
 m_dep = cc.find_library('m', required: false)
 
-lv2_dep = dependency('lv2',
-                     version: '>= 1.18.4',
-                     fallback: ['lv2', 'lv2_dep'])
-
-serd_dep = dependency('serd-0',
-                      version: '>= 0.30.10',
-                      fallback: ['serd', 'serd_dep'])
-
-sord_dep = dependency('sord-0',
-                      version: '>= 0.16.10',
-                      fallback: ['sord', 'sord_dep'])
+serd_dep = dependency('serd-0', fallback: 'serd', version: '>= 0.30.10')
+sord_dep = dependency('sord-0', fallback: 'sord', version: '>= 0.16.10')
+lv2_dep = dependency('lv2', fallback: 'lv2', version: '>= 1.18.4')
 
 ###########
 # Library #
@@ -94,6 +86,9 @@ pkg.generate(
   subdirs: [versioned_name],
   version: meson.project_version(),
 )
+
+# Override pkg-config dependency for internal meson dependants
+meson.override_dependency(versioned_name, sratom_dep)
 
 # Install header to a versioned include directory
 install_headers(c_headers, subdir: versioned_name / 'sratom')
