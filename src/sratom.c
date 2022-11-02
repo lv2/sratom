@@ -844,7 +844,15 @@ sratom_read(Sratom*         sratom,
   sord_node_free(world, sratom->nodes.atom_frameTime);
   sord_node_free(world, sratom->nodes.atom_beatTime);
   sord_node_free(world, sratom->nodes.atom_childType);
-  memset(&sratom->nodes, 0, sizeof(sratom->nodes));
+
+  sratom->nodes.xsd_base64Binary = NULL;
+  sratom->nodes.rdf_value        = NULL;
+  sratom->nodes.rdf_type         = NULL;
+  sratom->nodes.rdf_rest         = NULL;
+  sratom->nodes.rdf_first        = NULL;
+  sratom->nodes.atom_beatTime    = NULL;
+  sratom->nodes.atom_frameTime   = NULL;
+  sratom->nodes.atom_childType   = NULL;
 }
 
 LV2_Atom_Forge_Ref
