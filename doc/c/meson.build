@@ -10,7 +10,7 @@ conf_py = configure_file(
   output: 'conf.py',
 )
 
-configure_file(
+summary_rst = configure_file(
   copy: true,
   input: files('../summary.rst'),
   output: 'summary.rst',
@@ -20,6 +20,8 @@ c_rst_files = files(
   'index.rst',
   'overview.rst',
 )
+
+sratom_doc_rst_files = [summary_rst] + c_rst_files
 
 foreach f : c_rst_files
   configure_file(copy: true, input: f, output: '@PLAINNAME@')
