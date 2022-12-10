@@ -3,7 +3,6 @@
 
 Checks: >
   -*-magic-numbers,
-  -bugprone-suspicious-string-compare,
   -cert-err33-c,
   -readability-identifier-length,
 InheritParentConfig: true

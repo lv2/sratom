@@ -1,5 +1,6 @@
 sratom (0.6.15) unstable; urgency=medium
 
+  * Clean up code
   * Fix dependencies in pkg-config file
   * Override pkg-config dependency within meson
   * Replace duplicated dox_to_sphinx script with sphinxygen dependency

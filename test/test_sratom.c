@@ -362,7 +362,7 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
                                    LV2_ATOM_BODY(parsed));
     printf("# Turtle => Atom\n\n%s", instr);
 
-    if (strcmp(outstr, instr)) {
+    if (!!strcmp(outstr, instr)) {
       return test_fail("Re-serialized string differs from original\n");
     }
     free(instr);

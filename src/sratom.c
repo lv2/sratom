@@ -282,7 +282,7 @@ sratom_write(Sratom*         sratom,
       object   = serd_node_new_file_uri(str, NULL, NULL, true);
     } else {
       if (!sratom->base_uri.buf ||
-          strncmp((const char*)sratom->base_uri.buf, "file://", 7)) {
+          !!strncmp((const char*)sratom->base_uri.buf, "file://", 7)) {
         fprintf(stderr, "warning: Relative path but base is not a file URI.\n");
         fprintf(stderr, "warning: Writing ambiguous atom:Path literal.\n");
         object   = serd_node_from_string(SERD_LITERAL, str);
