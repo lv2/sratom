@@ -3,24 +3,14 @@
 
 Checks: >
   *,
-  -*-magic-numbers,
-  -*-narrowing-conversions,
-  -*-uppercase-literal-suffix,
   -altera-*,
-  -bugprone-easily-swappable-parameters,
-  -bugprone-macro-parentheses,
-  -bugprone-suspicious-string-compare,
-  -cert-err33-c,
-  -cert-err34-c,
-  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
-  -clang-analyzer-unix.Malloc,
-  -hicpp-signed-bitwise,
-  -llvm-header-guard,
+  -clang-diagnostic-unused-macros,
   -llvmlibc-*,
-  -misc-no-recursion,
-  -performance-no-int-to-ptr,
-  -readability-function-cognitive-complexity,
-  -readability-identifier-length,
+CheckOptions:
+  - key:   hicpp-uppercase-literal-suffix.NewSuffixes
+    value: 'L;U;UL;ULL'
+  - key:   readability-uppercase-literal-suffix.NewSuffixes
+    value: 'L;U;UL;ULL'
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '.*/sratom/[^/]+.h'
 FormatStyle: file

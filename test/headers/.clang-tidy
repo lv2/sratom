@@ -6,5 +6,5 @@ Checks: >
   -altera-*,
   -llvmlibc-*,
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*/sratom\.h'
+HeaderFilterRegex: '.*/sratom/[^/]+.h'
 FormatStyle: file

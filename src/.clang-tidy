@@ -3,7 +3,15 @@
 
 Checks: >
   -*-magic-numbers,
+  -*-narrowing-conversions,
+  -*-uppercase-literal-suffix,
+  -bugprone-easily-swappable-parameters,
   -bugprone-suspicious-string-compare,
   -cert-err33-c,
+  -cert-err34-c,
+  -clang-analyzer-unix.Malloc,
+  -hicpp-signed-bitwise,
+  -misc-no-recursion,
+  -readability-function-cognitive-complexity,
   -readability-identifier-length,
 InheritParentConfig: true
