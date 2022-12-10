@@ -321,11 +321,11 @@ sratom_write(Sratom*         sratom,
     new_node = true;
     datatype = serd_node_from_string(SERD_URI, USTR(LV2_MIDI__MidiEvent));
 
-    const size_t   len = size * 2ul;
+    const size_t   len = size * 2UL;
     uint8_t* const str = (uint8_t*)calloc(len + 1, 1);
     for (uint32_t i = 0; i < size; ++i) {
-      snprintf((char*)str + (2ul * i),
-               len - (2ul * i) + 1ul,
+      snprintf((char*)str + (2UL * i),
+               len - (2UL * i) + 1UL,
                "%02X",
                (unsigned)*((const uint8_t*)body + i));
     }
@@ -654,7 +654,7 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
     } else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
       lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
       for (const char* s = str; s < str + len; s += 2) {
-        unsigned num = 0u;
+        unsigned num = 0U;
         sscanf(s, "%2X", &num);
         const uint8_t c = num;
         lv2_atom_forge_raw(forge, &c, 1);
@@ -708,7 +708,7 @@ read_object(Sratom*         sratom,
   if (mode == MODE_SEQUENCE) {
     SordNode* time =
       sord_get(model, node, sratom->nodes.atom_beatTime, NULL, NULL);
-    uint32_t seq_unit = 0u;
+    uint32_t seq_unit = 0U;
     if (time) {
       const char* time_str = (const char*)sord_node_get_string(time);
       lv2_atom_forge_beat_time(forge, serd_strtod(time_str, NULL));
