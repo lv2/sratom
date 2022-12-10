@@ -23,6 +23,12 @@ if get_option('strict')
   endif
 endif
 
+###################
+# Header Warnings #
+###################
+
+subdir('headers')
+
 ##############
 # Unit Tests #
 ##############

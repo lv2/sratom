@@ -3,8 +3,8 @@
 
 Checks: >
   *,
-  -clang-diagnostic-unused-macros,
+  -altera-*,
   -llvmlibc-*,
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '.*/sratom\.h'
 FormatStyle: file
