@@ -40,6 +40,20 @@ serd_dep = dependency('serd-0', fallback: 'serd', version: '>= 0.30.10')
 sord_dep = dependency('sord-0', fallback: 'sord', version: '>= 0.16.10')
 lv2_dep = dependency('lv2', fallback: 'lv2', version: '>= 1.18.4')
 
+##########################
+# Platform Configuration #
+##########################
+
+# Use versioned name everywhere to support parallel major version installations
+if host_machine.system() == 'windows'
+  if get_option('default_library') == 'both'
+    error('default_library=both is not supported on Windows')
+  endif
+  soversion = ''
+else
+  soversion = meson.project_version().split('.')[0]
+endif
+
 ###########
 # Library #
 ###########
@@ -50,20 +64,20 @@ sources = files('src/sratom.c')
 
 # Set appropriate arguments for building against the library type
 extra_c_args = []
-subdir('meson/library')
 if get_option('default_library') == 'static'
   extra_c_args = ['-DSRATOM_STATIC']
 endif
 
 # Build shared and/or static library
 libsratom = library(
-  meson.project_name() + library_suffix,
+  versioned_name,
   sources,
   c_args: c_suppressions + extra_c_args + ['-DSRATOM_INTERNAL'],
   dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
   gnu_symbol_visibility: 'hidden',
   include_directories: include_dirs,
   install: true,
+  soversion: soversion,
   version: meson.project_version(),
 )
 
