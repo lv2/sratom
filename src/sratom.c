@@ -8,6 +8,8 @@
 #include "lv2/atom/util.h"
 #include "lv2/midi/midi.h"
 #include "lv2/urid/urid.h"
+#include "serd/serd.h"
+#include "sord/sord.h"
 
 #include <assert.h>
 #include <ctype.h>
