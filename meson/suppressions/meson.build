@@ -32,6 +32,13 @@ if is_variable('cc')
         '-Wno-sign-conversion',
       ]
 
+      if host_machine.system() == 'windows'
+        c_suppressions += [
+          '-Wno-deprecated-declarations',
+          '-Wno-format-nonliteral',
+        ]
+      endif
+
     elif cc.get_id() == 'gcc'
       c_suppressions += [
         '-Wno-cast-align',

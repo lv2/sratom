@@ -73,7 +73,7 @@ SRATOM_LOG_FUNC(1, 2)
 static int
 test_fail(const char* fmt, ...)
 {
-  va_list args;
+  va_list args; // NOLINT(cppcoreguidelines-init-variables)
   va_start(args, fmt);
   fprintf(stderr, "error: ");
   vfprintf(stderr, fmt, args);

@@ -5,6 +5,9 @@ Checks: >
   *,
   -altera-*,
   -llvmlibc-*,
+  -modernize-macro-to-enum,
+  -performance-no-int-to-ptr,
+  -readability-identifier-length,
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*/sratom/[^/]+.h'
 FormatStyle: file
