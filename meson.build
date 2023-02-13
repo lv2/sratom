@@ -39,21 +39,18 @@ m_dep = cc.find_library('m', required: false)
 serd_dep = dependency(
   'serd-0',
   fallback: 'serd',
-  include_type: 'system',
   version: '>= 0.30.10',
 )
 
 sord_dep = dependency(
   'sord-0',
   fallback: 'sord',
-  include_type: 'system',
   version: '>= 0.16.10',
 )
 
 lv2_dep = dependency(
   'lv2',
   fallback: 'lv2',
-  include_type: 'system',
   version: '>= 1.18.4',
 )
 
