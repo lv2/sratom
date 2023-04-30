@@ -3,12 +3,13 @@
 
 header_c_suppressions = []
 
-if get_option('strict')
+if get_option('warning_level') == 'everything'
   if cc.get_id() == 'clang'
     header_c_suppressions += [
       '-Wno-cast-align', # LV2
       '-Wno-cast-qual', # LV2
       '-Wno-declaration-after-statement', # LV2
+      '-Wno-padded', # LV2, serd
     ]
   elif cc.get_id() == 'gcc'
     header_c_suppressions += [
