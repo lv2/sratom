@@ -800,7 +800,7 @@ read_node(Sratom*         sratom,
       serd_uri_parse((const uint8_t*)str, &uri);
 
       SerdNode rel =
-        serd_node_new_relative_uri(&uri, &sratom->base, NULL, NULL);
+        serd_node_new_relative_uri(&uri, &sratom->base, &sratom->base, NULL);
       uint8_t* path = serd_file_uri_parse(rel.buf, NULL);
       if (path) {
         lv2_atom_forge_path(
