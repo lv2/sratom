@@ -10,6 +10,8 @@ Checks: >
   -clang-analyzer-unix.Malloc,
   -hicpp-signed-bitwise,
   -misc-no-recursion,
+  -modernize-macro-to-enum,
+  -performance-no-int-to-ptr,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
 InheritParentConfig: true

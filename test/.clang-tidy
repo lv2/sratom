@@ -4,5 +4,7 @@
 Checks: >
   -*-magic-numbers,
   -cert-err33-c,
+  -modernize-macro-to-enum,
+  -performance-no-int-to-ptr,
   -readability-identifier-length,
 InheritParentConfig: true
