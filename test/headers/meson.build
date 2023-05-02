@@ -9,7 +9,9 @@ if get_option('warning_level') == 'everything'
       '-Wno-cast-align', # LV2
       '-Wno-cast-qual', # LV2
       '-Wno-declaration-after-statement', # LV2
+      '-Wno-documentation-unknown-command', # LV2
       '-Wno-padded', # LV2, serd
+      '-Wno-poison-system-directories',
     ]
   elif cc.get_id() == 'gcc'
     header_c_suppressions += [

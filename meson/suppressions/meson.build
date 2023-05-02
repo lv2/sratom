@@ -34,6 +34,12 @@ if cc.get_id() == 'clang'
         '-Wno-format-nonliteral',
       ]
     endif
+
+    if not meson.is_cross_build()
+      c_suppressions += [
+        '-Wno-poison-system-directories',
+      ]
+    endif
   endif
 
   if warning_level in ['everything', '3']
