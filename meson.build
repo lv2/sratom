@@ -118,6 +118,26 @@ meson.override_dependency(versioned_name, sratom_dep)
 # Install header to a versioned include directory
 install_headers(c_headers, subdir: versioned_name / 'sratom')
 
+# Display top-level summary (before subdirectories to appear first)
+if not meson.is_subproject()
+  summary(
+    {
+      'Tests': not get_option('tests').disabled(),
+    },
+    bool_yn: true,
+    section: 'Components',
+  )
+
+  summary(
+    {
+      'Install prefix':  get_option('prefix'),
+      'Headers':  get_option('prefix') / get_option('includedir'),
+      'Libraries':  get_option('prefix') / get_option('libdir'),
+    },
+    section: 'Directories',
+  )
+endif
+
 ###########
 # Support #
 ###########
@@ -128,13 +148,4 @@ endif
 
 if not get_option('docs').disabled()
   subdir('doc')
-endif
-
-if not meson.is_subproject()
-  summary('Tests', not get_option('tests').disabled(), bool_yn: true)
-
-  summary('Install prefix', get_option('prefix'))
-
-  summary('Headers', get_option('prefix') / get_option('includedir'))
-  summary('Libraries', get_option('prefix') / get_option('libdir'))
 endif
