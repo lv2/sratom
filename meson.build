@@ -42,7 +42,7 @@ serd_dep = dependency(
 sord_dep = dependency(
   'sord-0',
   fallback: 'sord',
-  version: '>= 0.16.10',
+  version: '>= 0.16.15',
 )
 
 lv2_dep = dependency(
