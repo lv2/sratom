@@ -31,7 +31,6 @@ extern "C" {
 
 /**
    @defgroup sratom Sratom C API
-   This is the public C API of Sratom.
    @{
 */
 

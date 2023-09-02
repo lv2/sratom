@@ -1,7 +1,5 @@
-# Copyright 2021-2022 David Robillard <d@drobilla.net>
+# Copyright 2020-2023 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
-
-doxygen = find_program('doxygen')
 
 config = configuration_data()
 config.set('SRATOM_SRCDIR', sratom_src_root)

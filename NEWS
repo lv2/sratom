@@ -1,12 +1,13 @@
 sratom (0.6.15) unstable; urgency=medium
 
   * Clean up code
+  * Constrain relative URI references to the base URI
   * Fix dependencies in pkg-config file
   * Override pkg-config dependency within meson
+  * Remove junk files from documentation install
   * Replace duplicated dox_to_sphinx script with sphinxygen dependency
-  * Constrain relative URI references to the base URI
 
- -- David Robillard <d@drobilla.net>  Sun, 30 Apr 2023 22:28:21 +0000
+ -- David Robillard <d@drobilla.net>  Sat, 02 Sep 2023 21:42:38 +0000
 
 sratom (0.6.14) stable; urgency=medium
 
