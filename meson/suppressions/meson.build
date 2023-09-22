@@ -15,6 +15,7 @@ if cc.get_id() == 'clang'
   if warning_level == 'everything'
     c_suppressions += [
       '-Wno-cast-align',
+      '-Wno-cast-function-type-strict',
       '-Wno-cast-qual',
       '-Wno-declaration-after-statement',
       '-Wno-documentation-unknown-command',
@@ -26,6 +27,7 @@ if cc.get_id() == 'clang'
       '-Wno-padded',
       '-Wno-shorten-64-to-32',
       '-Wno-sign-conversion',
+      '-Wno-unsafe-buffer-usage',
     ]
 
     if host_machine.system() == 'windows'

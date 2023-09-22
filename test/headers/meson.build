@@ -12,6 +12,7 @@ if get_option('warning_level') == 'everything'
       '-Wno-documentation-unknown-command', # LV2
       '-Wno-padded', # LV2, serd
       '-Wno-poison-system-directories',
+      '-Wno-unsafe-buffer-usage', # LV2
     ]
   elif cc.get_id() == 'gcc'
     header_c_suppressions += [
