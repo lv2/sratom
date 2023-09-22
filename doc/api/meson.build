@@ -4,6 +4,6 @@
 c_sratom_rst = custom_target(
   'sratom.rst',
   command: [sphinxygen, '-f', '@INPUT0@', '@OUTDIR@'],
-  input: [c_index_xml] + c_rst_files,
+  input: [c_index_xml],
   output: 'sratom.rst',
 )
