@@ -1,8 +1,9 @@
-# Copyright 2020-2022 David Robillard <d@drobilla.net>
+# Copyright 2020-2023 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
 Checks: >
   -*-magic-numbers,
+  -bugprone-suspicious-realloc-usage,
   -cert-err33-c,
   -modernize-macro-to-enum,
   -performance-no-int-to-ptr,
