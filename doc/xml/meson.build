@@ -5,15 +5,20 @@ config = configuration_data()
 config.set('SRATOM_SRCDIR', sratom_src_root)
 config.set('DOX_OUTPUT', meson.current_build_dir() / '..')
 
-c_doxyfile = configure_file(
+doxyfile = configure_file(
   configuration: config,
   input: files('../Doxyfile.in'),
   output: 'Doxyfile',
 )
 
-c_index_xml = custom_target(
+doxygen_xml = custom_target(
   'index.xml',
   command: [doxygen, '@INPUT0@'],
-  input: [c_doxyfile] + c_headers,
-  output: 'index.xml',
+  input: [doxyfile] + c_headers,
+  output: [
+    'index.xml',
+
+    'group__sratom.xml',
+    'sratom_8h.xml',
+  ],
 )
