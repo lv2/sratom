@@ -63,7 +63,7 @@ elif cc.get_id() == 'gcc'
       '-Wno-unused-const-variable',
     ]
 
-    if host_machine.system() =='windows'
+    if host_machine.system() == 'windows'
       c_suppressions += [
         '-Wno-suggest-attribute=format',
       ]

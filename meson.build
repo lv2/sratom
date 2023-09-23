@@ -1,15 +1,18 @@
 # Copyright 2021-2022 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
-project('sratom', ['c'],
-        version: '0.6.15',
-        license: 'ISC',
-        meson_version: '>= 0.56.0',
-        default_options: [
-          'b_ndebug=if-release',
-          'buildtype=release',
-          'c_std=c99',
-        ])
+project(
+  'sratom',
+  ['c'],
+  default_options: [
+    'b_ndebug=if-release',
+    'buildtype=release',
+    'c_std=c99',
+  ],
+  license: 'ISC',
+  meson_version: '>= 0.56.0',
+  version: '0.6.15',
+)
 
 sratom_src_root = meson.current_source_dir()
 major_version = meson.project_version().split('.')[0]
@@ -97,7 +100,7 @@ sratom_dep = declare_dependency(
   compile_args: extra_c_args,
   dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
   include_directories: include_dirs,
-  link_with: libsratom
+  link_with: libsratom,
 )
 
 # Generage pkg-config file for external dependants
@@ -130,9 +133,9 @@ if not meson.is_subproject()
 
   summary(
     {
-      'Install prefix':  get_option('prefix'),
-      'Headers':  get_option('prefix') / get_option('includedir'),
-      'Libraries':  get_option('prefix') / get_option('libdir'),
+      'Install prefix': get_option('prefix'),
+      'Headers': get_option('prefix') / get_option('includedir'),
+      'Libraries': get_option('prefix') / get_option('libdir'),
     },
     section: 'Directories',
   )

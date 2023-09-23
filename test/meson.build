@@ -17,9 +17,12 @@ if get_option('warning_level') == 'everything'
   # Check licensing metadata
   reuse = find_program('reuse', required: false)
   if reuse.found()
-    test('REUSE', reuse,
-         args: ['--root', sratom_src_root, 'lint'],
-         suite: 'data')
+    test(
+      'REUSE',
+      reuse,
+      args: ['--root', sratom_src_root, 'lint'],
+      suite: 'data',
+    )
   endif
 endif
 
