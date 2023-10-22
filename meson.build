@@ -11,7 +11,7 @@ project(
   ],
   license: 'ISC',
   meson_version: '>= 0.56.0',
-  version: '0.6.15',
+  version: '0.6.16',
 )
 
 sratom_src_root = meson.current_source_dir()
@@ -45,7 +45,7 @@ serd_dep = dependency(
 sord_dep = dependency(
   'sord-0',
   fallback: 'sord',
-  version: '>= 0.16.15',
+  version: '>= 0.16.16',
 )
 
 lv2_dep = dependency(
