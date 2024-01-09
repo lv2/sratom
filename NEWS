@@ -1,3 +1,9 @@
+sratom (0.6.17) unstable; urgency=medium
+
+  * Enable clang nullability checks
+
+ -- David Robillard <d@drobilla.net>  Tue, 09 Jan 2024 22:42:39 +0000
+
 sratom (0.6.16) stable; urgency=medium
 
   * Clean up code

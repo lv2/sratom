@@ -1,4 +1,4 @@
-// Copyright 2012-2021 David Robillard <d@drobilla.net>
+// Copyright 2012-2024 David Robillard <d@drobilla.net>
 // SPDX-License-Identifier: ISC
 
 #include "sratom/sratom.h"
@@ -107,7 +107,7 @@ sratom_set_sink(Sratom*           sratom,
     serd_node_free(&sratom->base_uri);
     sratom->base_uri =
       serd_node_new_uri_from_string(USTR(base_uri), NULL, NULL);
-    serd_uri_parse(sratom->base_uri.buf, &sratom->base);
+    serd_uri_parse((const uint8_t*)sratom->base_uri.buf, &sratom->base);
   }
   sratom->write_statement = sink;
   sratom->end_anon        = end_sink;
@@ -801,7 +801,9 @@ read_node(Sratom*         sratom,
 
       SerdNode rel =
         serd_node_new_relative_uri(&uri, &sratom->base, &sratom->base, NULL);
-      uint8_t* path = serd_file_uri_parse(rel.buf, NULL);
+
+      uint8_t* const path = serd_file_uri_parse((const uint8_t*)rel.buf, NULL);
+
       if (path) {
         lv2_atom_forge_path(
           forge, (const char*)path, strlen((const char*)path));
