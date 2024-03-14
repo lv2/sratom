@@ -87,6 +87,7 @@ libsratom = library(
   versioned_name,
   sources,
   c_args: c_suppressions + extra_c_args + ['-DSRATOM_INTERNAL'],
+  darwin_versions: [major_version + '.0.0', meson.project_version()],
   dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
   gnu_symbol_visibility: 'hidden',
   include_directories: include_dirs,
