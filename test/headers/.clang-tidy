@@ -1,11 +1,11 @@
-# Copyright 2020-2022 David Robillard <d@drobilla.net>
+# Copyright 2020-2024 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
 Checks: >
   *,
+  -*-macro-to-enum,
   -altera-*,
   -llvmlibc-*,
-  -modernize-macro-to-enum,
   -performance-no-int-to-ptr,
   -readability-identifier-length,
 WarningsAsErrors: '*'
