@@ -1,9 +1,10 @@
 sratom (0.6.17) unstable; urgency=medium
 
+  * Add lint option with project metadata and code formatting tests
   * Enable clang nullability checks
   * Fix library current_version on MacOS
 
- -- David Robillard <d@drobilla.net>  Thu, 14 Mar 2024 17:00:24 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 06 Oct 2024 17:37:06 +0000
 
 sratom (0.6.16) stable; urgency=medium
 
