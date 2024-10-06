@@ -1,13 +1,13 @@
-# Copyright 2021-2022 David Robillard <d@drobilla.net>
+# Copyright 2021-2024 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
-####################
-# Project Metadata #
-####################
+########
+# Lint #
+########
 
-if get_option('warning_level') == 'everything'
-  # Check release metadata
+if get_option('lint')
   if not meson.is_subproject()
+    # Check release metadata
     autoship = find_program('autoship', required: false)
     if autoship.found()
       test('autoship', autoship, args: ['test', sratom_src_root], suite: 'data')
@@ -17,12 +17,8 @@ if get_option('warning_level') == 'everything'
   # Check licensing metadata
   reuse = find_program('reuse', required: false)
   if reuse.found()
-    test(
-      'REUSE',
-      reuse,
-      args: ['--root', sratom_src_root, 'lint'],
-      suite: 'data',
-    )
+    reuse_args = ['--root', sratom_src_root, 'lint']
+    test('REUSE', reuse, args: reuse_args, suite: 'data')
   endif
 endif
 
