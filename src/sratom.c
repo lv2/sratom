@@ -238,9 +238,9 @@ sratom_write(Sratom*         sratom,
              const void*     body)
 {
   const char* const type        = unmap->unmap(unmap->handle, type_urid);
-  uint8_t           idbuf[12]   = "b0000000000";
+  const uint8_t     idbuf[12]   = "b0000000000";
   SerdNode          id          = serd_node_from_string(SERD_BLANK, idbuf);
-  uint8_t           nodebuf[12] = "b0000000000";
+  const uint8_t     nodebuf[12] = "b0000000000";
   SerdNode          node        = serd_node_from_string(SERD_BLANK, nodebuf);
   SerdNode          object      = SERD_NODE_NULL;
   SerdNode          datatype    = SERD_NODE_NULL;
@@ -597,7 +597,7 @@ read_resource(Sratom*         sratom,
 }
 
 static uint32_t
-atom_size(Sratom* sratom, uint32_t type_urid)
+atom_size(const Sratom* sratom, uint32_t type_urid)
 {
   if (type_urid == sratom->forge.Int || type_urid == sratom->forge.Bool) {
     return sizeof(int32_t);
@@ -627,10 +627,10 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
 {
   assert(sord_node_get_type(node) == SORD_LITERAL);
 
-  size_t      len      = 0;
-  const char* str      = (const char*)sord_node_get_string_counted(node, &len);
-  SordNode*   datatype = sord_node_get_datatype(node);
-  const char* language = sord_node_get_language(node);
+  size_t          len = 0;
+  const char*     str = (const char*)sord_node_get_string_counted(node, &len);
+  const SordNode* datatype = sord_node_get_datatype(node);
+  const char*     language = sord_node_get_language(node);
   if (datatype) {
     const char* type_uri = (const char*)sord_node_get_string(datatype);
     if (!strcmp(type_uri, (const char*)NS_XSD "int") ||
@@ -873,7 +873,7 @@ sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
 LV2_Atom*
 sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref)
 {
-  SerdChunk* chunk = (SerdChunk*)handle;
+  const SerdChunk* chunk = (const SerdChunk*)handle;
   return (LV2_Atom*)(chunk->buf + ref - 1);
 }
 
@@ -893,12 +893,12 @@ sratom_from_turtle(Sratom*         sratom,
   SerdReader* reader = sord_new_reader(model, env, SERD_TURTLE, NULL);
 
   if (!serd_reader_read_string(reader, (const uint8_t*)str)) {
-    SordNode* s = sord_node_from_serd_node(world, env, subject, 0, 0);
+    const SordNode* s = sord_node_from_serd_node(world, env, subject, 0, 0);
     lv2_atom_forge_set_sink(
       &sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
     if (subject && predicate) {
-      SordNode* p = sord_node_from_serd_node(world, env, predicate, 0, 0);
-      SordNode* o = sord_get(model, s, p, NULL, NULL);
+      const SordNode* p = sord_node_from_serd_node(world, env, predicate, 0, 0);
+      SordNode*       o = sord_get(model, s, p, NULL, NULL);
       if (o) {
         sratom_read(sratom, &sratom->forge, world, model, o);
         sord_node_free(world, o);
