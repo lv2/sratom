@@ -37,11 +37,13 @@ endif
 
 header_c_suppressions = cc.get_supported_arguments(header_c_suppressions)
 
+test_headers_source = files('test_headers.c')
+
 test(
   'headers',
   executable(
     'test_headers',
-    files('test_headers.c'),
+    test_headers_source,
     c_args: header_c_suppressions,
     dependencies: [sratom_dep],
   ),
