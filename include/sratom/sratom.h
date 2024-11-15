@@ -63,13 +63,11 @@ typedef enum {
 } SratomObjectMode;
 
 /// Create a new Atom serializer
-SRATOM_API
-Sratom*
+SRATOM_API Sratom*
 sratom_new(LV2_URID_Map* map);
 
 /// Free an Atom serializer
-SRATOM_API
-void
+SRATOM_API void
 sratom_free(Sratom* sratom);
 
 /**
@@ -78,8 +76,7 @@ sratom_free(Sratom* sratom);
    This can be used to set namespace prefixes and a base URI for
    sratom_to_turtle() and sratom_from_turtle().
 */
-SRATOM_API
-void
+SRATOM_API void
 sratom_set_env(Sratom* sratom, SerdEnv* env);
 
 /**
@@ -87,8 +84,7 @@ sratom_set_env(Sratom* sratom, SerdEnv* env);
 
    This must be called before calling sratom_write().
 */
-SRATOM_API
-void
+SRATOM_API void
 sratom_set_sink(Sratom*           sratom,
                 const char*       base_uri,
                 SerdStatementSink sink,
@@ -102,13 +98,11 @@ sratom_set_sink(Sratom*           sratom,
    literals, rather than string literals with precise types.  The cost of this
    is that the types might get fudged on a round-trip to RDF and back.
 */
-SRATOM_API
-void
+SRATOM_API void
 sratom_set_pretty_numbers(Sratom* sratom, bool pretty_numbers);
 
 /// Configure how resources will be read to form LV2 Objects
-SRATOM_API
-void
+SRATOM_API void
 sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
 
 /**
@@ -118,8 +112,7 @@ sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
 
    @return 0 on success, or a non-zero error code otherwise.
 */
-SRATOM_API
-int
+SRATOM_API int
 sratom_write(Sratom*         sratom,
              LV2_URID_Unmap* unmap,
              uint32_t        flags,
@@ -134,8 +127,7 @@ sratom_write(Sratom*         sratom,
 
    The resulting atom will be written to `forge`.
 */
-SRATOM_API
-void
+SRATOM_API void
 sratom_read(Sratom*         sratom,
             LV2_Atom_Forge* forge,
             SordWorld*      world,
@@ -147,8 +139,7 @@ sratom_read(Sratom*         sratom,
 
    The returned string must be free()'d by the caller.
 */
-SRATOM_API
-char*
+SRATOM_API char*
 sratom_to_turtle(Sratom*         sratom,
                  LV2_URID_Unmap* unmap,
                  const char*     base_uri,
@@ -163,8 +154,7 @@ sratom_to_turtle(Sratom*         sratom,
 
    The returned atom must be free()'d by the caller.
 */
-SRATOM_API
-LV2_Atom*
+SRATOM_API LV2_Atom*
 sratom_from_turtle(Sratom*         sratom,
                    const char*     base_uri,
                    const SerdNode* subject,
@@ -176,15 +166,13 @@ sratom_from_turtle(Sratom*         sratom,
 
    The handle must point to an initialized SerdChunk.
 */
-SRATOM_API
-LV2_Atom_Forge_Ref
+SRATOM_API LV2_Atom_Forge_Ref
 sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
                   const void*                buf,
                   uint32_t                   size);
 
 /// The corresponding deref function for sratom_forge_sink
-SRATOM_API
-LV2_Atom*
+SRATOM_API LV2_Atom*
 sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref);
 
 /**

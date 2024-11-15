@@ -69,8 +69,7 @@ urid_unmap(LV2_URID_Unmap_Handle handle, LV2_URID urid)
   return NULL;
 }
 
-SRATOM_LOG_FUNC(1, 2)
-static int
+SRATOM_LOG_FUNC(1, 2) static int
 test_fail(const char* fmt, ...)
 {
   va_list args; // NOLINT(cppcoreguidelines-init-variables)
