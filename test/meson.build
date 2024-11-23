@@ -20,7 +20,6 @@ test(
     test_sratom_source,
     c_args: c_suppressions,
     dependencies: [sratom_dep, serd_dep, sord_dep],
-    include_directories: include_directories('../src'),
   ),
   suite: 'unit',
 )

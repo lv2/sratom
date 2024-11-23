@@ -1,13 +1,13 @@
 // Copyright 2012-2016 David Robillard <d@drobilla.net>
 // SPDX-License-Identifier: ISC
 
-#include "lv2/atom/atom.h"
-#include "lv2/atom/forge.h"
-#include "lv2/atom/util.h"
-#include "lv2/midi/midi.h"
-#include "lv2/urid/urid.h"
-#include "serd/serd.h"
-#include "sratom/sratom.h"
+#include <lv2/atom/atom.h>
+#include <lv2/atom/forge.h>
+#include <lv2/atom/util.h>
+#include <lv2/midi/midi.h>
+#include <lv2/urid/urid.h>
+#include <serd/serd.h>
+#include <sratom/sratom.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
