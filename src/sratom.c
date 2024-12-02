@@ -237,6 +237,8 @@ sratom_write(Sratom*         sratom,
              uint32_t        size,
              const void*     body)
 {
+  static const char hex_chars[] = "0123456789ABCDEF";
+
   const char* const type        = unmap->unmap(unmap->handle, type_urid);
   const uint8_t     idbuf[12]   = "b0000000000";
   SerdNode          id          = serd_node_from_string(SERD_BLANK, idbuf);
@@ -323,13 +325,12 @@ sratom_write(Sratom*         sratom,
     new_node = true;
     datatype = serd_node_from_string(SERD_URI, USTR(LV2_MIDI__MidiEvent));
 
-    const size_t   len = (size_t)size * 2U;
-    uint8_t* const str = (uint8_t*)calloc(len + 1, 1);
-    for (uint32_t i = 0; i < size; ++i) {
-      snprintf((char*)str + ((size_t)2 * i),
-               len - ((size_t)2 * i) + 1U,
-               "%02X",
-               (unsigned)*((const uint8_t*)body + i));
+    const size_t len = (size_t)size * 2U;
+    char* const  str = (char*)calloc(len + 1, 1);
+    for (uint32_t i = 0U; i < size; ++i) {
+      const uint8_t byte = ((const uint8_t*)body)[i];
+      str[2U * i]        = hex_chars[byte >> 4U];
+      str[2U * i + 1U]   = hex_chars[byte & 0x0FU];
     }
 
     object = serd_node_from_string(SERD_LITERAL, USTR(str));
