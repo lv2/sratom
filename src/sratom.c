@@ -327,7 +327,7 @@ sratom_write(Sratom*         sratom,
 
     const size_t len = (size_t)size * 2U;
     char* const  str = (char*)calloc(len + 1, 1);
-    for (uint32_t i = 0U; i < size; ++i) {
+    for (size_t i = 0U; i < size; ++i) {
       const uint8_t byte = ((const uint8_t*)body)[i];
       str[2U * i]        = hex_chars[byte >> 4U];
       str[2U * i + 1U]   = hex_chars[byte & 0x0FU];
