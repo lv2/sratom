@@ -453,7 +453,9 @@ sratom_write(Sratom*         sratom,
     start_object(sratom, &flags, subject, predicate, &id, type);
     SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
     flags |= SERD_LIST_O_BEGIN;
-    LV2_ATOM_SEQUENCE_BODY_FOREACH (seq, size, ev) {
+    for (const LV2_Atom_Event* ev = lv2_atom_sequence_begin(seq);
+         !lv2_atom_sequence_is_end(seq, size, ev);
+         ev = lv2_atom_sequence_next(ev)) {
       sratom->seq_unit = seq->unit;
       list_append(sratom,
                   unmap,
