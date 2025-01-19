@@ -805,12 +805,12 @@ read_node(Sratom*         sratom,
       lv2_atom_forge_atom(forge, 0, 0);
     } else if (!strncmp(str, "file://", 7)) {
       SerdURI uri;
-      serd_uri_parse((const uint8_t*)str, &uri);
+      serd_uri_parse(USTR(str), &uri);
 
       SerdNode rel =
         serd_node_new_relative_uri(&uri, &sratom->base, &sratom->base, NULL);
 
-      uint8_t* const path = serd_file_uri_parse((const uint8_t*)rel.buf, NULL);
+      uint8_t* const path = serd_file_uri_parse(USTR(rel.buf), NULL);
 
       if (path) {
         lv2_atom_forge_path(
@@ -900,7 +900,7 @@ sratom_from_turtle(Sratom*         sratom,
   SerdEnv*    env    = sratom->env ? sratom->env : serd_env_new(&base);
   SerdReader* reader = sord_new_reader(model, env, SERD_TURTLE, NULL);
 
-  if (!serd_reader_read_string(reader, (const uint8_t*)str)) {
+  if (!serd_reader_read_string(reader, USTR(str))) {
     const SordNode* s = sord_node_from_serd_node(world, env, subject, 0, 0);
     lv2_atom_forge_set_sink(
       &sratom->forge, sratom_forge_sink, sratom_forge_deref, &out);
