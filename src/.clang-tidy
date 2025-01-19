@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: 0BSD OR ISC
 
 Checks: >
-  -*-macro-to-enum,
   -*-magic-numbers,
   -*-narrowing-conversions,
   -bugprone-easily-swappable-parameters,
@@ -11,8 +10,9 @@ Checks: >
   -clang-analyzer-unix.Malloc,
   -hicpp-signed-bitwise,
   -misc-no-recursion,
-  -performance-no-int-to-ptr,
-  -readability-function-cognitive-complexity,
   -readability-identifier-length,
   -readability-redundant-casting,
+CheckOptions:
+  - key:   readability-function-cognitive-complexity.Threshold
+    value: '75'
 InheritParentConfig: true
