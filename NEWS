@@ -1,11 +1,11 @@
-sratom (0.6.17) unstable; urgency=medium
+sratom (0.6.18) stable; urgency=medium
 
   * Add lint option with project metadata and code formatting tests
   * Avoid snprintf when writing MIDI events
   * Enable clang nullability checks
   * Fix library current_version on MacOS
 
- -- David Robillard <d@drobilla.net>  Mon, 02 Dec 2024 15:41:31 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 19 Jan 2025 13:49:56 +0000
 
 sratom (0.6.16) stable; urgency=medium
 
