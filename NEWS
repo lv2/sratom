@@ -1,3 +1,9 @@
+sratom (0.6.19) unstable; urgency=medium
+
+  * Improve code quality
+
+ -- David Robillard <d@drobilla.net>  Sun, 19 Jan 2025 14:23:37 +0000
+
 sratom (0.6.18) stable; urgency=medium
 
   * Add lint option with project metadata and code formatting tests

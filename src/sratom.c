@@ -106,8 +106,7 @@ sratom_set_sink(Sratom*           sratom,
   if (base_uri) {
     serd_node_free(&sratom->base_uri);
     sratom->base_uri =
-      serd_node_new_uri_from_string(USTR(base_uri), NULL, NULL);
-    serd_uri_parse((const uint8_t*)sratom->base_uri.buf, &sratom->base);
+      serd_node_new_uri_from_string(USTR(base_uri), NULL, &sratom->base);
   }
   sratom->write_statement = sink;
   sratom->end_anon        = end_sink;
