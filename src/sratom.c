@@ -624,6 +624,12 @@ atom_size(const Sratom* sratom, uint32_t type_urid)
   return 0;
 }
 
+static inline uint8_t
+hex_digit_value(const uint8_t c)
+{
+  return (uint8_t)((c > '9') ? ((c & ~0x20) - 'A' + 10) : (c - '0'));
+}
+
 static void
 read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
 {
@@ -658,9 +664,9 @@ read_literal(Sratom* sratom, LV2_Atom_Forge* forge, const SordNode* node)
     } else if (!strcmp(type_uri, LV2_MIDI__MidiEvent)) {
       lv2_atom_forge_atom(forge, len / 2, sratom->midi_MidiEvent);
       for (const char* s = str; s < str + len; s += 2) {
-        unsigned num = 0U;
-        sscanf(s, "%2X", &num);
-        const uint8_t c = num;
+        const uint8_t hi = hex_digit_value(s[0]);
+        const uint8_t lo = hex_digit_value(s[1]);
+        const uint8_t c  = (uint8_t)(((unsigned)hi << 4U) | lo);
         lv2_atom_forge_raw(forge, &c, 1);
       }
       lv2_atom_forge_pad(forge, len / 2);

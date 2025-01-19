@@ -1,8 +1,9 @@
 sratom (0.6.19) unstable; urgency=medium
 
+  * Avoid use of scanf when reading MIDI events
   * Improve code quality
 
- -- David Robillard <d@drobilla.net>  Sun, 19 Jan 2025 14:23:37 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 19 Jan 2025 14:34:33 +0000
 
 sratom (0.6.18) stable; urgency=medium
 

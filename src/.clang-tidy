@@ -6,7 +6,6 @@ Checks: >
   -*-narrowing-conversions,
   -bugprone-easily-swappable-parameters,
   -cert-err33-c,
-  -cert-err34-c,
   -clang-analyzer-unix.Malloc,
   -hicpp-signed-bitwise,
   -misc-no-recursion,
