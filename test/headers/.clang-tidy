@@ -9,5 +9,5 @@ CheckOptions:
   - key:   readability-function-cognitive-complexity.Threshold
     value: '0'
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*/sratom/[^/]+.h'
+HeaderFilterRegex: '.*'
 FormatStyle: file
