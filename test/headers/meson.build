@@ -8,7 +8,11 @@ if get_option('warning_level') == 'everything'
     if not meson.is_cross_build()
       c_suppressions += ['-Wno-poison-system-directories']
     endif
- endif
+  elif cc.get_id() == 'msvc'
+    header_c_suppressions += [
+      '/wd4820', # padding added after construct
+    ]
+  endif
 endif
 
 header_c_suppressions = cc.get_supported_arguments(header_c_suppressions)
