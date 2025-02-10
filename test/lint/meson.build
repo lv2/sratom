@@ -1,7 +1,7 @@
 # Copyright 2021-2024 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
-all_sources = sources + test_sratom_source + test_headers_source
+all_sources = sources + test_sratom_source
 
 # Check licensing metadata
 reuse = find_program('reuse', required: false)
