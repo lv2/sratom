@@ -341,7 +341,7 @@ write_midi_event(const WriteContext* const ctx,
   for (size_t i = 0U; i < size; ++i) {
     const uint8_t byte = ((const uint8_t*)body)[i];
     str[2U * i]        = hex_chars[byte >> 4U];
-    str[2U * i + 1U]   = hex_chars[byte & 0x0FU];
+    str[(2U * i) + 1U] = hex_chars[byte & 0x0FU];
   }
 
   const SerdStatus st =
