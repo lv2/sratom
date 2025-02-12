@@ -173,7 +173,7 @@ sratom_dep = declare_dependency(
   link_with: libsratom,
 )
 
-# Generage pkg-config file for external dependants
+# Generate pkg-config file for external dependants
 pkg.generate(
   libsratom,
   description: 'Small library for serializing LV2 atoms',
