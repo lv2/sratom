@@ -159,6 +159,7 @@ libsratom = library(
   darwin_versions: [major_version + '.0.0', meson.project_version()],
   dependencies: [m_dep, lv2_dep, serd_dep, sord_dep],
   gnu_symbol_visibility: 'hidden',
+  implicit_include_directories: false,
   include_directories: include_dirs,
   install: true,
   soversion: soversion,
