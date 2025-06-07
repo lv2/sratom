@@ -28,11 +28,12 @@ if not meson.is_subproject()
   cppcheck = find_program('cppcheck', required: false)
   if cppcheck.found()
     compdb_path = join_paths(sratom_build_root, 'compile_commands.json')
+    suppress_path = join_paths(sratom_src_root, '.suppress.cppcheck')
     cppcheck_args = [
       '--enable=warning,style,performance,portability',
       '--error-exitcode=1',
       '--project=' + compdb_path,
-      '--suppress=normalCheckLevelMaxBranches',
+      '--suppressions-list=' + suppress_path,
       '-q',
     ]
     test('cppcheck', cppcheck, args: cppcheck_args, suite: 'code')
