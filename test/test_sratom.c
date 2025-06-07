@@ -9,6 +9,7 @@
 #include <serd/serd.h>
 #include <sratom/sratom.h>
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -37,6 +38,7 @@ copy_string(const char* str)
 {
   const size_t len = strlen(str);
   char*        dup = (char*)malloc(len + 1);
+  assert(dup);
   memcpy(dup, str, len + 1);
   return dup;
 }
