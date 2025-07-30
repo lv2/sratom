@@ -1,10 +1,11 @@
 sratom (0.6.19) unstable; urgency=medium
 
+  * Avoid over-use of yielding meson options
   * Avoid use of scanf when reading MIDI events
   * Fix lint checks
   * Improve code quality
 
- -- David Robillard <d@drobilla.net>  Mon, 10 Feb 2025 17:55:54 +0000
+ -- David Robillard <d@drobilla.net>  Wed, 30 Jul 2025 18:30:51 +0000
 
 sratom (0.6.18) stable; urgency=medium
 
