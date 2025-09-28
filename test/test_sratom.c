@@ -83,7 +83,7 @@ test_fail(const char* fmt, ...)
 }
 
 static int
-test(SerdEnv* env, bool top_level, bool pretty_numbers)
+test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
 {
   Uris           uris  = {NULL, 0};
   LV2_URID_Map   map   = {&uris, urid_map};
@@ -321,8 +321,6 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
 
   lv2_atom_forge_pop(&forge, &obj_frame);
 
-  const char* base_uri = "file:///tmp/base/";
-
   SerdNode s = serd_node_from_string(SERD_URI, USTR("http://example.org/obj"));
   SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_RDF "value"));
 
@@ -386,10 +384,11 @@ test(SerdEnv* env, bool top_level, bool pretty_numbers)
 static int
 test_env(SerdEnv* env)
 {
-  if (test(env, false, false) || //
-      test(env, true, false) ||  //
-      test(env, false, true) ||  //
-      test(env, true, true)) {
+  if (test(env, "file:///tmp/base/", false, false) || //
+      test(env, "file:///tmp/base/", true, false) ||  //
+      test(env, "file:///tmp/base/", false, true) ||  //
+      test(env, "file:///tmp/base/", true, true) ||   //
+      test(env, "http://example.org/", true, true)) {
     return 1;
   }
 

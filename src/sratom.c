@@ -318,8 +318,9 @@ write_path(const WriteContext* const ctx, const uint8_t* const str)
              !!strncmp((const char*)ctx->sratom->base_uri.buf, "file://", 7)) {
     fprintf(stderr, "warning: Relative path but base is not a file URI.\n");
     fprintf(stderr, "warning: Writing ambiguous atom:Path literal.\n");
-    object   = serd_node_from_string(SERD_LITERAL, str);
-    datatype = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__Path));
+    SerdNode string = serd_node_from_string(SERD_LITERAL, str);
+    object          = serd_node_copy(&string);
+    datatype        = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__Path));
   } else {
     SerdNode rel = serd_node_new_file_uri(str, NULL, NULL, true);
     object       = serd_node_new_uri_from_node(&rel, &ctx->sratom->base, NULL);
