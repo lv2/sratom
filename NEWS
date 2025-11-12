@@ -1,4 +1,4 @@
-sratom (0.6.19) unstable; urgency=medium
+sratom (0.6.20) stable; urgency=medium
 
   * Avoid over-use of yielding meson options
   * Avoid use of scanf when reading MIDI events
@@ -6,7 +6,7 @@ sratom (0.6.19) unstable; urgency=medium
   * Fix potential memory error when writing ambiguous relative paths
   * Improve code quality
 
- -- David Robillard <d@drobilla.net>  Sun, 28 Sep 2025 21:15:31 +0000
+ -- David Robillard <d@drobilla.net>  Wed, 12 Nov 2025 19:26:04 +0000
 
 sratom (0.6.18) stable; urgency=medium
 
