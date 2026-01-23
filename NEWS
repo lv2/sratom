@@ -1,8 +1,9 @@
 sratom (0.6.21) unstable; urgency=medium
 
   * Address new warnings in clang and clang-tidy 21
+  * Gracefully handle vectors with missing childType properties
 
- -- David Robillard <d@drobilla.net>  Sat, 20 Dec 2025 22:24:10 +0000
+ -- David Robillard <d@drobilla.net>  Fri, 23 Jan 2026 13:59:30 +0000
 
 sratom (0.6.20) stable; urgency=medium
 
