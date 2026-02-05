@@ -1,4 +1,4 @@
-# Copyright 2021-2024 David Robillard <d@drobilla.net>
+# Copyright 2021-2026 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
 ###################
@@ -11,17 +11,23 @@ subdir('headers')
 # Unit Tests #
 ##############
 
-test(
+unit_test_names = [
   'trip',
-  executable(
-    'test_trip',
-    files('test_trip.c'),
-    c_args: c_suppressions,
-    dependencies: [lv2_dep, serd_dep, sratom_dep],
-    implicit_include_directories: false,
-  ),
-  suite: 'unit',
-)
+]
+
+foreach name : unit_test_names
+  test(
+    name,
+    executable(
+      'test_' + name,
+      files('test_@0@.c'.format(name)),
+      c_args: c_suppressions,
+      dependencies: [lv2_dep, serd_dep, sratom_dep],
+      implicit_include_directories: false,
+    ),
+    suite: 'unit',
+  )
+endforeach
 
 ########
 # Lint #
