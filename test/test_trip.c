@@ -11,7 +11,6 @@
 #include <serd/serd.h>
 #include <sratom/sratom.h>
 
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,20 +21,10 @@
 
 #define USTR(s) ((const uint8_t*)(s))
 
-#ifdef __GNUC__
-#  define SRATOM_LOG_FUNC(fmt, arg1) __attribute__((format(printf, fmt, arg1)))
-#else
-#  define SRATOM_LOG_FUNC(fmt, arg1)
-#endif
-
-SRATOM_LOG_FUNC(1, 2) static int
-test_fail(const char* fmt, ...)
+static int
+test_fail(const char* const msg)
 {
-  va_list args; // NOLINT(cppcoreguidelines-init-variables)
-  va_start(args, fmt);
-  fprintf(stderr, "error: ");
-  vfprintf(stderr, fmt, args);
-  va_end(args);
+  fprintf(stderr, "error: %s\n", msg);
   return 1;
 }
 
@@ -305,7 +294,7 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
 
   if (!pretty_numbers) {
     if (!lv2_atom_equals(obj, parsed)) {
-      return test_fail("Parsed atom does not match original\n");
+      return test_fail("Parsed atom does not match original");
     }
 
     char* instr = sratom_to_turtle(sratom,
@@ -319,7 +308,7 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
     printf("# Turtle => Atom\n\n%s", instr);
 
     if (!!strcmp(outstr, instr)) {
-      return test_fail("Re-serialized string differs from original\n");
+      return test_fail("Re-serialized string differs from original");
     }
     free(instr);
   }
