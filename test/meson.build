@@ -11,15 +11,13 @@ subdir('headers')
 # Unit Tests #
 ##############
 
-test_sratom_source = files('test_sratom.c')
-
 test(
-  'sratom',
+  'trip',
   executable(
-    'test_sratom',
-    test_sratom_source,
+    'test_trip',
+    files('test_trip.c'),
     c_args: c_suppressions,
-    dependencies: [sratom_dep, serd_dep, sord_dep],
+    dependencies: [lv2_dep, serd_dep, sratom_dep],
     implicit_include_directories: false,
   ),
   suite: 'unit',
