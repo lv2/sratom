@@ -1,5 +1,7 @@
-// Copyright 2012-2016 David Robillard <d@drobilla.net>
+// Copyright 2012-2026 David Robillard <d@drobilla.net>
 // SPDX-License-Identifier: ISC
+
+#include "test_uri_map.h"
 
 #include <lv2/atom/atom.h>
 #include <lv2/atom/forge.h>
@@ -9,7 +11,6 @@
 #include <serd/serd.h>
 #include <sratom/sratom.h>
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,50 +27,6 @@
 #else
 #  define SRATOM_LOG_FUNC(fmt, arg1)
 #endif
-
-/// Simple O(n) URI map
-typedef struct {
-  char** uris;
-  size_t n_uris;
-} Uris;
-
-static char*
-copy_string(const char* str)
-{
-  const size_t len = strlen(str);
-  char*        dup = (char*)malloc(len + 1);
-  assert(dup);
-  memcpy(dup, str, len + 1);
-  return dup;
-}
-
-static LV2_URID
-urid_map(LV2_URID_Map_Handle handle, const char* uri)
-{
-  Uris* const uris = (Uris*)handle;
-
-  for (size_t i = 0; i < uris->n_uris; ++i) {
-    if (!strcmp(uris->uris[i], uri)) {
-      return i + 1;
-    }
-  }
-
-  uris->uris = (char**)realloc(uris->uris, ++uris->n_uris * sizeof(char*));
-  uris->uris[uris->n_uris - 1] = copy_string(uri);
-  return uris->n_uris;
-}
-
-static const char*
-urid_unmap(LV2_URID_Unmap_Handle handle, LV2_URID urid)
-{
-  Uris* const uris = (Uris*)handle;
-
-  if (urid > 0 && urid <= uris->n_uris) {
-    return uris->uris[urid - 1];
-  }
-
-  return NULL;
-}
 
 SRATOM_LOG_FUNC(1, 2) static int
 test_fail(const char* fmt, ...)
@@ -372,12 +329,7 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
   free(parsed);
   free(outstr);
   sratom_free(sratom);
-  for (uint32_t i = 0; i < uris.n_uris; ++i) {
-    free(uris.uris[i]);
-  }
-
-  free(uris.uris);
-
+  free_uris(&uris);
   return 0;
 }
 

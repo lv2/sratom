@@ -20,7 +20,7 @@ foreach name : unit_test_names
     name,
     executable(
       'test_' + name,
-      files('test_@0@.c'.format(name)),
+      files('test_@0@.c'.format(name), 'test_uri_map.c'),
       c_args: c_suppressions,
       dependencies: [lv2_dep, serd_dep, sratom_dep],
       implicit_include_directories: false,
