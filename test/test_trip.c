@@ -45,34 +45,35 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
                                    : SRATOM_OBJECT_MODE_BLANK);
 
   LV2_URID eg_Object  = urid_map(&uris, "http://example.org/Object");
-  LV2_URID eg_one     = urid_map(&uris, "http://example.org/a-one");
-  LV2_URID eg_two     = urid_map(&uris, "http://example.org/b-two");
-  LV2_URID eg_three   = urid_map(&uris, "http://example.org/c-three");
-  LV2_URID eg_four    = urid_map(&uris, "http://example.org/d-four");
-  LV2_URID eg_true    = urid_map(&uris, "http://example.org/e-true");
-  LV2_URID eg_false   = urid_map(&uris, "http://example.org/f-false");
-  LV2_URID eg_path    = urid_map(&uris, "http://example.org/g-path");
-  LV2_URID eg_winpath = urid_map(&uris, "http://example.org/h-winpath");
-  LV2_URID eg_relpath = urid_map(&uris, "http://example.org/i-relpath");
-  LV2_URID eg_urid    = urid_map(&uris, "http://example.org/j-urid");
-  LV2_URID eg_string  = urid_map(&uris, "http://example.org/k-string");
-  LV2_URID eg_langlit = urid_map(&uris, "http://example.org/l-langlit");
-  LV2_URID eg_typelit = urid_map(&uris, "http://example.org/m-typelit");
-  LV2_URID eg_null    = urid_map(&uris, "http://example.org/n-null");
-  LV2_URID eg_chunk   = urid_map(&uris, "http://example.org/o-chunk");
-  LV2_URID eg_blob    = urid_map(&uris, "http://example.org/p-blob");
-  LV2_URID eg_blank   = urid_map(&uris, "http://example.org/q-blank");
-  LV2_URID eg_tuple   = urid_map(&uris, "http://example.org/r-tuple");
-  LV2_URID eg_rectup  = urid_map(&uris, "http://example.org/s-rectup");
-  LV2_URID eg_ivector = urid_map(&uris, "http://example.org/t-ivector");
-  LV2_URID eg_lvector = urid_map(&uris, "http://example.org/u-lvector");
-  LV2_URID eg_fvector = urid_map(&uris, "http://example.org/v-fvector");
-  LV2_URID eg_dvector = urid_map(&uris, "http://example.org/w-dvector");
-  LV2_URID eg_bvector = urid_map(&uris, "http://example.org/x-bvector");
-  LV2_URID eg_fseq    = urid_map(&uris, "http://example.org/y-fseq");
-  LV2_URID eg_bseq    = urid_map(&uris, "http://example.org/z-bseq");
+  LV2_URID eg_one     = urid_map(&uris, "http://example.org/aa-one");
+  LV2_URID eg_two     = urid_map(&uris, "http://example.org/ab-two");
+  LV2_URID eg_three   = urid_map(&uris, "http://example.org/ac-three");
+  LV2_URID eg_four    = urid_map(&uris, "http://example.org/ad-four");
+  LV2_URID eg_true    = urid_map(&uris, "http://example.org/ae-true");
+  LV2_URID eg_false   = urid_map(&uris, "http://example.org/af-false");
+  LV2_URID eg_path    = urid_map(&uris, "http://example.org/ag-path");
+  LV2_URID eg_winpath = urid_map(&uris, "http://example.org/ah-winpath");
+  LV2_URID eg_relpath = urid_map(&uris, "http://example.org/ai-relpath");
+  LV2_URID eg_urid    = urid_map(&uris, "http://example.org/aj-urid");
+  LV2_URID eg_string  = urid_map(&uris, "http://example.org/ak-string");
+  LV2_URID eg_langlit = urid_map(&uris, "http://example.org/al-langlit");
+  LV2_URID eg_typelit = urid_map(&uris, "http://example.org/am-typelit");
+  LV2_URID eg_null    = urid_map(&uris, "http://example.org/an-null");
+  LV2_URID eg_chunk   = urid_map(&uris, "http://example.org/ba-chunk");
+  LV2_URID eg_blob    = urid_map(&uris, "http://example.org/bb-blob");
+  LV2_URID eg_blank   = urid_map(&uris, "http://example.org/bc-blank");
+  LV2_URID eg_tuple   = urid_map(&uris, "http://example.org/bd-tuple");
+  LV2_URID eg_rectup  = urid_map(&uris, "http://example.org/be-rectup");
+  LV2_URID eg_ivector = urid_map(&uris, "http://example.org/bf-ivector");
+  LV2_URID eg_lvector = urid_map(&uris, "http://example.org/bg-lvector");
+  LV2_URID eg_fvector = urid_map(&uris, "http://example.org/bh-fvector");
+  LV2_URID eg_dvector = urid_map(&uris, "http://example.org/bi-dvector");
+  LV2_URID eg_bvector = urid_map(&uris, "http://example.org/bj-bvector");
+  LV2_URID eg_uvector = urid_map(&uris, "http://example.org/bj-uvector");
+  LV2_URID eg_fseq    = urid_map(&uris, "http://example.org/bk-fseq");
+  LV2_URID eg_bseq    = urid_map(&uris, "http://example.org/bl-bseq");
 
-  uint8_t buf[1024];
+  uint8_t buf[1152];
   lv2_atom_forge_set_buffer(&forge, buf, sizeof(buf));
 
   const char*          obj_uri = "http://example.org/obj";
@@ -226,6 +227,11 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
   lv2_atom_forge_key(&forge, eg_bvector);
   const int32_t belems[] = {true, false, true};
   lv2_atom_forge_vector(&forge, sizeof(int32_t), forge.Bool, 3, belems);
+
+  // eg_uvector = (Vector<URID>)eg:one,eg:two
+  lv2_atom_forge_key(&forge, eg_uvector);
+  const LV2_URID uelems[] = {eg_one, eg_two};
+  lv2_atom_forge_vector(&forge, sizeof(LV2_URID), forge.URID, 2, uelems);
 
   // eg_fseq = (Sequence)1, 2
   LV2_URID midi_midiEvent = map.map(map.handle, LV2_MIDI__MidiEvent);
