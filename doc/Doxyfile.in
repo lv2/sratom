@@ -1,4 +1,4 @@
-# Copyright 2021-2022 David Robillard <d@drobilla.net>
+# Copyright 2021-2026 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
 PROJECT_NAME           = Sratom
@@ -22,7 +22,11 @@ XML_PROGRAMLISTING     = NO
 SHOW_FILES             = NO
 
 MACRO_EXPANSION        = YES
-PREDEFINED             = SRATOM_API
+PREDEFINED             = SERD_ALLOCATED \
+                         SERD_NONNULL= \
+                         SERD_NULLABLE= \
+                         SERD_UNSPECIFIED= \
+                         SRATOM_API
 
 RECURSIVE              = YES
 STRIP_FROM_PATH        = @SRATOM_SRCDIR@

@@ -1,4 +1,4 @@
-// Copyright 2012-2021 David Robillard <d@drobilla.net>
+// Copyright 2012-2026 David Robillard <d@drobilla.net>
 // SPDX-License-Identifier: ISC
 
 /// @file sratom.h Public API for Sratom
@@ -63,12 +63,12 @@ typedef enum {
 } SratomObjectMode;
 
 /// Create a new Atom serializer
-SRATOM_API Sratom*
-sratom_new(LV2_URID_Map* map);
+SRATOM_API Sratom* SERD_ALLOCATED
+sratom_new(LV2_URID_Map* SERD_NONNULL map);
 
 /// Free an Atom serializer
 SRATOM_API void
-sratom_free(Sratom* sratom);
+sratom_free(Sratom* SERD_NULLABLE sratom);
 
 /**
    Set the environment for reading or writing Turtle.
@@ -77,7 +77,7 @@ sratom_free(Sratom* sratom);
    sratom_to_turtle() and sratom_from_turtle().
 */
 SRATOM_API void
-sratom_set_env(Sratom* sratom, SerdEnv* env);
+sratom_set_env(Sratom* SERD_NONNULL sratom, SerdEnv* SERD_NULLABLE env);
 
 /**
    Set the sink(s) where sratom will write its output.
@@ -85,11 +85,11 @@ sratom_set_env(Sratom* sratom, SerdEnv* env);
    This must be called before calling sratom_write().
 */
 SRATOM_API void
-sratom_set_sink(Sratom*           sratom,
-                const char*       base_uri,
-                SerdStatementSink sink,
-                SerdEndSink       end_sink,
-                void*             handle);
+sratom_set_sink(Sratom* SERD_NONNULL           sratom,
+                const char* SERD_NULLABLE      base_uri,
+                SerdStatementSink SERD_NONNULL sink,
+                SerdEndSink SERD_NULLABLE      end_sink,
+                void* SERD_UNSPECIFIED         handle);
 
 /**
    Write pretty numeric literals.
@@ -99,11 +99,12 @@ sratom_set_sink(Sratom*           sratom,
    is that the types might get fudged on a round-trip to RDF and back.
 */
 SRATOM_API void
-sratom_set_pretty_numbers(Sratom* sratom, bool pretty_numbers);
+sratom_set_pretty_numbers(Sratom* SERD_NONNULL sratom, bool pretty_numbers);
 
 /// Configure how resources will be read to form LV2 Objects
 SRATOM_API void
-sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
+sratom_set_object_mode(Sratom* SERD_NONNULL sratom,
+                       SratomObjectMode     object_mode);
 
 /**
    Write an Atom to RDF.
@@ -113,14 +114,14 @@ sratom_set_object_mode(Sratom* sratom, SratomObjectMode object_mode);
    @return 0 on success, or a non-zero error code otherwise.
 */
 SRATOM_API int
-sratom_write(Sratom*         sratom,
-             LV2_URID_Unmap* unmap,
-             uint32_t        flags,
-             const SerdNode* subject,
-             const SerdNode* predicate,
-             uint32_t        type_urid,
-             uint32_t        size,
-             const void*     body);
+sratom_write(Sratom* SERD_NONNULL             sratom,
+             LV2_URID_Unmap* SERD_UNSPECIFIED unmap,
+             uint32_t                         flags,
+             const SerdNode* SERD_NULLABLE    subject,
+             const SerdNode* SERD_NULLABLE    predicate,
+             uint32_t                         type_urid,
+             uint32_t                         size,
+             const void* SERD_NONNULL         body);
 
 /**
    Read an Atom from RDF.
@@ -128,38 +129,38 @@ sratom_write(Sratom*         sratom,
    The resulting atom will be written to `forge`.
 */
 SRATOM_API void
-sratom_read(Sratom*         sratom,
-            LV2_Atom_Forge* forge,
-            SordWorld*      world,
-            SordModel*      model,
-            const SordNode* node);
+sratom_read(Sratom* SERD_NONNULL         sratom,
+            LV2_Atom_Forge* SERD_NONNULL forge,
+            SordWorld* SERD_NONNULL      world,
+            SordModel* SERD_NONNULL      model,
+            const SordNode* SERD_NONNULL node);
 
 /**
    Serialize an Atom to a Turtle string.
 
    The returned string must be free()'d by the caller.
 */
-SRATOM_API char*
-sratom_to_turtle(Sratom*         sratom,
-                 LV2_URID_Unmap* unmap,
-                 const char*     base_uri,
-                 const SerdNode* subject,
-                 const SerdNode* predicate,
-                 uint32_t        type,
-                 uint32_t        size,
-                 const void*     body);
+SRATOM_API char* SERD_ALLOCATED
+sratom_to_turtle(Sratom* SERD_NONNULL             sratom,
+                 LV2_URID_Unmap* SERD_UNSPECIFIED unmap,
+                 const char* SERD_NONNULL         base_uri,
+                 const SerdNode* SERD_UNSPECIFIED subject,
+                 const SerdNode* SERD_UNSPECIFIED predicate,
+                 uint32_t                         type,
+                 uint32_t                         size,
+                 const void* SERD_NONNULL         body);
 
 /**
    Read an Atom from a Turtle string.
 
    The returned atom must be free()'d by the caller.
 */
-SRATOM_API LV2_Atom*
-sratom_from_turtle(Sratom*         sratom,
-                   const char*     base_uri,
-                   const SerdNode* subject,
-                   const SerdNode* predicate,
-                   const char*     str);
+SRATOM_API LV2_Atom* SERD_ALLOCATED
+sratom_from_turtle(Sratom* SERD_NONNULL             sratom,
+                   const char* SERD_NONNULL         base_uri,
+                   const SerdNode* SERD_UNSPECIFIED subject,
+                   const SerdNode* SERD_UNSPECIFIED predicate,
+                   const char* SERD_NONNULL         str);
 
 /**
    A convenient resizing sink for LV2_Atom_Forge.
@@ -167,13 +168,14 @@ sratom_from_turtle(Sratom*         sratom,
    The handle must point to an initialized SerdChunk.
 */
 SRATOM_API LV2_Atom_Forge_Ref
-sratom_forge_sink(LV2_Atom_Forge_Sink_Handle handle,
-                  const void*                buf,
-                  uint32_t                   size);
+sratom_forge_sink(LV2_Atom_Forge_Sink_Handle SERD_UNSPECIFIED handle,
+                  const void* SERD_NONNULL                    buf,
+                  uint32_t                                    size);
 
 /// The corresponding deref function for sratom_forge_sink
-SRATOM_API LV2_Atom*
-sratom_forge_deref(LV2_Atom_Forge_Sink_Handle handle, LV2_Atom_Forge_Ref ref);
+SRATOM_API LV2_Atom* SERD_NULLABLE
+sratom_forge_deref(LV2_Atom_Forge_Sink_Handle SERD_UNSPECIFIED handle,
+                   LV2_Atom_Forge_Ref                          ref);
 
 /**
    @}

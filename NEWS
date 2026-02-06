@@ -1,10 +1,11 @@
 sratom (0.6.21) unstable; urgency=medium
 
+  * Add clang nullability annotations
   * Address new warnings in clang and clang-tidy 21
   * Gracefully handle reading vectors with missing childType properties
   * Gracefully handle writing vectors with zero childSize properties
 
- -- David Robillard <d@drobilla.net>  Fri, 06 Feb 2026 00:33:21 +0000
+ -- David Robillard <d@drobilla.net>  Fri, 06 Feb 2026 20:07:46 +0000
 
 sratom (0.6.20) stable; urgency=medium
 
