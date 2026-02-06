@@ -445,6 +445,10 @@ write_vector(WriteContext* const   ctx,
              const void*           body)
 {
   const LV2_Atom_Vector_Body* vec = (const LV2_Atom_Vector_Body*)body;
+  if (!vec->child_size) {
+    return SERD_ERR_BAD_ARG;
+  }
+
   gensym(&ctx->id, 'v', ctx->sratom->next_id++);
   start_object(
     ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, type_uri);

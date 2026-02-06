@@ -13,6 +13,7 @@ subdir('headers')
 
 unit_test_names = [
   'trip',
+  'write',
 ]
 
 foreach name : unit_test_names
