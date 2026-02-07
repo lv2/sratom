@@ -49,6 +49,72 @@ on_end(void* const handle, const SerdNode* const node)
 }
 
 static void
+check_turtle(Sratom* const         sratom,
+             LV2_URID_Unmap* const unmap,
+             const LV2_Atom* const atom,
+             const char* const     expected)
+{
+  const SerdNode s = serd_node_from_string(SERD_URI, USTR(NS_EG "s"));
+  const SerdNode p = serd_node_from_string(SERD_URI, USTR(NS_EG "p"));
+
+  char* const ttl = sratom_to_turtle(
+    sratom, unmap, NS_EG, &s, &p, atom->type, atom->size, LV2_ATOM_BODY(atom));
+
+  assert(ttl);
+  assert(!strcmp(ttl, expected));
+  free(ttl);
+}
+
+// Not covered by round-trip test because it comes back as a string
+static void
+test_bare_literal(void)
+{
+  Uris           uris   = {NULL, 0};
+  LV2_URID_Map   map    = {&uris, urid_map};
+  LV2_URID_Unmap unmap  = {&uris, urid_unmap};
+  Sratom* const  sratom = sratom_new(&map);
+
+  LV2_Atom_Forge forge;
+  LV2_Atom       buf[8];
+  lv2_atom_forge_init(&forge, &map);
+  lv2_atom_forge_set_buffer(&forge, (uint8_t*)buf, sizeof(buf));
+  lv2_atom_forge_literal(&forge, "test", 4, 0, 0);
+
+  check_turtle(sratom,
+               &unmap,
+               buf,
+               "<http://example.org/s>\n\t<http://example.org/p> \"test\" .\n");
+
+  sratom_free(sratom);
+  free_uris(&uris);
+}
+
+// Not covered by round-trip test because it comes back as a URID
+static void
+test_uri(void)
+{
+  Uris           uris   = {NULL, 0};
+  LV2_URID_Map   map    = {&uris, urid_map};
+  LV2_URID_Unmap unmap  = {&uris, urid_unmap};
+  Sratom* const  sratom = sratom_new(&map);
+
+  LV2_Atom_Forge forge;
+  LV2_Atom       buf[8];
+  lv2_atom_forge_init(&forge, &map);
+  lv2_atom_forge_set_buffer(&forge, (uint8_t*)buf, sizeof(buf));
+  lv2_atom_forge_uri(&forge, NS_EG "o", strlen(NS_EG "o"));
+
+  check_turtle(sratom,
+               &unmap,
+               buf,
+               "<http://example.org/s>\n\t<http://example.org/p> "
+               "<http://example.org/o> .\n");
+
+  sratom_free(sratom);
+  free_uris(&uris);
+}
+
+static void
 test_bad_vector_child_size(void)
 {
   Uris           uris         = {NULL, 0};
@@ -82,6 +148,8 @@ test_bad_vector_child_size(void)
 int
 main(void)
 {
+  test_bare_literal();
+  test_uri();
   test_bad_vector_child_size();
   return 0;
 }
