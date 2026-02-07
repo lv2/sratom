@@ -142,7 +142,7 @@ gensym(SerdNode* out, char c, unsigned num)
   out->n_bytes = out->n_chars = snprintf((char*)out->buf, 12, "%c%u", c, num);
 }
 
-static void
+static SerdStatus
 list_append(Sratom*         sratom,
             LV2_URID_Unmap* unmap,
             unsigned*       flags,
@@ -153,22 +153,28 @@ list_append(Sratom*         sratom,
             uint32_t        type,
             const void*     body)
 {
+  int st = 0;
+
   // Generate a list node
   gensym(node, 'l', sratom->next_id);
-  sratom->write_statement(sratom->handle, *flags, NULL, s, p, node, NULL, NULL);
+  if ((st = sratom->write_statement(
+         sratom->handle, *flags, NULL, s, p, node, NULL, NULL))) {
+    return (SerdStatus)st;
+  }
 
   // _:node rdf:first value
   *flags = SERD_LIST_CONT;
   *p     = serd_node_from_string(SERD_URI, NS_RDF "first");
-  sratom_write(sratom, unmap, *flags, node, p, type, size, body);
+  st     = sratom_write(sratom, unmap, *flags, node, p, type, size, body);
 
   // Set subject to node and predicate to rdf:rest for next time
   gensym(node, 'l', ++sratom->next_id);
   *s = *node;
   *p = serd_node_from_string(SERD_URI, NS_RDF "rest");
+  return (SerdStatus)st;
 }
 
-static void
+static SerdStatus
 list_end(SerdStatementSink sink,
          void*             handle,
          const unsigned    flags,
@@ -177,10 +183,10 @@ list_end(SerdStatementSink sink,
 {
   // _:node rdf:rest rdf:nil
   const SerdNode nil = serd_node_from_string(SERD_URI, NS_RDF "nil");
-  sink(handle, flags, NULL, s, p, &nil, NULL, NULL);
+  return sink(handle, flags, NULL, s, p, &nil, NULL, NULL);
 }
 
-static void
+static SerdStatus
 start_object(Sratom*         sratom,
              uint32_t*       flags,
              const SerdNode* subject,
@@ -188,15 +194,18 @@ start_object(Sratom*         sratom,
              const SerdNode* node,
              const char*     type)
 {
+  SerdStatus st = SERD_SUCCESS;
+
   if (subject && predicate) {
-    sratom->write_statement(sratom->handle,
-                            *flags | SERD_ANON_O_BEGIN,
-                            NULL,
-                            subject,
-                            predicate,
-                            node,
-                            NULL,
-                            NULL);
+    st = sratom->write_statement(sratom->handle,
+                                 *flags | SERD_ANON_O_BEGIN,
+                                 NULL,
+                                 subject,
+                                 predicate,
+                                 node,
+                                 NULL,
+                                 NULL);
+
     // Start abbreviating object properties
     *flags |= SERD_ANON_CONT;
 
@@ -204,12 +213,15 @@ start_object(Sratom*         sratom,
     *flags &= ~(uint32_t)SERD_LIST_CONT;
   }
 
-  if (type) {
+  if (!st && type) {
     SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "type");
     SerdNode o = serd_node_from_string(SERD_URI, USTR(type));
-    sratom->write_statement(
+
+    st = sratom->write_statement(
       sratom->handle, *flags, NULL, node, &p, &o, NULL, NULL);
   }
+
+  return st;
 }
 
 static bool
@@ -360,8 +372,12 @@ write_event(WriteContext* const         ctx,
             const LV2_Atom_Event* const ev)
 {
   gensym(&ctx->id, 'e', ctx->sratom->next_id++);
-  start_object(
+
+  SerdStatus st = start_object(
     ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, NULL);
+  if (st) {
+    return st;
+  }
 
   SerdNode time     = SERD_NODE_NULL;
   SerdNode p        = SERD_NODE_NULL;
@@ -377,27 +393,31 @@ write_event(WriteContext* const         ctx,
     datatype = number_type(ctx->sratom, NS_XSD "long");
   }
 
-  ctx->sratom->write_statement(ctx->sratom->handle,
-                               SERD_ANON_CONT,
-                               NULL,
-                               &ctx->id,
-                               &p,
-                               &time,
-                               &datatype,
-                               &language);
+  st = ctx->sratom->write_statement(ctx->sratom->handle,
+                                    SERD_ANON_CONT,
+                                    NULL,
+                                    &ctx->id,
+                                    &p,
+                                    &time,
+                                    &datatype,
+                                    &language);
   serd_node_free(&time);
+  if (st) {
+    return st;
+  }
 
-  p = serd_node_from_string(SERD_URI, NS_RDF "value");
-  sratom_write(ctx->sratom,
-               unmap,
-               SERD_ANON_CONT,
-               &ctx->id,
-               &p,
-               ev->body.type,
-               ev->body.size,
-               LV2_ATOM_BODY(&ev->body));
+  p  = serd_node_from_string(SERD_URI, NS_RDF "value");
+  st = (SerdStatus)sratom_write(ctx->sratom,
+                                unmap,
+                                SERD_ANON_CONT,
+                                &ctx->id,
+                                &p,
+                                ev->body.type,
+                                ev->body.size,
+                                LV2_ATOM_BODY(&ev->body));
 
-  return ctx->sratom->end_anon
+  return st ? st
+         : ctx->sratom->end_anon
            ? ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id)
            : SERD_SUCCESS;
 }
@@ -409,30 +429,45 @@ write_tuple(WriteContext* const   ctx,
             const uint32_t        size,
             const void*           body)
 {
+  SerdStatus st = SERD_SUCCESS;
+
   gensym(&ctx->id, 't', ctx->sratom->next_id++);
-  start_object(
-    ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, type_uri);
+
+  if ((st = start_object(ctx->sratom,
+                         &ctx->flags,
+                         ctx->subject,
+                         ctx->predicate,
+                         &ctx->id,
+                         type_uri))) {
+    return st;
+  }
 
   SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
   ctx->flags |= SERD_LIST_O_BEGIN;
-  LV2_ATOM_TUPLE_BODY_FOREACH (body, size, i) {
-    list_append(ctx->sratom,
-                unmap,
-                &ctx->flags,
-                &ctx->id,
-                &p,
-                &ctx->node,
-                i->size,
-                i->type,
-                LV2_ATOM_BODY(i));
+  for (const LV2_Atom* i = (const LV2_Atom*)body;
+       !lv2_atom_tuple_is_end(body, size, i);
+       i = lv2_atom_tuple_next(i)) {
+    if ((st = list_append(ctx->sratom,
+                          unmap,
+                          &ctx->flags,
+                          &ctx->id,
+                          &p,
+                          &ctx->node,
+                          i->size,
+                          i->type,
+                          LV2_ATOM_BODY(i)))) {
+      return st;
+    }
   }
-  list_end(ctx->sratom->write_statement,
-           ctx->sratom->handle,
-           ctx->flags,
-           &ctx->id,
-           &p);
 
-  return ctx->sratom->end_anon
+  st = list_end(ctx->sratom->write_statement,
+                ctx->sratom->handle,
+                ctx->flags,
+                &ctx->id,
+                &p);
+
+  return st ? st
+         : ctx->sratom->end_anon
            ? ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id)
            : SERD_SUCCESS;
 }
@@ -444,46 +479,63 @@ write_vector(WriteContext* const   ctx,
              const uint32_t        size,
              const void*           body)
 {
+  SerdStatus st = SERD_SUCCESS;
+
   const LV2_Atom_Vector_Body* vec = (const LV2_Atom_Vector_Body*)body;
   if (!vec->child_size) {
     return SERD_ERR_BAD_ARG;
   }
 
   gensym(&ctx->id, 'v', ctx->sratom->next_id++);
-  start_object(
-    ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, type_uri);
+  if ((st = start_object(ctx->sratom,
+                         &ctx->flags,
+                         ctx->subject,
+                         ctx->predicate,
+                         &ctx->id,
+                         type_uri))) {
+    return st;
+  }
+
   SerdNode p = serd_node_from_string(SERD_URI, USTR(LV2_ATOM__childType));
   SerdNode child_type =
     serd_node_from_string(SERD_URI, USTR(unmap_uri(unmap, vec->child_type)));
-  ctx->sratom->write_statement(ctx->sratom->handle,
-                               ctx->flags,
-                               NULL,
-                               &ctx->id,
-                               &p,
-                               &child_type,
-                               NULL,
-                               NULL);
+
+  if ((st = ctx->sratom->write_statement(ctx->sratom->handle,
+                                         ctx->flags,
+                                         NULL,
+                                         &ctx->id,
+                                         &p,
+                                         &child_type,
+                                         NULL,
+                                         NULL))) {
+    return st;
+  }
+
   p = serd_node_from_string(SERD_URI, NS_RDF "value");
   ctx->flags |= SERD_LIST_O_BEGIN;
   for (const char* i = (const char*)(vec + 1); i < (const char*)vec + size;
        i += vec->child_size) {
-    list_append(ctx->sratom,
-                unmap,
-                &ctx->flags,
-                &ctx->id,
-                &p,
-                &ctx->node,
-                vec->child_size,
-                vec->child_type,
-                i);
+    if ((st = list_append(ctx->sratom,
+                          unmap,
+                          &ctx->flags,
+                          &ctx->id,
+                          &p,
+                          &ctx->node,
+                          vec->child_size,
+                          vec->child_type,
+                          i))) {
+      return st;
+    }
   }
-  list_end(ctx->sratom->write_statement,
-           ctx->sratom->handle,
-           ctx->flags,
-           &ctx->id,
-           &p);
 
-  return ctx->sratom->end_anon
+  st = list_end(ctx->sratom->write_statement,
+                ctx->sratom->handle,
+                ctx->flags,
+                &ctx->id,
+                &p);
+
+  return st ? st
+         : ctx->sratom->end_anon
            ? ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id)
            : SERD_SUCCESS;
 }
@@ -495,37 +547,41 @@ write_atom_object(WriteContext* const   ctx,
                   const uint32_t        size,
                   const void*           body)
 {
+  int st = SERD_SUCCESS;
+
   const LV2_Atom_Object_Body* const obj   = (const LV2_Atom_Object_Body*)body;
   const char* const                 otype = unmap_uri(unmap, obj->otype);
 
   if (lv2_atom_forge_is_blank(&ctx->sratom->forge, type_urid, obj)) {
     gensym(&ctx->id, 'b', ctx->sratom->next_id++);
-    start_object(
+    st = start_object(
       ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, otype);
   } else {
     ctx->id = serd_node_from_string(SERD_URI, USTR(unmap_uri(unmap, obj->id)));
     ctx->flags = 0U;
-    start_object(ctx->sratom, &ctx->flags, NULL, NULL, &ctx->id, otype);
+    st = start_object(ctx->sratom, &ctx->flags, NULL, NULL, &ctx->id, otype);
   }
 
-  LV2_ATOM_OBJECT_BODY_FOREACH (obj, size, prop) {
-    const char* const key  = unmap_uri(unmap, prop->key);
+  for (const LV2_Atom_Property_Body* p = lv2_atom_object_begin(obj);
+       !st && !lv2_atom_object_is_end(obj, size, p);
+       p = lv2_atom_object_next(p)) {
+    const char* const key  = unmap_uri(unmap, p->key);
     SerdNode          pred = serd_node_from_string(SERD_URI, USTR(key));
-    sratom_write(ctx->sratom,
-                 unmap,
-                 ctx->flags,
-                 &ctx->id,
-                 &pred,
-                 prop->value.type,
-                 prop->value.size,
-                 LV2_ATOM_BODY(&prop->value));
+
+    st = sratom_write(ctx->sratom,
+                      unmap,
+                      ctx->flags,
+                      &ctx->id,
+                      &pred,
+                      p->value.type,
+                      p->value.size,
+                      LV2_ATOM_BODY(&p->value));
   }
 
-  if (ctx->sratom->end_anon && (ctx->flags & SERD_ANON_CONT)) {
-    return ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id);
-  }
-
-  return SERD_SUCCESS;
+  return st ? (SerdStatus)st
+         : (ctx->sratom->end_anon && (ctx->flags & SERD_ANON_CONT))
+           ? ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id)
+           : SERD_SUCCESS;
 }
 
 static SerdStatus
@@ -535,37 +591,48 @@ write_sequence(WriteContext* const   ctx,
                const uint32_t        size,
                const void* const     body)
 {
+  SerdStatus st = SERD_SUCCESS;
+
   const LV2_Atom_Sequence_Body* seq = (const LV2_Atom_Sequence_Body*)body;
   gensym(&ctx->id, 'v', ctx->sratom->next_id++);
-  start_object(
-    ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, type_uri);
+  if ((st = start_object(ctx->sratom,
+                         &ctx->flags,
+                         ctx->subject,
+                         ctx->predicate,
+                         &ctx->id,
+                         type_uri))) {
+    return st;
+  }
+
   SerdNode p = serd_node_from_string(SERD_URI, NS_RDF "value");
   ctx->flags |= SERD_LIST_O_BEGIN;
   for (const LV2_Atom_Event* ev = lv2_atom_sequence_begin(seq);
        !lv2_atom_sequence_is_end(seq, size, ev);
        ev = lv2_atom_sequence_next(ev)) {
     ctx->sratom->seq_unit = seq->unit;
-    list_append(ctx->sratom,
-                unmap,
-                &ctx->flags,
+    if ((st = list_append(ctx->sratom,
+                          unmap,
+                          &ctx->flags,
+                          &ctx->id,
+                          &p,
+                          &ctx->node,
+                          sizeof(LV2_Atom_Event) + ev->body.size,
+                          ctx->sratom->atom_Event,
+                          ev))) {
+      return st;
+    }
+  }
+
+  st = list_end(ctx->sratom->write_statement,
+                ctx->sratom->handle,
+                ctx->flags,
                 &ctx->id,
-                &p,
-                &ctx->node,
-                sizeof(LV2_Atom_Event) + ev->body.size,
-                ctx->sratom->atom_Event,
-                ev);
-  }
-  list_end(ctx->sratom->write_statement,
-           ctx->sratom->handle,
-           ctx->flags,
-           &ctx->id,
-           &p);
+                &p);
 
-  if (ctx->sratom->end_anon && ctx->subject && ctx->predicate) {
-    return ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id);
-  }
-
-  return SERD_SUCCESS;
+  return st ? st
+         : (ctx->sratom->end_anon && ctx->subject && ctx->predicate)
+           ? ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id)
+           : SERD_SUCCESS;
 }
 
 static SerdStatus
@@ -574,21 +641,31 @@ write_value_object(WriteContext* const ctx,
                    const uint32_t      size,
                    const void* const   body)
 {
+  SerdStatus st = SERD_SUCCESS;
+
   gensym(&ctx->id, 'b', ctx->sratom->next_id++);
-  start_object(
-    ctx->sratom, &ctx->flags, ctx->subject, ctx->predicate, &ctx->id, type_uri);
+  if ((st = start_object(ctx->sratom,
+                         &ctx->flags,
+                         ctx->subject,
+                         ctx->predicate,
+                         &ctx->id,
+                         type_uri))) {
+    return st;
+  }
+
   SerdNode p        = serd_node_from_string(SERD_URI, NS_RDF "value");
   SerdNode o        = serd_node_new_blob(body, size, true);
   SerdNode datatype = serd_node_from_string(SERD_URI, NS_XSD "base64Binary");
 
-  ctx->sratom->write_statement(
+  st = ctx->sratom->write_statement(
     ctx->sratom->handle, ctx->flags, NULL, &ctx->id, &p, &o, &datatype, NULL);
 
-  if (ctx->sratom->end_anon && ctx->subject && ctx->predicate) {
+  if (!st && ctx->sratom->end_anon && ctx->subject && ctx->predicate) {
     ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id);
   }
+
   serd_node_free(&o);
-  return SERD_SUCCESS; // FIXME
+  return st;
 }
 
 int
@@ -749,8 +826,10 @@ sratom_to_turtle(Sratom*         sratom,
                   (SerdStatementSink)serd_writer_write_statement,
                   (SerdEndSink)serd_writer_end_anon,
                   writer);
-  sratom_write(
+
+  const int st = sratom_write(
     sratom, unmap, SERD_EMPTY_S, subject, predicate, type, size, body);
+
   serd_writer_finish(writer);
 
   serd_writer_free(writer);
@@ -759,6 +838,11 @@ sratom_to_turtle(Sratom*         sratom,
   }
 
   serd_node_free(&base);
+  if (st) {
+    free((void*)str.buf);
+    return NULL;
+  }
+
   return (char*)serd_chunk_sink_finish(&str);
 }
 
