@@ -234,20 +234,20 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
   lv2_atom_forge_vector(&forge, sizeof(LV2_URID), forge.URID, 2, uelems);
 
   // eg_fseq = (Sequence)1, 2
-  LV2_URID midi_midiEvent = map.map(map.handle, LV2_MIDI__MidiEvent);
+  LV2_URID midi_MidiEvent = map.map(map.handle, LV2_MIDI__MidiEvent);
   lv2_atom_forge_key(&forge, eg_fseq);
   LV2_Atom_Forge_Frame fseq_frame;
   lv2_atom_forge_sequence_head(&forge, &fseq_frame, 0);
 
   const uint8_t ev1[3] = {0x90, 0x1A, 0x1};
   lv2_atom_forge_frame_time(&forge, 1);
-  lv2_atom_forge_atom(&forge, sizeof(ev1), midi_midiEvent);
+  lv2_atom_forge_atom(&forge, sizeof(ev1), midi_MidiEvent);
   lv2_atom_forge_raw(&forge, ev1, sizeof(ev1));
   lv2_atom_forge_pad(&forge, sizeof(ev1));
 
   const uint8_t ev2[3] = {0x90, 0x2B, 0x2};
   lv2_atom_forge_frame_time(&forge, 3);
-  lv2_atom_forge_atom(&forge, sizeof(ev2), midi_midiEvent);
+  lv2_atom_forge_atom(&forge, sizeof(ev2), midi_MidiEvent);
   lv2_atom_forge_raw(&forge, ev2, sizeof(ev2));
   lv2_atom_forge_pad(&forge, sizeof(ev2));
 
@@ -260,12 +260,12 @@ test(SerdEnv* env, const char* base_uri, bool top_level, bool pretty_numbers)
   lv2_atom_forge_sequence_head(&forge, &bseq_frame, atom_beatTime);
 
   lv2_atom_forge_beat_time(&forge, 1.0);
-  lv2_atom_forge_atom(&forge, sizeof(ev1), midi_midiEvent);
+  lv2_atom_forge_atom(&forge, sizeof(ev1), midi_MidiEvent);
   lv2_atom_forge_raw(&forge, ev1, sizeof(ev1));
   lv2_atom_forge_pad(&forge, sizeof(ev1));
 
   lv2_atom_forge_beat_time(&forge, 2.0);
-  lv2_atom_forge_atom(&forge, sizeof(ev2), midi_midiEvent);
+  lv2_atom_forge_atom(&forge, sizeof(ev2), midi_MidiEvent);
   lv2_atom_forge_raw(&forge, ev2, sizeof(ev2));
   lv2_atom_forge_pad(&forge, sizeof(ev2));
 
