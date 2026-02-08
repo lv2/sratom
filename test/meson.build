@@ -11,17 +11,24 @@ subdir('headers')
 # Unit Tests #
 ##############
 
+common_test_sources = files('test_uri_map.c')
+
 unit_test_names = [
   'trip',
   'write',
 ]
 
+unit_test_sources = common_test_sources
+
 foreach name : unit_test_names
+  sources = files('test_@0@.c'.format(name), 'test_uri_map.c')
+  unit_test_sources += sources
+
   test(
     name,
     executable(
       'test_' + name,
-      files('test_@0@.c'.format(name), 'test_uri_map.c'),
+      common_test_sources + sources,
       c_args: c_suppressions,
       dependencies: [lv2_dep, serd_dep, sratom_dep],
       implicit_include_directories: false,
