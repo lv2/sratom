@@ -11,7 +11,10 @@ subdir('headers')
 # Unit Tests #
 ##############
 
-common_test_sources = files('test_uri_map.c')
+common_test_sources = files(
+  'forge_test_object.c',
+  'test_uri_map.c',
+)
 
 unit_test_names = [
   'trip',
