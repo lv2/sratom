@@ -661,7 +661,7 @@ write_value_object(WriteContext* const ctx,
     ctx->sratom->handle, ctx->flags, NULL, &ctx->id, &p, &o, &datatype, NULL);
 
   if (!st && ctx->sratom->end_anon && ctx->subject && ctx->predicate) {
-    ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id);
+    st = ctx->sratom->end_anon(ctx->sratom->handle, &ctx->id);
   }
 
   serd_node_free(&o);
