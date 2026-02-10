@@ -201,7 +201,7 @@ test_write_errors(void)
   sratom_set_sink(sratom, NS_EG, on_statement, on_end, &ctx);
 
   LV2_Atom_Forge forge;
-  LV2_Atom       buf[128];
+  LV2_Atom       buf[192];
   lv2_atom_forge_init(&forge, &map);
   lv2_atom_forge_set_buffer(&forge, (uint8_t*)buf, sizeof(buf));
   forge_test_object(&forge, &map, &uris, 0U);
